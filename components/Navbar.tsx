@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
+import CreatePostModal from "./CreatePostModal";
 
 type UserProfile = {
   id: string;
@@ -17,6 +18,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     // Function to fetch current user and their profile
@@ -102,7 +104,16 @@ export default function Navbar() {
           {!loading && (
             <>
               {user ? (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
+                  <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-accent text-white hover:bg-accent/90 transition-colors"
+                    aria-label="Create Post"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                  </button>
                   {profile && (
                     <Link
                       href={`/profile/${user.id}`}
@@ -152,6 +163,13 @@ export default function Navbar() {
           )}
         </div>
       </div>
+      {user && (
+        <CreatePostModal 
+          isOpen={isCreateModalOpen} 
+          onClose={() => setIsCreateModalOpen(false)} 
+          userId={user.id} 
+        />
+      )}
     </nav>
   );
 }
