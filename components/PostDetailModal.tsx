@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, MoreHorizontal, Trash2, Edit2, Send } from "lucide-react";
+import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import EditPostModal from "./EditPostModal";
 import { useEffect } from "react";
@@ -80,6 +80,7 @@ export default function PostDetailModal({ isOpen, onClose, post, handleLike, cur
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentInput, setCommentInput] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchComments = async () => {
     if (!post) return;
@@ -158,8 +159,10 @@ export default function PostDetailModal({ isOpen, onClose, post, handleLike, cur
       await fetchComments();
       window.dispatchEvent(new Event('postUpdated')); // Optimistically update comment count in grid
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error submitting comment:", err);
+      setError(err.message || "Failed to post comment.");
+      setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingComment(false);
     }
@@ -191,6 +194,8 @@ export default function PostDetailModal({ isOpen, onClose, post, handleLike, cur
       onClose();
     } catch (err: any) {
       console.error("Error deleting post:", err.message);
+      setError(err.message || "Failed to delete post.");
+      setTimeout(() => setError(null), 3000);
     } finally {
       setIsDeleting(false);
     }
@@ -284,6 +289,13 @@ export default function PostDetailModal({ isOpen, onClose, post, handleLike, cur
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="px-6 py-2 bg-red-50 border-b border-red-100 flex items-center gap-2 text-sm text-red-600 shrink-0">
+            <AlertCircle className="w-4 h-4" />
+            {error}
+          </div>
+        )}
 
         {showDeleteConfirm && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -392,7 +404,17 @@ export default function PostDetailModal({ isOpen, onClose, post, handleLike, cur
           <div className="px-6 py-4 border-t border-border bg-surface">
             <h4 className="text-sm font-semibold text-heading mb-4">{comments.length} comments</h4>
             {commentsLoading ? (
-              <p className="text-sm text-gray-500 animate-pulse">Loading comments...</p>
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-3 animate-pulse">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0"></div>
+                    <div className="flex-1 space-y-2 mt-1">
+                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : comments.length === 0 ? (
               <p className="text-sm text-gray-500">No comments yet. Be the first!</p>
             ) : (

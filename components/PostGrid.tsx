@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import PostDetailModal, { Post } from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle, AlertCircle, Camera } from "lucide-react";
 
 type Props = {
   posts: Post[];
@@ -23,6 +23,7 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
   const [showDeleteConfirmFor, setShowDeleteConfirmFor] = useState<Post | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Sync props to state so parent can fetch and provide data, but we can optimistically update
   useEffect(() => {
@@ -56,6 +57,8 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
       setShowDeleteConfirmFor(null);
     } catch (err: any) {
       console.error("Error deleting post:", err.message);
+      setError("Failed to delete post. Please try again.");
+      setTimeout(() => setError(null), 3000);
     } finally {
       setIsDeleting(false);
     }
@@ -117,7 +120,21 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
       }
     } catch (err) {
       console.error("Error toggling like:", err);
-      // We don't have a refetch callback, so we could dispatch an event if needed
+      // Revert optimistic update
+      setPosts((currentPosts) =>
+        currentPosts.map((post) => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              isLikedByMe: currentlyLiked,
+              likeCount: currentlyLiked ? post.likeCount : Math.max(0, post.likeCount - 1),
+            };
+          }
+          return post;
+        })
+      );
+      setError("Failed to like post.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -125,7 +142,7 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-1 animate-pulse">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="aspect-square bg-gray-100 dark:bg-gray-800"></div>
+          <div key={i} className="aspect-square bg-gray-200"></div>
         ))}
       </div>
     );
@@ -133,14 +150,26 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
 
   if (posts.length === 0) {
     return (
-      <div className="bg-surface border border-border shadow-sm rounded-xl p-8 text-center text-gray-500">
-        No posts yet.
+      <div className="bg-surface border border-border shadow-sm rounded-xl p-12 flex flex-col items-center justify-center text-center gap-4">
+        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
+          <Camera className="w-8 h-8 text-gray-300" />
+        </div>
+        <div>
+          <h3 className="font-heading font-semibold text-lg text-heading">No posts yet</h3>
+          <p className="text-body text-sm mt-1">When there are posts, they'll show up here.</p>
+        </div>
       </div>
     );
   }
 
   return (
     <>
+      {error && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-sm text-red-600">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          {error}
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
         {posts.map((post) => {
           const isOwner = currentUserId && post.user_id === currentUserId;

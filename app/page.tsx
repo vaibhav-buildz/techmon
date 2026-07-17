@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PostGrid from "@/components/PostGrid";
 import { Post } from "@/components/PostDetailModal";
+import { Users } from "lucide-react";
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -164,7 +165,21 @@ export default function Home() {
   }, [userId, fetchFollowingPosts]);
 
   if (loading) {
-    return <div className="min-h-screen bg-background" />;
+    return (
+      <div className="min-h-screen py-12 bg-background text-body">
+        <div className="max-w-4xl mx-auto px-4 w-full">
+          <div className="mb-8 space-y-3">
+            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-1 animate-pulse">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="aspect-square bg-gray-200"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // LOGGED IN: Following Feed
@@ -178,7 +193,11 @@ export default function Home() {
           </div>
           
           {!postsLoading && posts.length === 0 ? (
-            <div className="bg-surface border border-border shadow-sm rounded-xl p-12 text-center flex flex-col items-center gap-4">
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-16 text-center flex flex-col items-center gap-4">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100 mb-2">
+                <Users className="w-8 h-8 text-gray-300" />
+              </div>
+              <h3 className="font-heading font-semibold text-xl text-heading">Welcome to your feed</h3>
               <p className="text-gray-500 font-medium">Follow people to see their posts here.</p>
               <Link 
                 href="/feed"

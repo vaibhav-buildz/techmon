@@ -93,7 +93,7 @@ export default function EditPostModal({ isOpen, onClose, post }: Props) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div 
-        className="bg-surface border border-border shadow-xl rounded-2xl w-full max-w-[500px] flex flex-col overflow-hidden relative"
+        className="bg-surface border border-border shadow-xl rounded-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -109,8 +109,9 @@ export default function EditPostModal({ isOpen, onClose, post }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 bg-surface">
-          <div className="p-6">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto">
+          
+          <div className="p-6 space-y-6">
             
             {/* Note Editor */}
             {post.type === "note" && (

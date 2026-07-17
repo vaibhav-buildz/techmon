@@ -7,7 +7,7 @@ import Link from "next/link";
 import PostDetailModal, { Post } from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import PostGrid from "@/components/PostGrid";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2 } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -39,6 +39,7 @@ export default function ProfilePage() {
   // Follow state
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
 
   const fetchProfileAndUser = useCallback(async () => {
     try {
@@ -224,6 +225,8 @@ export default function ProfilePage() {
       }
     } catch (err: any) {
       console.error("Error toggling follow:", err.message);
+      setFollowError("Failed to update follow status.");
+      setTimeout(() => setFollowError(null), 3000);
     } finally {
       setFollowLoading(false);
     }
@@ -231,8 +234,29 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-body">
-        <div className="text-gray-400 animate-pulse font-medium">Loading profile...</div>
+      <div className="min-h-screen py-16 bg-background text-body">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8">
+            {/* Left Column Skeleton */}
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-6 h-fit animate-pulse">
+              <div className="flex flex-col items-center sm:items-start space-y-4">
+                <div className="w-24 h-24 rounded-full bg-gray-200"></div>
+                <div className="space-y-2 w-full">
+                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+            {/* Right Column Skeleton */}
+            <div className="space-y-8 animate-pulse">
+              <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -307,22 +331,30 @@ export default function ProfilePage() {
                   )}
                   
                   {currentUserId && !isOwner && (
-                    <button
-                      onClick={handleFollowToggle}
-                      disabled={followLoading}
-                      className={`mt-4 w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors group ${
-                        isFollowing 
-                          ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
-                          : "bg-accent text-white border border-transparent hover:bg-accent/90"
-                      }`}
-                    >
-                      {followLoading ? "Loading..." : isFollowing ? (
-                        <>
-                          <span className="block group-hover:hidden">Following</span>
-                          <span className="hidden group-hover:block">Unfollow</span>
-                        </>
-                      ) : "Follow"}
-                    </button>
+                    <div className="mt-4">
+                      {followError && (
+                        <div className="mb-2 px-3 py-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-xs text-red-600">
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                          {followError}
+                        </div>
+                      )}
+                      <button
+                        onClick={handleFollowToggle}
+                        disabled={followLoading}
+                        className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors group disabled:opacity-50 ${
+                          isFollowing 
+                            ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
+                            : "bg-accent text-white border border-transparent hover:bg-accent/90"
+                        }`}
+                      >
+                        {followLoading ? "Loading..." : isFollowing ? (
+                          <>
+                            <span className="block group-hover:hidden">Following</span>
+                            <span className="hidden group-hover:block">Unfollow</span>
+                          </>
+                        ) : "Follow"}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

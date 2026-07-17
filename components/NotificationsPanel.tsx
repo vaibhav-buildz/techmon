@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Heart, UserPlus, MessageCircle, Bell } from "lucide-react";
+import { X, Heart, UserPlus, MessageCircle, Bell, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import PostDetailModal, { Post } from "@/components/PostDetailModal";
@@ -44,6 +44,7 @@ function timeAgo(dateString: string) {
 export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: Props) {
   const [notifications, setNotifications] = useState<NotificationResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   // Modal State for clicking a post notification
@@ -204,13 +205,23 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
 
     try {
       if (currentlyLiked) {
-        await supabase.from("likes").delete().match({ post_id: postId, user_id: userId });
+        const { error } = await supabase.from("likes").delete().match({ post_id: postId, user_id: userId });
+        if (error) throw error;
       } else {
-        await supabase.from("likes").insert({ post_id: postId, user_id: userId });
+        const { error } = await supabase.from("likes").insert({ post_id: postId, user_id: userId });
+        if (error) throw error;
       }
       window.dispatchEvent(new Event('postUpdated')); // Refresh grid in background
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      // Revert optimistic update
+      setSelectedPost({
+        ...selectedPost,
+        isLikedByMe: currentlyLiked,
+        likeCount: currentlyLiked ? selectedPost.likeCount : Math.max(0, selectedPost.likeCount - 1),
+      });
+      setError("Failed to update like. Please try again.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -234,9 +245,23 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
           </div>
 
           <div className="overflow-y-auto flex-1">
+            {error && (
+              <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center gap-2 text-sm text-red-600">
+                <AlertCircle className="w-4 h-4" />
+                {error}
+              </div>
+            )}
             {loading ? (
-              <div className="p-8 text-center text-gray-400 text-sm animate-pulse">
-                Loading notifications...
+              <div className="py-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="w-full flex items-start gap-4 px-4 py-4 animate-pulse">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0"></div>
+                    <div className="flex-1 space-y-2 mt-1">
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500 text-sm flex flex-col items-center gap-3">

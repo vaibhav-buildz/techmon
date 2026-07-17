@@ -135,8 +135,31 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-body">
-        <div className="text-gray-400 animate-pulse font-medium">Loading profile data...</div>
+      <div className="min-h-screen py-16 bg-background text-body">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8">
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-6 h-fit animate-pulse">
+              <div className="w-20 h-20 rounded-full bg-gray-200"></div>
+              <div className="h-10 bg-gray-200 rounded w-full mt-4"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+            <div className="space-y-8 animate-pulse">
+              <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
+                <div className="h-24 bg-gray-200 rounded w-full"></div>
+              </div>
+              <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
+                <div className="h-10 bg-gray-200 rounded w-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -66,7 +66,7 @@ export default function Sidebar({ user, profile }: Props) {
     { label: "Home", icon: House, href: "/" },
     { label: "Search", icon: Search, onClick: () => setIsSearchModalOpen(true) },
     { label: "Feed", icon: Clapperboard, href: "/feed" },
-    { label: "Messages", icon: MessageCircle, onClick: () => alert("Messages coming soon") },
+    { label: "Messages", icon: MessageCircle, onClick: () => alert("Messages coming soon!") },
     { label: "Notifications", icon: Heart, onClick: () => setIsNotificationsPanelOpen(true) },
     { label: "Create", icon: PlusSquare, onClick: () => setIsCreateModalOpen(true) },
     { 
@@ -150,7 +150,7 @@ export default function Sidebar({ user, profile }: Props) {
                 </Link>
                 <button
                   onClick={() => {
-                    alert("Multiple accounts coming soon");
+                    alert("Multiple accounts coming soon!");
                     setShowMoreMenu(false);
                   }}
                   className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-body hover:bg-gray-50 transition-colors font-medium"

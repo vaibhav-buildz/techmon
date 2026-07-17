@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Users, Frown } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -77,7 +77,7 @@ export default function SearchModal({ isOpen, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div 
-        className="bg-surface w-full max-w-lg rounded-xl shadow-2xl border border-border overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
+        className="bg-surface w-full max-w-lg max-h-[90vh] rounded-xl shadow-2xl border border-border overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 p-4 border-b border-border">
@@ -95,18 +95,28 @@ export default function SearchModal({ isOpen, onClose }: Props) {
           </button>
         </div>
 
-        <div className="max-h-96 overflow-y-auto">
+        <div className="overflow-y-auto flex-1">
           {!query.trim() ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
-              Search for people by name
+            <div className="p-12 text-center text-gray-500 text-sm flex flex-col items-center gap-3">
+              <Users className="w-8 h-8 text-gray-300" />
+              <p>Search for people by name</p>
             </div>
           ) : loading ? (
-            <div className="p-8 text-center text-gray-400 text-sm animate-pulse">
-              Searching...
+            <div className="py-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="w-full flex items-center gap-4 px-4 py-3 animate-pulse">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 shrink-0"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : results.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
-              No results found for "{query}"
+            <div className="p-12 text-center text-gray-500 text-sm flex flex-col items-center gap-3">
+              <Frown className="w-8 h-8 text-gray-300" />
+              <p>No results found for "{query}"</p>
             </div>
           ) : (
             <div className="py-2">

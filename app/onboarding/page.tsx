@@ -81,8 +81,26 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-body">
-        <div className="text-gray-400 animate-pulse font-medium">Loading...</div>
+      <div className="min-h-screen py-12 bg-background text-body">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center md:justify-start">
+          <div className="w-full max-w-xl">
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8 animate-pulse">
+              <div className="space-y-3">
+                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+              <div className="space-y-6">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    <div className={i === 4 ? "h-24 bg-gray-200 rounded w-full" : "h-10 bg-gray-200 rounded w-full"}></div>
+                  </div>
+                ))}
+                <div className="h-10 bg-gray-200 rounded w-full mt-4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
