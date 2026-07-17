@@ -21,6 +21,8 @@ export default function EditProfilePage() {
   const [githubUrl, setGithubUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
@@ -52,6 +54,7 @@ export default function EditProfilePage() {
           setGithubUrl(profile.github_url || "");
           setLinkedinUrl(profile.linkedin_url || "");
           setPortfolioUrl(profile.portfolio_url || "");
+          setAvatarUrl(profile.avatar_url || "");
         }
       } catch (err: any) {
         setError(err.message);
@@ -62,6 +65,36 @@ export default function EditProfilePage() {
 
     fetchUserAndProfile();
   }, [router]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploadingAvatar(true);
+      setError(null);
+
+      if (!e.target.files || e.target.files.length === 0) {
+        throw new Error("You must select an image to upload.");
+      }
+
+      const file = e.target.files[0];
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${userId}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      setAvatarUrl(data.publicUrl);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +120,7 @@ export default function EditProfilePage() {
           github_url: githubUrl,
           linkedin_url: linkedinUrl,
           portfolio_url: portfolioUrl,
+          avatar_url: avatarUrl,
         })
         .eq("id", userId);
 
@@ -142,6 +176,39 @@ export default function EditProfilePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-zinc-900/50 p-6 md:p-8 rounded-xl border border-zinc-800/50">
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Avatar
+              </label>
+              <div className="flex items-center gap-6">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar preview"
+                    className="w-16 h-16 rounded-full object-cover border border-zinc-800"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 text-xs">
+                    None
+                  </div>
+                )}
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                    className="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-zinc-800 file:text-zinc-100 hover:file:bg-zinc-700 transition-colors disabled:opacity-50"
+                  />
+                  {uploadingAvatar && (
+                    <p className="text-xs text-zinc-400 mt-2 animate-pulse">Uploading...</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-zinc-800/50 my-4"></div>
+
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-1">
                 Full Name
