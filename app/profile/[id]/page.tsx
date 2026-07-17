@@ -225,7 +225,7 @@ export default function ProfilePage() {
                   {profile.skills.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="font-mono text-xs bg-blue-50 border-l-2 border-accent px-3 py-1 text-accent rounded-full"
+                      className="font-mono text-xs bg-blue-50 px-3 py-1 text-accent rounded-full border border-accent/20"
                     >
                       {skill}
                     </span>
