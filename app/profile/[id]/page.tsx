@@ -106,8 +106,8 @@ export default function ProfilePage() {
     : "?";
 
   return (
-    <div className="min-h-screen py-16 px-4 bg-background text-body flex justify-center">
-      <div className="w-full max-w-5xl">
+    <div className="min-h-screen py-16 bg-background text-body">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8">
           
           {/* Left Column (Sticky Sidebar) */}
@@ -225,7 +225,7 @@ export default function ProfilePage() {
                   {profile.skills.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="font-mono text-xs bg-accent/10 border-l-2 border-accent px-2 py-1 text-accent"
+                      className="font-mono text-xs bg-blue-50 border-l-2 border-accent px-3 py-1 text-accent rounded-full"
                     >
                       {skill}
                     </span>

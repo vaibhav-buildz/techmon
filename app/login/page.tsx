@@ -45,9 +45,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-background text-body flex justify-center md:justify-start">
-      <div className="w-full max-w-md">
-        <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
+    <div className="min-h-screen py-12 bg-background text-body">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md">
+          <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
           <div className="text-left">
             <h2 className="text-2xl font-heading font-bold tracking-tight text-heading">Welcome back</h2>
             <p className="text-sm text-body mt-2">Sign in to your account</p>
@@ -123,6 +124,7 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
+        </div>
         </div>
       </div>
     </div>

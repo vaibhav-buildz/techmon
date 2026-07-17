@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 type UserProfile = {
   id: string;
@@ -13,6 +13,7 @@ type UserProfile = {
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,18 +130,22 @@ export default function Navbar() {
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Link
-                    href="/login"
-                    className="text-sm font-medium text-body hover:text-accent transition-colors"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="text-sm font-medium px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
-                  >
-                    Sign Up
-                  </Link>
+                  {pathname !== "/login" && (
+                    <Link
+                      href="/login"
+                      className="text-sm font-medium text-body hover:text-accent transition-colors"
+                    >
+                      Login
+                    </Link>
+                  )}
+                  {pathname !== "/signup" && (
+                    <Link
+                      href="/signup"
+                      className="text-sm font-medium px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
+                    >
+                      Sign Up
+                    </Link>
+                  )}
                 </div>
               )}
             </>

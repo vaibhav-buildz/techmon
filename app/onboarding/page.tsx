@@ -88,9 +88,10 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-background text-body flex justify-center md:justify-start">
-      <div className="w-full max-w-xl">
-        <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
+    <div className="min-h-screen py-12 bg-background text-body">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center md:justify-start">
+        <div className="w-full max-w-xl">
+          <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
           <div className="text-left">
             <h1 className="text-2xl font-heading font-bold tracking-tight text-heading">Complete your profile</h1>
             <p className="text-sm text-body mt-2">Tell us a bit about yourself to get started.</p>
@@ -182,6 +183,7 @@ export default function OnboardingPage() {
               </button>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </div>

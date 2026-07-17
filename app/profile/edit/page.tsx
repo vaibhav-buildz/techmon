@@ -157,8 +157,8 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen py-16 px-4 bg-background text-body flex justify-center">
-      <div className="w-full max-w-5xl">
+    <div className="min-h-screen py-16 bg-background text-body">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-heading font-bold tracking-tight text-heading">Edit Profile</h1>
@@ -196,16 +196,16 @@ export default function EditProfilePage() {
                   </div>
                 )}
                 <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    disabled={uploadingAvatar}
-                    className="block w-full text-sm text-body file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-background file:border file:border-border file:text-body hover:file:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
-                  />
-                  {uploadingAvatar && (
-                    <p className="text-xs text-accent mt-2 animate-pulse">Uploading...</p>
-                  )}
+                  <label className={`cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors ${uploadingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {uploadingAvatar ? "Uploading..." : "Change photo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
+                    />
+                  </label>
                 </div>
               </div>
             </div>
@@ -326,6 +326,18 @@ export default function EditProfilePage() {
                   placeholder="React, TypeScript, Node.js (comma separated)"
                 />
                 <p className="text-xs text-body mt-2">Enter skills separated by commas.</p>
+                {skills.trim().length > 0 && (
+                  <div className="flex flex-wrap gap-2.5 mt-4 pt-4 border-t border-border">
+                    {skills.split(',').map((s) => s.trim()).filter((s) => s.length > 0).map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="font-mono text-xs bg-blue-50 border-l-2 border-accent px-3 py-1 text-accent rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
