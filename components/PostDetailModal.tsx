@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X, MoreHorizontal, Trash2, Edit2 } from "lucide-react";
+import { X, MoreHorizontal, Trash2, Edit2, Send } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import EditPostModal from "./EditPostModal";
+import { useEffect } from "react";
 
 export type Post = {
   id: string;
@@ -16,6 +17,7 @@ export type Post = {
   media_type?: "image" | "video";
   created_at: string;
   likeCount: number;
+  commentCount: number;
   isLikedByMe: boolean;
   profiles: {
     name: string;
@@ -56,11 +58,112 @@ const getRelativeTime = (dateString: string) => {
   return `${diffInYears}y ago`;
 };
 
+export type CommentResult = {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    name: string;
+    avatar_url: string;
+  };
+};
+
 export default function PostDetailModal({ isOpen, onClose, post, handleLike, currentUserId }: Props) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Comments state
+  const [comments, setComments] = useState<CommentResult[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentInput, setCommentInput] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  const fetchComments = async () => {
+    if (!post) return;
+    setCommentsLoading(true);
+    try {
+      const { data: commentsData, error: commentsError } = await supabase
+        .from("comments")
+        .select("*")
+        .eq("post_id", post.id)
+        .order("created_at", { ascending: true });
+
+      if (commentsError) throw commentsError;
+
+      if (!commentsData || commentsData.length === 0) {
+        setComments([]);
+        return;
+      }
+
+      const userIds = [...new Set(commentsData.map((c) => c.user_id))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, name, avatar_url")
+        .in("id", userIds);
+
+      if (profilesError) throw profilesError;
+      const profileMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+
+      const mergedComments = commentsData.map((c) => ({
+        ...c,
+        profiles: profileMap.get(c.user_id) || { name: "Unknown", avatar_url: "" },
+      }));
+
+      setComments(mergedComments);
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && post?.id) {
+      fetchComments();
+    }
+  }, [isOpen, post?.id]);
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentInput.trim() || !post || !currentUserId || isSubmittingComment) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const { error: insertError } = await supabase
+        .from("comments")
+        .insert({
+          post_id: post.id,
+          user_id: currentUserId,
+          content: commentInput.trim(),
+        });
+      
+      if (insertError) throw insertError;
+
+      // Create notification
+      if (post.user_id !== currentUserId) {
+        await supabase
+          .from("notifications")
+          .insert({
+            recipient_id: post.user_id,
+            actor_id: currentUserId,
+            type: "comment",
+            post_id: post.id
+          });
+      }
+
+      setCommentInput("");
+      await fetchComments();
+      window.dispatchEvent(new Event('postUpdated')); // Optimistically update comment count in grid
+
+    } catch (err) {
+      console.error("Error submitting comment:", err);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!post || isDeleting) return;
@@ -257,34 +360,85 @@ export default function PostDetailModal({ isOpen, onClose, post, handleLike, cur
               </p>
             )}
           </div>
+          
+          {/* Footer (Likes & Timestamp) */}
+          <div className="px-6 py-4 flex items-center justify-between border-t border-border bg-surface">
+            <button
+              onClick={() => handleLike(post.id, post.isLikedByMe)}
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors focus:outline-none ${
+                post.isLikedByMe
+                  ? "text-accent"
+                  : "text-gray-400 hover:text-accent"
+              }`}
+            >
+              {post.isLikedByMe ? (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                  <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+              )}
+              <span className="text-base">{post.likeCount}</span>
+            </button>
+  
+            <span className="text-sm text-gray-400">
+              {getRelativeTime(post.created_at)}
+            </span>
+          </div>
+
+          {/* Comments Section */}
+          <div className="px-6 py-4 border-t border-border bg-surface">
+            <h4 className="text-sm font-semibold text-heading mb-4">{comments.length} comments</h4>
+            {commentsLoading ? (
+              <p className="text-sm text-gray-500 animate-pulse">Loading comments...</p>
+            ) : comments.length === 0 ? (
+              <p className="text-sm text-gray-500">No comments yet. Be the first!</p>
+            ) : (
+              <div className="space-y-4">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-3">
+                    {comment.profiles.avatar_url ? (
+                       <img src={comment.profiles.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0 border border-border" />
+                    ) : (
+                       <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-500 shrink-0 border border-border">
+                         {comment.profiles.name.charAt(0).toUpperCase()}
+                       </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-sm text-heading">{comment.profiles.name}</span>
+                        <span className="text-xs text-gray-400">{getRelativeTime(comment.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-body mt-0.5 whitespace-pre-wrap">{comment.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Footer (Likes & Timestamp) */}
-        <div className="px-6 py-4 flex items-center justify-between border-t border-border bg-surface shrink-0">
-          <button
-            onClick={() => handleLike(post.id, post.isLikedByMe)}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors focus:outline-none ${
-              post.isLikedByMe
-                ? "text-accent"
-                : "text-gray-400 hover:text-accent"
-            }`}
-          >
-            {post.isLikedByMe ? (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-              </svg>
-            )}
-            <span className="text-base">{post.likeCount}</span>
-          </button>
-
-          <span className="text-sm text-gray-400">
-            {getRelativeTime(post.created_at)}
-          </span>
-        </div>
+        {/* Comment Input */}
+        {currentUserId && (
+          <form onSubmit={handleSubmitComment} className="px-6 py-4 border-t border-border bg-surface shrink-0 flex items-center gap-3">
+            <input
+               type="text"
+               value={commentInput}
+               onChange={(e) => setCommentInput(e.target.value)}
+               placeholder="Add a comment..."
+               className="flex-1 bg-gray-50 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+            <button
+               type="submit"
+               disabled={!commentInput.trim() || isSubmittingComment}
+               className="shrink-0 p-2.5 bg-accent text-white rounded-xl hover:bg-accent/90 disabled:opacity-50 transition-colors"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        )}
       </div>
       
       <EditPostModal 

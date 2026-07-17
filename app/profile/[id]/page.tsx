@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import PostDetailModal, { Post } from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
+import PostGrid from "@/components/PostGrid";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2 } from "lucide-react";
 
 type Profile = {
@@ -35,14 +36,9 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   
-  // Modal state
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-
-  // Grid Action Menu State
-  const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
-  const [showDeleteConfirmFor, setShowDeleteConfirmFor] = useState<Post | null>(null);
-  const [showEditModalFor, setShowEditModalFor] = useState<Post | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Follow state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const fetchProfileAndUser = useCallback(async () => {
     try {
@@ -69,6 +65,17 @@ export default function ProfilePage() {
         setCurrentUserId(user.id);
         if (user.id === id) {
           setIsOwner(true);
+        } else {
+          // Check follow status
+          const { data: followData } = await supabase
+            .from("follows")
+            .select("*")
+            .match({ follower_id: user.id, following_id: id })
+            .single();
+            
+          if (followData) {
+            setIsFollowing(true);
+          }
         }
       }
     } catch (err: any) {
@@ -112,8 +119,23 @@ export default function ProfilePage() {
         }
       }
 
+      let commentsData: any[] = [];
+      if (postIds.length > 0) {
+        const { data: fetchCommentsData, error: commentsError } = await supabase
+          .from("comments")
+          .select("post_id")
+          .in("post_id", postIds);
+
+        if (commentsError) {
+          console.error("Error fetching comments:", commentsError);
+        } else {
+          commentsData = fetchCommentsData || [];
+        }
+      }
+
       const mergedPosts = postsData.map((post) => {
         const postLikes = likesData.filter((l) => l.post_id === post.id);
+        const postComments = commentsData.filter((c) => c.post_id === post.id);
         const isLikedByMe = currentViewerId ? postLikes.some((l) => l.user_id === currentViewerId) : false;
 
         return {
@@ -124,6 +146,7 @@ export default function ProfilePage() {
             headline: authorProfile.headline || "",
           },
           likeCount: postLikes.length,
+          commentCount: postComments.length,
           isLikedByMe,
         };
       });
@@ -166,81 +189,43 @@ export default function ProfilePage() {
     };
   }, [profile, id, currentUserId, fetchPosts]);
 
-  const handleDeleteGridPost = async () => {
-    const post = showDeleteConfirmFor;
-    if (!post || isDeleting) return;
-    setIsDeleting(true);
-
+  const handleFollowToggle = async () => {
+    if (!currentUserId || isOwner) return;
+    setFollowLoading(true);
+    
     try {
-      if (post.type === "media" && post.media_url) {
-        try {
-          const urlParts = post.media_url.split('/posts/');
-          if (urlParts.length === 2) {
-            const filePath = urlParts[1];
-            await supabase.storage.from("posts").remove([filePath]);
-          }
-        } catch (e) {
-          console.error("Failed to delete media from storage", e);
-        }
-      }
-
-      const { error } = await supabase.from("posts").delete().eq("id", post.id);
-      if (error) throw error;
-
-      window.dispatchEvent(new Event('postDeleted'));
-      setShowDeleteConfirmFor(null);
-    } catch (err: any) {
-      console.error("Error deleting post:", err.message);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleLike = async (postId: string, currentlyLiked: boolean) => {
-    if (!currentUserId) return;
-
-    // Optimistic update for the grid list
-    setPosts((currentPosts) =>
-      currentPosts.map((post) => {
-        if (post.id === postId) {
-          const updatedPost = {
-            ...post,
-            isLikedByMe: !currentlyLiked,
-            likeCount: currentlyLiked ? Math.max(0, post.likeCount - 1) : post.likeCount + 1,
-          };
-          
-          // Also optimistically update the modal if it's the one being viewed
-          if (selectedPost && selectedPost.id === postId) {
-            setSelectedPost(updatedPost);
-          }
-          
-          return updatedPost;
-        }
-        return post;
-      })
-    );
-
-    try {
-      if (currentlyLiked) {
-        // Unlike: Delete row
+      if (isFollowing) {
         const { error } = await supabase
-          .from("likes")
+          .from("follows")
           .delete()
-          .match({ post_id: postId, user_id: currentUserId });
-          
+          .match({ follower_id: currentUserId, following_id: id });
         if (error) throw error;
+        setIsFollowing(false);
       } else {
-        // Like: Insert row
         const { error } = await supabase
-          .from("likes")
-          .insert({ post_id: postId, user_id: currentUserId });
-          
+          .from("follows")
+          .insert({ follower_id: currentUserId, following_id: id });
         if (error) throw error;
+        
+        const { error: notifError } = await supabase
+          .from("notifications")
+          .insert({
+            recipient_id: id,
+            actor_id: currentUserId,
+            type: "follow",
+            post_id: null
+          });
+          
+        if (notifError) {
+          console.error("Error creating follow notification:", notifError);
+        }
+        
+        setIsFollowing(true);
       }
-    } catch (err) {
-      console.error("Error toggling like:", err);
-      // Fallback: Re-fetch posts on error to fix desync
-      if (profile) fetchPosts(id, currentUserId, profile);
+    } catch (err: any) {
+      console.error("Error toggling follow:", err.message);
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -291,7 +276,7 @@ export default function ProfilePage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8">
             {/* Left Column (Sticky Sidebar) */}
-            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8 h-fit lg:sticky lg:top-24">
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8 h-fit lg:sticky lg:top-24 relative">
               
               <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-6">
                 {/* Avatar */}
@@ -320,20 +305,27 @@ export default function ProfilePage() {
                       {profile.organization}
                     </p>
                   )}
+                  
+                  {currentUserId && !isOwner && (
+                    <button
+                      onClick={handleFollowToggle}
+                      disabled={followLoading}
+                      className={`mt-4 w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors group ${
+                        isFollowing 
+                          ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
+                          : "bg-accent text-white border border-transparent hover:bg-accent/90"
+                      }`}
+                    >
+                      {followLoading ? "Loading..." : isFollowing ? (
+                        <>
+                          <span className="block group-hover:hidden">Following</span>
+                          <span className="hidden group-hover:block">Unfollow</span>
+                        </>
+                      ) : "Follow"}
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {/* Edit Button (if owner) */}
-              {isOwner && (
-                <div className="w-full pt-2">
-                  <Link
-                    href="/profile/edit"
-                    className="w-full inline-flex items-center justify-center px-4 py-2 bg-surface border border-border rounded-lg text-sm font-medium text-heading hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-accent"
-                  >
-                    Edit Profile
-                  </Link>
-                </div>
-              )}
 
               {/* Links */}
               {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
@@ -421,105 +413,7 @@ export default function ProfilePage() {
               {/* Posts Grid */}
               <div className="space-y-4 pt-4 border-t border-border">
                 <h2 className="font-heading font-semibold text-xl text-heading">Posts</h2>
-                
-                {postsLoading ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1 animate-pulse">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="aspect-square bg-gray-200"></div>
-                    ))}
-                  </div>
-                ) : posts.length === 0 ? (
-                  <div className="bg-surface border border-border shadow-sm rounded-xl p-8 text-center text-gray-500">
-                    No posts yet.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
-                    {posts.map((post) => (
-                      <div 
-                        key={post.id} 
-                        onClick={() => setSelectedPost(post)}
-                        className="aspect-square relative cursor-pointer group bg-surface border border-border overflow-hidden flex items-center justify-center hover:opacity-90 transition-opacity"
-                      >
-                        {post.type === "media" && post.media_url ? (
-                          post.media_type === "video" ? (
-                            <video src={post.media_url} className="w-full h-full object-cover" muted />
-                          ) : (
-                            <img src={post.media_url} alt="Post preview" className="w-full h-full object-cover" />
-                          )
-                        ) : post.type === "note" ? (
-                          <div className={`w-full h-full p-4 flex flex-col justify-center items-center text-center ${post.background || 'bg-white'}`}>
-                            <div className={`absolute top-4 right-4 mb-2 shrink-0 ${post.background === 'bg-white' || post.background?.includes('bg-white') ? 'text-gray-400' : 'text-white/70'}`}>
-                              <StickyNote className="w-4 h-4" />
-                            </div>
-                            <p className={`text-sm line-clamp-4 leading-relaxed font-medium ${post.background === 'bg-white' || post.background?.includes('bg-white') ? 'text-gray-800' : 'text-white'}`}>
-                              {post.content}
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="w-full h-full p-4 flex flex-col bg-surface border-border">
-                            <div className="flex justify-end text-gray-400 mb-2 shrink-0">
-                              {post.type === "code" ? <Code className="w-4 h-4" /> : <Type className="w-4 h-4" />}
-                            </div>
-                            <p className="text-xs text-body line-clamp-4 leading-relaxed font-medium">
-                              {post.content}
-                            </p>
-                          </div>
-                        )}
-                        
-                        {/* Hover Overlay with Likes & Actions */}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <div className="flex items-center gap-1.5 text-white font-medium">
-                            <Heart className="w-5 h-5 fill-white" />
-                            <span>{post.likeCount}</span>
-                          </div>
-                          
-                          {/* Grid Tile Actions */}
-                          {isOwner && (
-                            <div className="absolute top-2 right-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id);
-                                }}
-                                className="p-1.5 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-colors"
-                              >
-                                <MoreHorizontal className="w-5 h-5" />
-                              </button>
-                              
-                              {activeMenuPostId === post.id && (
-                                <div 
-                                  className="absolute right-0 mt-1 w-32 bg-surface border border-border shadow-lg rounded-xl overflow-hidden z-20 py-1"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {(post.type === "note" || post.type === "media") && (
-                                    <button
-                                      onClick={() => {
-                                        setActiveMenuPostId(null);
-                                        setShowEditModalFor(post);
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                                    >
-                                      <Edit2 className="w-3.5 h-3.5" /> Edit
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() => {
-                                      setActiveMenuPostId(null);
-                                      setShowDeleteConfirmFor(post);
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" /> Delete
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <PostGrid posts={posts} loading={postsLoading} currentUserId={currentUserId} />
               </div>
 
             </div>
@@ -527,49 +421,6 @@ export default function ProfilePage() {
 
         </div>
       </div>
-
-      <PostDetailModal 
-        isOpen={selectedPost !== null}
-        post={selectedPost}
-        onClose={() => setSelectedPost(null)}
-        handleLike={handleLike}
-        currentUserId={currentUserId}
-      />
-
-      <EditPostModal
-        isOpen={showEditModalFor !== null}
-        onClose={() => setShowEditModalFor(null)}
-        post={showEditModalFor}
-      />
-
-      {showDeleteConfirmFor && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteConfirmFor(null)}>
-          <div 
-            className="bg-surface border border-border rounded-xl p-6 shadow-2xl max-w-sm w-full mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="font-heading font-semibold text-lg text-heading mb-2">Delete Post?</h3>
-            <p className="text-body text-sm mb-6">This action cannot be undone.</p>
-            
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirmFor(null)}
-                disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium text-body hover:text-heading transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteGridPost}
-                disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
