@@ -31,63 +31,65 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 text-zinc-100">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
-          <p className="text-sm text-zinc-400 mt-2">Enter your details to sign up</p>
-        </div>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-background text-body flex justify-center md:justify-start">
+      <div className="w-full max-w-md">
+        <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
+          <div className="text-left">
+            <h2 className="text-2xl font-heading font-bold tracking-tight text-heading">Create an account</h2>
+            <p className="text-sm text-body mt-2">Enter your details to sign up</p>
+          </div>
 
-        <div className="mt-8">
-          <form onSubmit={handleEmailSignUp} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {error && (
-              <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                {error}
+          <div className="mt-8">
+            <form onSubmit={handleEmailSignUp} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-heading mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
+                  placeholder="you@example.com"
+                />
               </div>
-            )}
+              <div>
+                <label className="block text-sm font-medium text-heading mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
+                  placeholder="••••••••"
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 px-4 bg-white text-black font-medium rounded-lg text-sm hover:bg-zinc-200 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-            >
-              {loading ? "Signing up..." : "Sign Up"}
-            </button>
-          </form>
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+                  {error}
+                </div>
+              )}
 
-          <p className="text-center text-sm text-zinc-400 mt-6">
-            Already have an account?{" "}
-            <Link href="/login" className="text-white hover:underline">
-              Log in
-            </Link>
-          </p>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 px-4 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              >
+                {loading ? "Signing up..." : "Sign Up"}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-body mt-6">
+              Already have an account?{" "}
+              <Link href="/login" className="text-accent hover:underline font-medium">
+                Log in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

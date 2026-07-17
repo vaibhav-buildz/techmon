@@ -91,9 +91,9 @@ export default function Navbar() {
     : "?";
 
   return (
-    <nav className="w-full border-b border-zinc-800 bg-zinc-950 text-zinc-100 h-16 flex items-center">
+    <nav className="w-full border-b border-border bg-surface text-body h-16 flex items-center">
       <div className="max-w-7xl mx-auto w-full px-4 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight hover:text-zinc-300 transition-colors">
+        <Link href="/" className="text-xl font-heading font-bold tracking-tight text-heading hover:text-accent transition-colors">
           Techmon
         </Link>
 
@@ -111,10 +111,10 @@ export default function Navbar() {
                         <img
                           src={profile.avatar_url}
                           alt={profile.name}
-                          className="w-8 h-8 rounded-full object-cover border border-zinc-800 group-hover:border-zinc-600 transition-colors"
+                          className="w-8 h-8 rounded-full object-cover border border-border group-hover:border-accent transition-colors"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-medium text-zinc-400 group-hover:border-zinc-600 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center text-xs font-medium text-body group-hover:border-accent transition-colors">
                           {initials}
                         </div>
                       )}
@@ -122,7 +122,7 @@ export default function Navbar() {
                   )}
                   <button
                     onClick={handleLogout}
-                    className="text-sm font-medium text-zinc-400 hover:text-white transition-colors focus:outline-none"
+                    className="text-sm font-medium text-body hover:text-accent transition-colors focus:outline-none"
                   >
                     Logout
                   </button>
@@ -131,13 +131,13 @@ export default function Navbar() {
                 <div className="flex items-center gap-4">
                   <Link
                     href="/login"
-                    className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                    className="text-sm font-medium text-body hover:text-accent transition-colors"
                   >
                     Login
                   </Link>
                   <Link
                     href="/signup"
-                    className="text-sm font-medium px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors"
+                    className="text-sm font-medium px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
                   >
                     Sign Up
                   </Link>

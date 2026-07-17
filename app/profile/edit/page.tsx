@@ -135,20 +135,20 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
-        <div className="text-zinc-500 animate-pulse">Loading profile data...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background text-body">
+        <div className="text-gray-400 animate-pulse font-medium">Loading profile data...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
+      <div className="min-h-screen flex items-center justify-center bg-background text-body">
         <div className="text-center space-y-4">
-          <div className="text-red-500 bg-red-500/10 p-4 rounded-lg border border-red-500/20 max-w-md">
+          <div className="text-red-600 bg-red-50 p-4 rounded-lg border border-red-100 max-w-md">
             Error loading profile: {error}
           </div>
-          <Link href="/" className="text-sm text-zinc-400 hover:text-white transition-colors">
+          <Link href="/" className="text-sm text-accent hover:underline font-medium">
             Return home
           </Link>
         </div>
@@ -157,38 +157,41 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 bg-zinc-950 text-zinc-100 flex justify-center">
-      <div className="w-full max-w-xl space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen py-16 px-4 bg-background text-body flex justify-center">
+      <div className="w-full max-w-5xl">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Edit Profile</h1>
-            <p className="text-zinc-400 mt-2">Update your personal information and links.</p>
+            <h1 className="text-3xl font-heading font-bold tracking-tight text-heading">Edit Profile</h1>
+            <p className="text-body mt-2 text-sm">Update your personal information and links.</p>
           </div>
           {userId && (
             <Link
               href={`/profile/${userId}`}
-              className="text-sm text-zinc-400 hover:text-white transition-colors"
+              className="text-sm font-medium text-body hover:text-accent transition-colors"
             >
               Cancel
             </Link>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-zinc-900/50 p-6 md:p-8 rounded-xl border border-zinc-800/50">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8">
+          
+          {/* Left Column (Sticky Sidebar) */}
+          <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-6 h-fit lg:sticky lg:top-24">
+            
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
+              <label className="block text-sm font-medium text-heading mb-2">
                 Avatar
               </label>
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col gap-4">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt="Avatar preview"
-                    className="w-16 h-16 rounded-full object-cover border border-zinc-800"
+                    className="w-20 h-20 rounded-full object-cover border border-border"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 text-xs">
+                  <div className="w-20 h-20 rounded-full bg-background border border-border flex items-center justify-center text-gray-400 text-xs font-medium">
                     None
                   </div>
                 )}
@@ -198,19 +201,19 @@ export default function EditProfilePage() {
                     accept="image/*"
                     onChange={handleAvatarUpload}
                     disabled={uploadingAvatar}
-                    className="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-zinc-800 file:text-zinc-100 hover:file:bg-zinc-700 transition-colors disabled:opacity-50"
+                    className="block w-full text-sm text-body file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-background file:border file:border-border file:text-body hover:file:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
                   />
                   {uploadingAvatar && (
-                    <p className="text-xs text-zinc-400 mt-2 animate-pulse">Uploading...</p>
+                    <p className="text-xs text-accent mt-2 animate-pulse">Uploading...</p>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="w-full h-px bg-zinc-800/50 my-4"></div>
+            <div className="w-full h-px bg-border my-4"></div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-heading mb-1">
                 Full Name
               </label>
               <input
@@ -218,13 +221,13 @@ export default function EditProfilePage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
                 placeholder="Jane Doe"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-heading mb-1">
                 Headline
               </label>
               <input
@@ -232,108 +235,118 @@ export default function EditProfilePage() {
                 required
                 value={headline}
                 onChange={(e) => setHeadline(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow font-mono"
                 placeholder="Software Engineer at Acme Corp"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Organization (College / Company)
+              <label className="block text-sm font-medium text-heading mb-1">
+                Organization
               </label>
               <input
                 type="text"
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
                 placeholder="Acme Corp"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Bio
-              </label>
-              <textarea
-                rows={4}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow resize-none"
-                placeholder="Tell us about yourself..."
-              />
-            </div>
+            <div className="w-full h-px bg-border my-6"></div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Skills (comma-separated)
-              </label>
-              <input
-                type="text"
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
-                placeholder="React, TypeScript, Node.js"
-              />
-            </div>
+            <h3 className="font-mono text-xs uppercase text-accent mb-4">&gt; Social Links</h3>
 
-            <div className="w-full h-px bg-zinc-800/50 my-6"></div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-heading mb-1">
+                  GitHub URL
+                </label>
+                <input
+                  type="url"
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
+                  placeholder="https://github.com/username"
+                />
+              </div>
 
-            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-4">Social Links</h3>
+              <div>
+                <label className="block text-sm font-medium text-heading mb-1">
+                  LinkedIn URL
+                </label>
+                <input
+                  type="url"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
+                  placeholder="https://linkedin.com/in/username"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                GitHub URL
-              </label>
-              <input
-                type="url"
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
-                placeholder="https://github.com/username"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                LinkedIn URL
-              </label>
-              <input
-                type="url"
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
-                placeholder="https://linkedin.com/in/username"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Portfolio URL
-              </label>
-              <input
-                type="url"
-                value={portfolioUrl}
-                onChange={(e) => setPortfolioUrl(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-sm placeholder-zinc-600 transition-shadow"
-                placeholder="https://yourwebsite.com"
-              />
+              <div>
+                <label className="block text-sm font-medium text-heading mb-1">
+                  Portfolio URL
+                </label>
+                <input
+                  type="url"
+                  value={portfolioUrl}
+                  onChange={(e) => setPortfolioUrl(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
             </div>
           </div>
 
-          {error && (
-            <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-lg border border-red-500/20 mt-4">
-              {error}
+          {/* Right Column */}
+          <div className="space-y-8 flex flex-col">
+            
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
+              <h2 className="font-mono text-xs uppercase text-accent">&gt; About</h2>
+              <div>
+                <textarea
+                  rows={6}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow resize-none"
+                  placeholder="Tell us about yourself..."
+                />
+              </div>
             </div>
-          )}
 
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-2.5 px-4 bg-white text-black font-medium rounded-lg text-sm hover:bg-zinc-200 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-zinc-500"
-            >
-              {submitting ? "Saving Changes..." : "Save Profile"}
-            </button>
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
+              <h2 className="font-mono text-xs uppercase text-accent">&gt; Skills</h2>
+              <div>
+                <input
+                  type="text"
+                  value={skills}
+                  onChange={(e) => setSkills(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow font-mono"
+                  placeholder="React, TypeScript, Node.js (comma separated)"
+                />
+                <p className="text-xs text-body mt-2">Enter skills separated by commas.</p>
+              </div>
+            </div>
+
+            <div className="mt-auto">
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 mb-4">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full lg:w-auto py-2.5 px-6 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                >
+                  {submitting ? "Saving Changes..." : "Save Profile"}
+                </button>
+              </div>
+            </div>
+
           </div>
         </form>
       </div>
