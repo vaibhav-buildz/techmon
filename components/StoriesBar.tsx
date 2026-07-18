@@ -30,9 +30,9 @@ export default function StoriesBar({ userId, userProfile }: Props) {
   // Capture modal state
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
 
-  const fetchStories = useCallback(async () => {
+  const fetchStories = useCallback(async (isInitialLoad = false) => {
     try {
-      setLoading(true);
+      if (isInitialLoad) setLoading(true);
 
       // 1. Get followed user IDs
       const { data: followData, error: followError } = await supabase
@@ -55,10 +55,12 @@ export default function StoriesBar({ userId, userProfile }: Props) {
 
       if (storiesError) throw storiesError;
 
+      console.log("[StoriesBar] Fetched stories:", storiesData?.length ?? 0, "for users:", allUserIds);
+
       if (!storiesData || storiesData.length === 0) {
+        console.log("[StoriesBar] No active stories found");
         setStoryGroups([]);
         setMyStories([]);
-        setLoading(false);
         return;
       }
 
@@ -102,6 +104,7 @@ export default function StoriesBar({ userId, userProfile }: Props) {
 
       // Separate own stories
       const ownStories = groupMap.get(userId) || [];
+      console.log("[StoriesBar] Own stories:", ownStories.length, "Followed groups:", followingIds.length);
       setMyStories(ownStories);
 
       // Build groups for followed users (exclude self — self is rendered as the "+" item)
@@ -130,7 +133,7 @@ export default function StoriesBar({ userId, userProfile }: Props) {
 
       setStoryGroups(followedGroups);
     } catch (err: any) {
-      console.error("Error fetching stories:", err);
+      console.error("[StoriesBar] Error fetching stories:", err);
       setError("Failed to load stories.");
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -139,12 +142,13 @@ export default function StoriesBar({ userId, userProfile }: Props) {
   }, [userId]);
 
   useEffect(() => {
-    fetchStories();
+    fetchStories(true); // initial load with skeleton
   }, [fetchStories]);
 
   // Called when a story is successfully created via the capture modal
   const handleStoryCreated = useCallback(() => {
-    fetchStories();
+    console.log("[StoriesBar] Story created, refetching...");
+    fetchStories(false); // refetch without skeleton
   }, [fetchStories]);
 
   // Build the full viewer groups array (self first, then followed)
@@ -208,50 +212,67 @@ export default function StoriesBar({ userId, userProfile }: Props) {
 
       <div className="flex gap-4 overflow-x-auto py-2 mb-6 scrollbar-hide">
         {/* Own story / Add story */}
-        <button
-          onClick={() => setCaptureModalOpen(true)}
-          className="flex flex-col items-center gap-1.5 shrink-0 group"
-        >
+        <div className="flex flex-col items-center gap-1.5 shrink-0">
           <div className="relative">
-            <div
-              className={`w-16 h-16 rounded-full overflow-hidden border-2 ${
-                myStories.length > 0 && hasUnviewedStories(myStories)
-                  ? "border-transparent"
-                  : "border-gray-200"
-              }`}
-              style={
-                myStories.length > 0 && hasUnviewedStories(myStories)
-                  ? {
-                      background:
-                        "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
-                      padding: "2px",
-                    }
-                  : undefined
-              }
+            {/* Avatar — clicking opens viewer if user has stories, otherwise opens capture */}
+            <button
+              onClick={() => {
+                if (myStories.length > 0) {
+                  openViewer(0);
+                } else {
+                  setCaptureModalOpen(true);
+                }
+              }}
+              className="block"
             >
-              <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
-                {userProfile.avatar_url ? (
-                  <img
-                    src={userProfile.avatar_url}
-                    alt="Your story"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg font-medium text-gray-400">
-                    {userProfile.name?.charAt(0)?.toUpperCase() || "?"}
-                  </div>
-                )}
+              <div
+                className={`w-16 h-16 rounded-full overflow-hidden border-2 ${
+                  myStories.length > 0
+                    ? "border-transparent"
+                    : "border-gray-200"
+                }`}
+                style={
+                  myStories.length > 0
+                    ? {
+                        background: hasUnviewedStories(myStories)
+                          ? "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)"
+                          : "linear-gradient(135deg, #d1d5db, #9ca3af)",
+                        padding: "2px",
+                      }
+                    : undefined
+                }
+              >
+                <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
+                  {userProfile.avatar_url ? (
+                    <img
+                      src={userProfile.avatar_url}
+                      alt="Your story"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-lg font-medium text-gray-400">
+                      {userProfile.name?.charAt(0)?.toUpperCase() || "?"}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            {/* Plus badge */}
-            <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-accent rounded-full border-2 border-white flex items-center justify-center shadow-sm">
+            </button>
+            {/* Plus badge — always opens capture modal */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCaptureModalOpen(true);
+              }}
+              className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-accent rounded-full border-2 border-white flex items-center justify-center shadow-sm hover:bg-accent/90 transition-colors"
+              aria-label="Add story"
+            >
               <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-            </div>
+            </button>
           </div>
           <span className="text-xs text-body font-medium truncate w-16 text-center">
             Your story
           </span>
-        </button>
+        </div>
 
         {/* Followed users' stories */}
         {storyGroups.map((group, i) => {

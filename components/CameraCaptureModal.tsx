@@ -51,10 +51,9 @@ export default function CameraCaptureModal({
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
       });
+      console.log("[CameraCaptureModal] getUserMedia resolved successfully");
+      console.log("[CameraCaptureModal] Video tracks:", mediaStream.getVideoTracks().length, mediaStream.getVideoTracks().map(t => `${t.label} (${t.readyState})`));
       setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
     } catch (err: any) {
       console.error("Camera error:", err);
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
@@ -80,18 +79,16 @@ export default function CameraCaptureModal({
         video: true,
       });
 
+      console.log("[CameraCaptureModal] getDisplayMedia resolved successfully");
+      console.log("[CameraCaptureModal] Screen tracks:", mediaStream.getVideoTracks().length, mediaStream.getVideoTracks().map(t => `${t.label} (${t.readyState})`));
+
       // Listen for user ending share via browser UI
       mediaStream.getVideoTracks()[0].addEventListener("ended", () => {
+        console.log("[CameraCaptureModal] Screen share track ended by user");
         setStream(null);
-        if (videoRef.current) {
-          videoRef.current.srcObject = null;
-        }
       });
 
       setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
     } catch (err: any) {
       console.error("Screen share error:", err);
       if (err.name === "NotAllowedError" || err.name === "AbortError") {
@@ -113,12 +110,28 @@ export default function CameraCaptureModal({
     } else {
       startScreenShare();
     }
-
-    // Cleanup on unmount or tab change
-    return () => {
-      // We don't stop stream here because the new effect will handle it
-    };
   }, [activeTab, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Attach stream to video element AFTER React renders it
+  useEffect(() => {
+    if (!stream) return;
+
+    const video = videoRef.current;
+    if (!video) {
+      console.warn("[CameraCaptureModal] stream is set but videoRef.current is null — video element not mounted yet");
+      return;
+    }
+
+    console.log("[CameraCaptureModal] Attaching stream to video element");
+    video.srcObject = stream;
+    console.log("[CameraCaptureModal] video.srcObject set:", !!video.srcObject);
+
+    video.play().then(() => {
+      console.log("[CameraCaptureModal] video.play() succeeded, videoWidth:", video.videoWidth, "videoHeight:", video.videoHeight);
+    }).catch((err) => {
+      console.warn("[CameraCaptureModal] video.play() rejected:", err);
+    });
+  }, [stream]);
 
   // Cleanup on close
   useEffect(() => {
@@ -151,10 +164,24 @@ export default function CameraCaptureModal({
   const handleCapture = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || !stream) return;
+    if (!video || !canvas || !stream) {
+      console.warn("[CameraCaptureModal] handleCapture: missing ref/stream", { video: !!video, canvas: !!canvas, stream: !!stream });
+      return;
+    }
+
+    console.log("[CameraCaptureModal] Capturing frame — videoWidth:", video.videoWidth, "videoHeight:", video.videoHeight);
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn("[CameraCaptureModal] video dimensions are 0x0 — cannot capture");
+      setError("Video not ready yet. Please wait a moment and try again.");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+
+    console.log("[CameraCaptureModal] Canvas dimensions set to:", canvas.width, "x", canvas.height);
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -164,6 +191,7 @@ export default function CameraCaptureModal({
     canvas.toBlob(
       (blob) => {
         if (blob) {
+          console.log("[CameraCaptureModal] Captured blob size:", blob.size, "bytes");
           setCapturedBlob(blob);
           setCapturedPreview(URL.createObjectURL(blob));
           stopStream();
@@ -319,15 +347,16 @@ export default function CameraCaptureModal({
           ) : (
             /* Live video preview */
             <div className="w-full aspect-[9/16] max-h-full rounded-2xl overflow-hidden bg-gray-900 relative flex items-center justify-center">
-              {streamLoading ? (
-                <div className="flex flex-col items-center gap-4">
+              {streamLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
                   <div className="w-10 h-10 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                  <p className="text-white/50 text-sm font-medium">
+                  <p className="text-white/50 text-sm font-medium mt-4">
                     {activeTab === "camera" ? "Starting camera..." : "Starting screen share..."}
                   </p>
                 </div>
-              ) : !stream && !error ? (
-                <div className="flex flex-col items-center gap-4">
+              )}
+              {!streamLoading && !stream && !error && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
                   <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
                     {activeTab === "camera" ? (
                       <Camera className="w-8 h-8 text-white/40" />
@@ -335,23 +364,24 @@ export default function CameraCaptureModal({
                       <Monitor className="w-8 h-8 text-white/40" />
                     )}
                   </div>
-                  <p className="text-white/40 text-sm">
+                  <p className="text-white/40 text-sm mt-4">
                     {activeTab === "camera"
                       ? "Allow camera access to get started"
                       : "Select a screen to share"}
                   </p>
                 </div>
-              ) : (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={`w-full h-full object-contain ${
-                    activeTab === "camera" ? "scale-x-[-1]" : ""
-                  }`}
-                />
               )}
+              {/* Video element is always mounted so the ref is available when stream arrives */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{ display: stream ? "block" : "none", width: "100%", height: "100%" }}
+                className={`object-contain ${
+                  activeTab === "camera" ? "scale-x-[-1]" : ""
+                }`}
+              />
             </div>
           )}
         </div>
