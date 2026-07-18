@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import { addAccount } from "@/lib/accountManager";
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
@@ -24,6 +25,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
             .single();
 
           setProfile(profileData || null);
+          addAccount(session, profileData);
         } else {
           setProfile(null);
         }
@@ -46,6 +48,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           .single();
         
         setProfile(profileData || null);
+        addAccount(session, profileData);
       } else {
         setProfile(null);
       }

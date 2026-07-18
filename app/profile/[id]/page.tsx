@@ -7,6 +7,7 @@ import Link from "next/link";
 import PostDetailModal, { Post } from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import PostGrid from "@/components/PostGrid";
+import SwitchAccountModal from "@/components/SwitchAccountModal";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut } from "lucide-react";
 
 type Profile = {
@@ -45,6 +46,7 @@ export default function ProfilePage() {
   const [followingCount, setFollowingCount] = useState(0);
   const [postsCount, setPostsCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [switchModalOpen, setSwitchModalOpen] = useState(false);
 
   const fetchFollowCounts = useCallback(async () => {
     try {
@@ -396,7 +398,7 @@ export default function ProfilePage() {
                         <button
                           onClick={() => {
                             setMenuOpen(false);
-                            alert("Multiple accounts coming soon");
+                            setSwitchModalOpen(true);
                           }}
                           className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
                         >
@@ -589,6 +591,12 @@ export default function ProfilePage() {
 
         </div>
       </div>
+
+      <SwitchAccountModal
+        isOpen={switchModalOpen}
+        onClose={() => setSwitchModalOpen(false)}
+        currentUserId={currentUserId}
+      />
     </>
   );
 }

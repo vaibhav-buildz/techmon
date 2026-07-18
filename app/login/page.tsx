@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { addAccount } from "@/lib/accountManager";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,11 +36,21 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+
+      if (data.session) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, avatar_url")
+          .eq("id", data.session.user.id)
+          .single();
+        addAccount(data.session, profile);
+      }
+
       router.push("/onboarding");
     } catch (err: any) {
       setError(err.message);

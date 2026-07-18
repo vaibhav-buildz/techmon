@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { addAccount } from "@/lib/accountManager";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -71,6 +72,12 @@ export default function OnboardingPage() {
       });
 
       if (error) throw error;
+
+      // Update account in savedAccounts
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        addAccount(session, { name, avatar_url: "" });
+      }
 
       router.push(`/profile/${userId}`);
     } catch (err: any) {
