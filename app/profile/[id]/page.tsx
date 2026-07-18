@@ -10,7 +10,7 @@ import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -56,6 +56,7 @@ export default function ProfilePage() {
   const [profileStories, setProfileStories] = useState<Story[]>([]);
   const [viewedStoryIds, setViewedStoryIds] = useState<Set<string>>(new Set());
   const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
 
   const fetchFollowCounts = useCallback(async () => {
     try {
@@ -290,6 +291,18 @@ export default function ProfilePage() {
     };
   }, [profile, currentUserId, fetchPosts]);
 
+  // Escape key listener for avatar viewer
+  useEffect(() => {
+    if (!avatarViewerOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setAvatarViewerOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [avatarViewerOpen]);
+
   const handleFollowToggle = async () => {
     if (!currentUserId || isOwner) return;
     setFollowLoading(true);
@@ -510,19 +523,24 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </button>
-                ) : (
-                  <div className="w-24 h-24 rounded-full overflow-hidden border border-border">
-                    {profile.avatar_url ? (
+                ) : profile.avatar_url ? (
+                  <button
+                    onClick={() => setAvatarViewerOpen(true)}
+                    className="focus:outline-none cursor-pointer group rounded-full"
+                  >
+                    <div className="w-24 h-24 rounded-full overflow-hidden border border-border group-hover:opacity-90 transition-opacity">
                       <img
                         src={profile.avatar_url}
                         alt={profile.name}
                         className="w-full h-full object-cover"
                       />
-                    ) : (
-                      <div className="w-full h-full rounded-full bg-background flex items-center justify-center text-3xl font-medium text-gray-400">
-                        {initials}
-                      </div>
-                    )}
+                    </div>
+                  </button>
+                ) : (
+                  <div className="w-24 h-24 rounded-full overflow-hidden border border-border">
+                    <div className="w-full h-full rounded-full bg-background flex items-center justify-center text-3xl font-medium text-gray-400">
+                      {initials}
+                    </div>
                   </div>
                 )}
 
@@ -732,6 +750,31 @@ export default function ProfilePage() {
             });
           }}
         />
+      )}
+
+      {avatarViewerOpen && profile.avatar_url && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setAvatarViewerOpen(false)}
+        >
+          <button
+            onClick={() => setAvatarViewerOpen(false)}
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div
+            className="relative max-w-sm w-full aspect-square rounded-full overflow-hidden border-4 border-white/10 shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={profile.avatar_url}
+              alt={profile.name}
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
       )}
     </>
   );
