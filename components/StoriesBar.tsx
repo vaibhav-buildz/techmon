@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import StoryViewer, { Story, StoryGroup } from "./StoryViewer";
+import CameraCaptureModal from "./CameraCaptureModal";
 
 type Props = {
   userId: string;
@@ -17,7 +18,6 @@ export default function StoriesBar({ userId, userProfile }: Props) {
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [myStories, setMyStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewedStoryIds, setViewedStoryIds] = useState<Set<string>>(
     new Set()
@@ -27,7 +27,8 @@ export default function StoriesBar({ userId, userProfile }: Props) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerStartIndex, setViewerStartIndex] = useState(0);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Capture modal state
+  const [captureModalOpen, setCaptureModalOpen] = useState(false);
 
   const fetchStories = useCallback(async () => {
     try {
@@ -141,65 +142,10 @@ export default function StoriesBar({ userId, userProfile }: Props) {
     fetchStories();
   }, [fetchStories]);
 
-  // Handle file upload for creating a story
-  const handleFileSelect = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Reset file input so same file can be re-selected
-    e.target.value = "";
-
-    setUploading(true);
-    setError(null);
-
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2, 9)}.${fileExt}`;
-      const filePath = `${userId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("stories")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage
-        .from("stories")
-        .getPublicUrl(filePath);
-
-      const mediaUrl = publicUrlData.publicUrl;
-      const mediaType = file.type.startsWith("video/") ? "video" : "image";
-
-      // Calculate expiry (24 hours from now)
-      const expiresAt = new Date(
-        Date.now() + 24 * 60 * 60 * 1000
-      ).toISOString();
-
-      const { error: insertError } = await supabase
-        .from("stories")
-        .insert({
-          user_id: userId,
-          media_url: mediaUrl,
-          media_type: mediaType,
-          expires_at: expiresAt,
-        });
-
-      if (insertError) throw insertError;
-
-      // Refresh stories
-      await fetchStories();
-    } catch (err: any) {
-      console.error("Error uploading story:", err);
-      setError(err.message || "Failed to upload story.");
-      setTimeout(() => setError(null), 3000);
-    } finally {
-      setUploading(false);
-    }
-  };
+  // Called when a story is successfully created via the capture modal
+  const handleStoryCreated = useCallback(() => {
+    fetchStories();
+  }, [fetchStories]);
 
   // Build the full viewer groups array (self first, then followed)
   const allViewerGroups: StoryGroup[] = [];
@@ -263,14 +209,7 @@ export default function StoriesBar({ userId, userProfile }: Props) {
       <div className="flex gap-4 overflow-x-auto py-2 mb-6 scrollbar-hide">
         {/* Own story / Add story */}
         <button
-          onClick={() => {
-            if (myStories.length > 0) {
-              // If user has stories, tapping opens viewer on own stories
-              // But the "+" badge should still allow adding
-            }
-            fileInputRef.current?.click();
-          }}
-          disabled={uploading}
+          onClick={() => setCaptureModalOpen(true)}
           className="flex flex-col items-center gap-1.5 shrink-0 group"
         >
           <div className="relative">
@@ -279,7 +218,7 @@ export default function StoriesBar({ userId, userProfile }: Props) {
                 myStories.length > 0 && hasUnviewedStories(myStories)
                   ? "border-transparent"
                   : "border-gray-200"
-              } ${uploading ? "opacity-50" : ""}`}
+              }`}
               style={
                 myStories.length > 0 && hasUnviewedStories(myStories)
                   ? {
@@ -306,34 +245,13 @@ export default function StoriesBar({ userId, userProfile }: Props) {
             </div>
             {/* Plus badge */}
             <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-accent rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-              {uploading ? (
-                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-              )}
+              <Plus className="w-3.5 h-3.5 text-white" strokeWidth={3} />
             </div>
           </div>
           <span className="text-xs text-body font-medium truncate w-16 text-center">
-            {uploading ? "Uploading" : "Your story"}
+            Your story
           </span>
         </button>
-
-        {/* View own stories (separate tap target if user has stories) */}
-        {myStories.length > 0 && (
-          <button
-            onClick={() => openViewer(0)}
-            className="flex flex-col items-center gap-1.5 shrink-0 group -ml-2"
-            style={{ display: "none" }} // Hidden — we handle this differently
-          />
-        )}
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
 
         {/* Followed users' stories */}
         {storyGroups.map((group, i) => {
@@ -397,6 +315,14 @@ export default function StoriesBar({ userId, userProfile }: Props) {
           onStoryViewed={handleStoryViewed}
         />
       )}
+
+      {/* Camera Capture Modal */}
+      <CameraCaptureModal
+        isOpen={captureModalOpen}
+        onClose={() => setCaptureModalOpen(false)}
+        userId={userId}
+        onStoryCreated={handleStoryCreated}
+      />
     </>
   );
 }
