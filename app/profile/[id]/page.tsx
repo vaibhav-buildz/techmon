@@ -9,6 +9,7 @@ import EditPostModal from "@/components/EditPostModal";
 import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
+import StoryViewer, { Story } from "@/components/StoryViewer";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut } from "lucide-react";
 
 type Profile = {
@@ -50,6 +51,11 @@ export default function ProfilePage() {
   const [switchModalOpen, setSwitchModalOpen] = useState(false);
   const [followListModalOpen, setFollowListModalOpen] = useState(false);
   const [followListType, setFollowListType] = useState<"followers" | "following">("followers");
+  
+  // Stories state
+  const [profileStories, setProfileStories] = useState<Story[]>([]);
+  const [viewedStoryIds, setViewedStoryIds] = useState<Set<string>>(new Set());
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
 
   const fetchFollowCounts = useCallback(async () => {
     try {
@@ -80,6 +86,45 @@ export default function ProfilePage() {
       console.error("[ProfilePage] Error fetching follow counts:", err);
     }
   }, [id]);
+
+  const fetchProfileStories = useCallback(async (profileOwnerId: string, viewerId: string | null) => {
+    try {
+      const nowStr = new Date().toISOString();
+      const { data: storiesData, error: storiesError } = await supabase
+        .from("stories")
+        .select("*")
+        .eq("user_id", profileOwnerId)
+        .gt("expires_at", nowStr)
+        .order("created_at", { ascending: true });
+
+      if (storiesError) {
+        console.error("[ProfilePage] Error fetching stories:", storiesError);
+        return;
+      }
+
+      setProfileStories(storiesData || []);
+
+      if (storiesData && storiesData.length > 0 && viewerId) {
+        const storyIds = storiesData.map((s) => s.id);
+        const { data: viewsData, error: viewsError } = await supabase
+          .from("story_views")
+          .select("story_id")
+          .eq("viewer_id", viewerId)
+          .in("story_id", storyIds);
+
+        if (viewsError) {
+          console.error("[ProfilePage] Error fetching story views:", viewsError);
+        }
+
+        const viewedIds = new Set<string>(viewsData?.map((v) => v.story_id) || []);
+        setViewedStoryIds(viewedIds);
+      } else {
+        setViewedStoryIds(new Set());
+      }
+    } catch (err) {
+      console.error("[ProfilePage] Error in fetchProfileStories:", err);
+    }
+  }, []);
 
   const fetchProfileAndUser = useCallback(async () => {
     try {
@@ -222,8 +267,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile && !loading) {
       fetchPosts(profile.id, currentUserId, profile);
+      fetchProfileStories(profile.id, currentUserId);
     }
-  }, [profile, currentUserId, loading, fetchPosts]);
+  }, [profile, currentUserId, loading, fetchPosts, fetchProfileStories]);
 
   // Listen for custom events from Modals
   useEffect(() => {
@@ -427,15 +473,56 @@ export default function ProfilePage() {
               
               <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-6">
                 {/* Avatar */}
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.name}
-                    className="w-24 h-24 rounded-full object-cover border border-border"
-                  />
+                {profileStories.length > 0 ? (
+                  <button
+                    onClick={() => setStoryViewerOpen(true)}
+                    className="focus:outline-none cursor-pointer group rounded-full"
+                  >
+                    <div
+                      className={`w-24 h-24 rounded-full overflow-hidden border-2 flex items-center justify-center ${
+                        profileStories.some((s) => !viewedStoryIds.has(s.id))
+                          ? "border-transparent"
+                          : "border-gray-200"
+                      }`}
+                      style={
+                        profileStories.some((s) => !viewedStoryIds.has(s.id))
+                          ? {
+                              background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+                              padding: "3px",
+                            }
+                          : {
+                              padding: "2px",
+                            }
+                      }
+                    >
+                      <div className="w-full h-full rounded-full overflow-hidden bg-surface flex items-center justify-center">
+                        {profile.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.name}
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-background flex items-center justify-center text-3xl font-medium text-gray-400">
+                            {initials}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-background border border-border flex items-center justify-center text-3xl font-medium text-gray-400">
-                    {initials}
+                  <div className="w-24 h-24 rounded-full overflow-hidden border border-border">
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt={profile.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-background flex items-center justify-center text-3xl font-medium text-gray-400">
+                        {initials}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -622,6 +709,30 @@ export default function ProfilePage() {
         isOwner={isOwner}
         onCountChange={fetchFollowCounts}
       />
+
+      {storyViewerOpen && profileStories.length > 0 && (
+        <StoryViewer
+          groups={[{
+            userId: profile.id,
+            name: profile.name,
+            avatar_url: profile.avatar_url || "",
+            stories: profileStories
+          }]}
+          startGroupIndex={0}
+          viewerId={currentUserId || ""}
+          onClose={() => {
+            setStoryViewerOpen(false);
+            fetchProfileStories(profile.id, currentUserId);
+          }}
+          onStoryViewed={(storyId) => {
+            setViewedStoryIds((prev) => {
+              const next = new Set(prev);
+              next.add(storyId);
+              return next;
+            });
+          }}
+        />
+      )}
     </>
   );
 }
