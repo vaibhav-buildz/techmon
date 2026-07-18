@@ -14,11 +14,7 @@ import {
   Search, 
   Heart, 
   PlusSquare, 
-  CircleUserRound, 
-  Menu,
-  Settings,
-  Users,
-  LogOut
+  CircleUserRound
 } from "lucide-react";
 
 type UserProfile = {
@@ -38,7 +34,6 @@ export default function Sidebar({ user, profile }: Props) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -56,11 +51,6 @@ export default function Sidebar({ user, profile }: Props) {
     };
     fetchUnread();
   }, [user]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
 
   const navItems = [
     { label: "Home", icon: House, href: "/" },
@@ -123,55 +113,6 @@ export default function Sidebar({ user, profile }: Props) {
               </button>
             );
           })}
-        </div>
-
-        <div className="p-3 relative">
-          <button 
-            onClick={() => setShowMoreMenu(!showMoreMenu)}
-            className="flex w-full items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors text-body group font-medium"
-          >
-            <div className="shrink-0 transition-transform group-hover:scale-105">
-              <Menu className="w-6 h-6 stroke-2" />
-            </div>
-            <span className="text-base">More</span>
-          </button>
-
-          {showMoreMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
-              <div className="absolute bottom-16 left-3 w-64 bg-surface border border-border shadow-xl rounded-xl z-50 overflow-hidden py-2">
-                <Link
-                  href="/settings"
-                  onClick={() => setShowMoreMenu(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                >
-                  <Settings className="w-4 h-4 text-gray-400" />
-                  Settings
-                </Link>
-                <button
-                  onClick={() => {
-                    alert("Multiple accounts coming soon!");
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                >
-                  <Users className="w-4 h-4 text-gray-400" />
-                  Switch Accounts
-                </button>
-                <div className="h-px bg-border my-1" />
-                <button
-                  onClick={() => {
-                    setShowMoreMenu(false);
-                    handleLogout();
-                  }}
-                  className="w-full text-left flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
-                >
-                  <LogOut className="w-4 h-4 text-red-500" />
-                  Logout
-                </button>
-              </div>
-            </>
-          )}
         </div>
       </nav>
 

@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import PostDetailModal, { Post } from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import PostGrid from "@/components/PostGrid";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -24,6 +24,7 @@ type Profile = {
 
 export default function ProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -42,6 +43,8 @@ export default function ProfilePage() {
   const [followError, setFollowError] = useState<string | null>(null);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [postsCount, setPostsCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const fetchFollowCounts = useCallback(async () => {
     try {
@@ -143,6 +146,7 @@ export default function ProfilePage() {
       
       if (!postsData || postsData.length === 0) {
         setPosts([]);
+        setPostsCount(0);
         return;
       }
 
@@ -195,8 +199,11 @@ export default function ProfilePage() {
       });
 
       setPosts(mergedPosts as Post[]);
+      setPostsCount(mergedPosts.length);
     } catch (err: any) {
       console.error("[ProfilePage] Posts fetch failed:", err.message);
+      setPosts([]);
+      setPostsCount(0);
     } finally {
       setPostsLoading(false);
     }
@@ -209,16 +216,16 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile && !loading) {
-      fetchPosts(id, currentUserId, profile);
+      fetchPosts(profile.id, currentUserId, profile);
     }
-  }, [profile, currentUserId, loading, id, fetchPosts]);
+  }, [profile, currentUserId, loading, fetchPosts]);
 
   // Listen for custom events from Modals
   useEffect(() => {
     if (!profile) return;
 
     const handleRefresh = () => {
-      fetchPosts(id, currentUserId, profile);
+      fetchPosts(profile.id, currentUserId, profile);
     };
 
     window.addEventListener('postCreated', handleRefresh);
@@ -230,7 +237,7 @@ export default function ProfilePage() {
       window.removeEventListener('postDeleted', handleRefresh);
       window.removeEventListener('postUpdated', handleRefresh);
     };
-  }, [profile, id, currentUserId, fetchPosts]);
+  }, [profile, currentUserId, fetchPosts]);
 
   const handleFollowToggle = async () => {
     if (!currentUserId || isOwner) return;
@@ -274,6 +281,15 @@ export default function ProfilePage() {
       setTimeout(() => setFollowError(null), 3000);
     } finally {
       setFollowLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push("/login");
+    } catch (err) {
+      console.error("[ProfilePage] Logout failed:", err);
     }
   };
 
@@ -347,6 +363,63 @@ export default function ProfilePage() {
             {/* Left Column (Sticky Sidebar) */}
             <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8 h-fit lg:sticky lg:top-24 relative">
               
+              {isOwner && (
+                <div className="absolute top-4 right-4 z-30">
+                  <button
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className="p-1.5 text-body hover:text-heading hover:bg-gray-100 rounded-lg transition-all"
+                    aria-label="Menu"
+                  >
+                    <Menu className="w-6 h-6" />
+                  </button>
+
+                  {menuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                      <div className="absolute right-0 mt-2 w-52 bg-surface border border-border shadow-xl rounded-xl z-50 overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                        <Link
+                          href="/profile/edit"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                        >
+                          <Edit2 className="w-4 h-4 text-gray-400" />
+                          Edit Profile
+                        </Link>
+                        <Link
+                          href="/settings"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                        >
+                          <Settings className="w-4 h-4 text-gray-400" />
+                          Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setMenuOpen(false);
+                            alert("Multiple accounts coming soon");
+                          }}
+                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                        >
+                          <Users className="w-4 h-4 text-gray-400" />
+                          Switch Account
+                        </button>
+                        <div className="h-px bg-border my-1" />
+                        <button
+                          onClick={() => {
+                            setMenuOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                        >
+                          <LogOut className="w-4 h-4 text-red-500" />
+                          Logout
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              
               <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-6">
                 {/* Avatar */}
                 {profile.avatar_url ? (
@@ -375,8 +448,13 @@ export default function ProfilePage() {
                     </p>
                   )}
 
-                  {/* Follower / Following Counts */}
-                  <div className="flex items-center gap-4 mt-3">
+                  {/* Counts: Posts · Followers · Following */}
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    <div className="text-sm">
+                      <span className="font-semibold text-heading">{postsCount}</span>
+                      <span className="text-body ml-1">{postsCount === 1 ? "Post" : "Posts"}</span>
+                    </div>
+                    <span className="text-border">·</span>
                     <div className="text-sm">
                       <span className="font-semibold text-heading">{followersCount}</span>
                       <span className="text-body ml-1">{followersCount === 1 ? "Follower" : "Followers"}</span>
