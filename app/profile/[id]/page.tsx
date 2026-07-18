@@ -10,7 +10,7 @@ import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -596,22 +596,31 @@ export default function ProfilePage() {
                           {followError}
                         </div>
                       )}
-                      <button
-                        onClick={handleFollowToggle}
-                        disabled={followLoading}
-                        className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors group disabled:opacity-50 ${
-                          isFollowing 
-                            ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
-                            : "bg-accent text-white border border-transparent hover:bg-accent/90"
-                        }`}
-                      >
-                        {followLoading ? "Loading..." : isFollowing ? (
-                          <>
-                            <span className="block group-hover:hidden">Following</span>
-                            <span className="hidden group-hover:block">Unfollow</span>
-                          </>
-                        ) : "Follow"}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleFollowToggle}
+                          disabled={followLoading}
+                          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors group disabled:opacity-50 ${
+                            isFollowing 
+                              ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
+                              : "bg-accent text-white border border-transparent hover:bg-accent/90"
+                          }`}
+                        >
+                          {followLoading ? "Loading..." : isFollowing ? (
+                            <>
+                              <span className="block group-hover:hidden">Following</span>
+                              <span className="hidden group-hover:block">Unfollow</span>
+                            </>
+                          ) : "Follow"}
+                        </button>
+                        <button
+                          onClick={() => alert("Messaging coming soon")}
+                          className="flex items-center justify-center gap-2 px-4 py-2 bg-surface border border-border text-heading hover:bg-gray-50 transition-colors text-sm font-medium rounded-lg flex-1"
+                        >
+                          <MessageCircle className="w-4.5 h-4.5 text-gray-500" />
+                          <span>Message</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
