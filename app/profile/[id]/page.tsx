@@ -40,6 +40,38 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
+  const fetchFollowCounts = useCallback(async () => {
+    try {
+      // Followers: users who follow this profile
+      const { count: followers, error: followersError } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", id);
+
+      if (followersError) {
+        console.error("[ProfilePage] Error fetching followers count:", followersError);
+      } else {
+        setFollowersCount(followers ?? 0);
+      }
+
+      // Following: users this profile follows
+      const { count: following, error: followingError } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", id);
+
+      if (followingError) {
+        console.error("[ProfilePage] Error fetching following count:", followingError);
+      } else {
+        setFollowingCount(following ?? 0);
+      }
+    } catch (err: any) {
+      console.error("[ProfilePage] Error fetching follow counts:", err);
+    }
+  }, [id]);
 
   const fetchProfileAndUser = useCallback(async () => {
     try {
@@ -79,25 +111,35 @@ export default function ProfilePage() {
           }
         }
       }
+
+      // Fetch follower/following counts
+      await fetchFollowCounts();
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, fetchFollowCounts]);
 
   const fetchPosts = useCallback(async (userId: string, currentViewerId: string | null, authorProfile: Profile | null) => {
     if (!authorProfile) return;
     try {
       setPostsLoading(true);
-      
+
+      console.log("[ProfilePage] Fetching posts for user_id:", userId);
+
       const { data: postsData, error: postsError } = await supabase
         .from("posts")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (postsError) throw postsError;
+      if (postsError) {
+        console.error("[ProfilePage] Posts query error:", postsError);
+        throw postsError;
+      }
+
+      console.log("[ProfilePage] Posts fetched:", postsData?.length ?? 0, "for user_id:", userId);
       
       if (!postsData || postsData.length === 0) {
         setPosts([]);
@@ -154,7 +196,7 @@ export default function ProfilePage() {
 
       setPosts(mergedPosts as Post[]);
     } catch (err: any) {
-      console.error("Posts fetch failed:", err.message);
+      console.error("[ProfilePage] Posts fetch failed:", err.message);
     } finally {
       setPostsLoading(false);
     }
@@ -223,6 +265,9 @@ export default function ProfilePage() {
         
         setIsFollowing(true);
       }
+
+      // Update follower count after follow/unfollow
+      await fetchFollowCounts();
     } catch (err: any) {
       console.error("Error toggling follow:", err.message);
       setFollowError("Failed to update follow status.");
@@ -329,6 +374,19 @@ export default function ProfilePage() {
                       {profile.organization}
                     </p>
                   )}
+
+                  {/* Follower / Following Counts */}
+                  <div className="flex items-center gap-4 mt-3">
+                    <div className="text-sm">
+                      <span className="font-semibold text-heading">{followersCount}</span>
+                      <span className="text-body ml-1">{followersCount === 1 ? "Follower" : "Followers"}</span>
+                    </div>
+                    <span className="text-border">·</span>
+                    <div className="text-sm">
+                      <span className="font-semibold text-heading">{followingCount}</span>
+                      <span className="text-body ml-1">Following</span>
+                    </div>
+                  </div>
                   
                   {currentUserId && !isOwner && (
                     <div className="mt-4">
