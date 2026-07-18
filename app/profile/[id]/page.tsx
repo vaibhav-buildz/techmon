@@ -8,6 +8,7 @@ import PostDetailModal, { Post } from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
+import FollowListModal from "@/components/FollowListModal";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut } from "lucide-react";
 
 type Profile = {
@@ -47,6 +48,8 @@ export default function ProfilePage() {
   const [postsCount, setPostsCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [switchModalOpen, setSwitchModalOpen] = useState(false);
+  const [followListModalOpen, setFollowListModalOpen] = useState(false);
+  const [followListType, setFollowListType] = useState<"followers" | "following">("followers");
 
   const fetchFollowCounts = useCallback(async () => {
     try {
@@ -451,21 +454,33 @@ export default function ProfilePage() {
                   )}
 
                   {/* Counts: Posts · Followers · Following */}
-                  <div className="flex items-center gap-4 mt-3 flex-wrap">
-                    <div className="text-sm">
+                  <div className="flex items-center gap-4 mt-3 flex-wrap text-sm">
+                    <div>
                       <span className="font-semibold text-heading">{postsCount}</span>
                       <span className="text-body ml-1">{postsCount === 1 ? "Post" : "Posts"}</span>
                     </div>
                     <span className="text-border">·</span>
-                    <div className="text-sm">
+                    <button
+                      onClick={() => {
+                        setFollowListType("followers");
+                        setFollowListModalOpen(true);
+                      }}
+                      className="hover:text-accent hover:underline transition-colors flex items-center cursor-pointer"
+                    >
                       <span className="font-semibold text-heading">{followersCount}</span>
                       <span className="text-body ml-1">{followersCount === 1 ? "Follower" : "Followers"}</span>
-                    </div>
+                    </button>
                     <span className="text-border">·</span>
-                    <div className="text-sm">
+                    <button
+                      onClick={() => {
+                        setFollowListType("following");
+                        setFollowListModalOpen(true);
+                      }}
+                      className="hover:text-accent hover:underline transition-colors flex items-center cursor-pointer"
+                    >
                       <span className="font-semibold text-heading">{followingCount}</span>
                       <span className="text-body ml-1">Following</span>
-                    </div>
+                    </button>
                   </div>
                   
                   {currentUserId && !isOwner && (
@@ -596,6 +611,16 @@ export default function ProfilePage() {
         isOpen={switchModalOpen}
         onClose={() => setSwitchModalOpen(false)}
         currentUserId={currentUserId}
+      />
+
+      <FollowListModal
+        isOpen={followListModalOpen}
+        onClose={() => setFollowListModalOpen(false)}
+        type={followListType}
+        profileId={profile.id}
+        currentUserId={currentUserId}
+        isOwner={isOwner}
+        onCountChange={fetchFollowCounts}
       />
     </>
   );
