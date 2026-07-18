@@ -5,10 +5,12 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PostGrid from "@/components/PostGrid";
 import { Post } from "@/components/PostDetailModal";
+import StoriesBar from "@/components/StoriesBar";
 import { Users } from "lucide-react";
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ name: string; avatar_url?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Following Feed State
@@ -128,6 +130,15 @@ export default function Home() {
       
       if (uid) {
         fetchFollowingPosts(uid);
+        // Fetch user profile for stories bar
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("name, avatar_url")
+          .eq("id", uid)
+          .single();
+        if (profileData) {
+          setUserProfile(profileData);
+        }
       } else {
         setPostsLoading(false);
       }
@@ -168,6 +179,15 @@ export default function Home() {
     return (
       <div className="min-h-screen py-12 bg-background text-body">
         <div className="max-w-4xl mx-auto px-4 w-full">
+          {/* Stories skeleton */}
+          <div className="flex gap-4 overflow-hidden py-2 mb-6">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-2 shrink-0">
+                <div className="w-16 h-16 rounded-full bg-gray-200 animate-pulse" />
+                <div className="w-12 h-3 rounded bg-gray-200 animate-pulse" />
+              </div>
+            ))}
+          </div>
           <div className="mb-8 space-y-3">
             <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
             <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
@@ -187,6 +207,11 @@ export default function Home() {
     return (
       <div className="min-h-screen py-12 bg-background text-body">
         <div className="max-w-4xl mx-auto px-4 w-full">
+          {/* Stories Bar */}
+          {userProfile && (
+            <StoriesBar userId={userId} userProfile={userProfile} />
+          )}
+
           <div className="mb-8">
             <h1 className="text-3xl font-heading font-bold text-heading">Following</h1>
             <p className="text-body mt-2">Posts from people you follow.</p>

@@ -17,3 +17,12 @@ body {
   background-color: var(--color-background);
   color: var(--color-body);
 }
+
+/* Hide scrollbar for stories bar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
