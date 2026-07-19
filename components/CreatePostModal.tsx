@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { StickyNote, Image as ImageIcon, X, Upload, Check } from "lucide-react";
+import { processHashtags } from "@/lib/hashtagHelpers";
 
 type Props = {
   isOpen: boolean;
@@ -77,7 +78,7 @@ export default function CreatePostModal({ isOpen, onClose, userId }: Props) {
         mediaType = file.type.startsWith("video/") ? "video" : "image";
       }
 
-      const { error: insertError } = await supabase
+      const { data: insertedPost, error: insertError } = await supabase
         .from("posts")
         .insert({
           user_id: userId,
@@ -85,9 +86,14 @@ export default function CreatePostModal({ isOpen, onClose, userId }: Props) {
           content: content,
           ...(postType === "note" && { background: background.class }),
           ...(postType === "media" && { media_url: mediaUrl, media_type: mediaType })
-        });
+        })
+        .select("id")
+        .single();
 
       if (insertError) throw insertError;
+      if (insertedPost) {
+        await processHashtags(insertedPost.id, content);
+      }
 
       // Reset form
       setContent("");

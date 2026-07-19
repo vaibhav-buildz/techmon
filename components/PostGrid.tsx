@@ -6,6 +6,7 @@ import { Post } from "@/lib/types";
 import Link from "next/link";
 import PostDetailModal from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
+import HashtagText from "@/components/HashtagText";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle, AlertCircle, Camera, Share2, Repeat2, Archive, ArchiveRestore } from "lucide-react";
 
 type Props = {
@@ -285,7 +286,7 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
                           </div>
                         )}
                         <p className={`text-sm line-clamp-4 leading-relaxed font-medium ${targetPost!.background === 'bg-white' || targetPost!.background?.includes('bg-white') ? 'text-gray-800' : 'text-white'}`}>
-                          {targetPost!.content}
+                          <HashtagText text={targetPost!.content} />
                         </p>
                       </div>
                     ) : (
@@ -296,7 +297,7 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
                           </div>
                         )}
                         <p className="text-xs text-body line-clamp-4 leading-relaxed font-medium">
-                          {targetPost!.content}
+                          <HashtagText text={targetPost!.content} />
                         </p>
                       </div>
                     )}

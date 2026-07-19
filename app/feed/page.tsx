@@ -6,6 +6,7 @@ import PostGrid from "@/components/PostGrid";
 import { Post } from "@/lib/types";
 import ThreeColumnLayout from "@/components/ThreeColumnLayout";
 import SuggestedUsers from "@/components/SuggestedUsers";
+import TrendingHashtags from "@/components/TrendingHashtags";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -202,7 +203,12 @@ export default function FeedPage() {
 
   return (
     <ThreeColumnLayout
-      rightColumn={<SuggestedUsers currentUserId={currentUserId} />}
+      rightColumn={
+        <>
+          <SuggestedUsers currentUserId={currentUserId} />
+          <TrendingHashtags />
+        </>
+      }
     >
       <div className="flex flex-col gap-6 pb-20 md:pb-0">
         <div>

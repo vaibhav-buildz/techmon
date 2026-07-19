@@ -17,7 +17,7 @@ export default function PostDetailModal({ isOpen, onClose, post, handleLike, cur
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div 
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col relative"
+        className="w-full max-w-2xl max-h-[90vh] flex flex-col min-h-0 relative rounded-2xl overflow-hidden shadow-2xl bg-surface"
         onClick={(e) => e.stopPropagation()}
       >
         <PostDetailView

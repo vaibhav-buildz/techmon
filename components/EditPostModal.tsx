@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { X, Check } from "lucide-react";
 import { Post } from "@/lib/types";
+import { processHashtags } from "@/lib/hashtagHelpers";
 
 type Props = {
   isOpen: boolean;
@@ -69,6 +70,7 @@ export default function EditPostModal({ isOpen, onClose, post }: Props) {
         .eq("id", post.id);
 
       if (updateError) throw updateError;
+      await processHashtags(post.id, content);
 
       setSuccess(true);
       

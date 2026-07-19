@@ -28,6 +28,10 @@ export type CommentResult = {
   content: string;
   created_at: string;
   user_id: string;
+  parent_comment_id?: string | null;
+  likeCount?: number;
+  isLikedByMe?: boolean;
+  replies?: CommentResult[];
   profiles: {
     name: string;
     avatar_url: string;

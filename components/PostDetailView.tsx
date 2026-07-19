@@ -8,6 +8,9 @@ import EditPostModal from "./EditPostModal";
 import SharePostModal from "./SharePostModal";
 import LikesModal from "./LikesModal";
 import { Post, CommentResult } from "@/lib/types";
+import CommentsSection from "@/components/CommentsSection";
+import HashtagText from "@/components/HashtagText";
+import CommentItem from "@/components/CommentItem";
 
 type Props = {
   post: Post;
@@ -68,6 +71,14 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
         return;
       }
 
+      const commentIds = commentsData.map(c => c.id);
+      const { data: likesData, error: likesError } = await supabase
+        .from("comment_likes")
+        .select("comment_id, user_id")
+        .in("comment_id", commentIds);
+      
+      if (likesError) throw likesError;
+
       const userIds = [...new Set(commentsData.map((c) => c.user_id))];
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
@@ -77,12 +88,37 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
       if (profilesError) throw profilesError;
       const profileMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
 
-      const mergedComments = commentsData.map((c) => ({
-        ...c,
-        profiles: profileMap.get(c.user_id) || { name: "Unknown", avatar_url: "" },
-      }));
+      const processedComments = commentsData.map((c) => {
+        const commentLikes = likesData?.filter(l => l.comment_id === c.id) || [];
+        return {
+          ...c,
+          profiles: profileMap.get(c.user_id) || { name: "Unknown", avatar_url: "" },
+          likeCount: commentLikes.length,
+          isLikedByMe: currentUserId ? commentLikes.some(l => l.user_id === currentUserId) : false,
+          replies: []
+        };
+      });
+      
+      // Threading logic
+      const topLevelComments: CommentResult[] = [];
+      const replyMap = new Map<string, CommentResult[]>();
 
-      setComments(mergedComments);
+      processedComments.forEach(c => {
+        if (c.parent_comment_id) {
+          if (!replyMap.has(c.parent_comment_id)) {
+            replyMap.set(c.parent_comment_id, []);
+          }
+          replyMap.get(c.parent_comment_id)!.push(c);
+        } else {
+          topLevelComments.push(c);
+        }
+      });
+
+      topLevelComments.forEach(c => {
+        c.replies = replyMap.get(c.id) || [];
+      });
+
+      setComments(topLevelComments);
     } catch (err) {
       console.error("Error fetching comments:", err);
     } finally {
@@ -134,6 +170,83 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSubmittingComment(false);
+    }
+  };
+
+  const handleCommentLike = async (commentId: string, currentlyLiked: boolean) => {
+    if (!currentUserId) return;
+    try {
+      if (currentlyLiked) {
+        await supabase
+          .from("comment_likes")
+          .delete()
+          .match({ comment_id: commentId, user_id: currentUserId });
+      } else {
+        await supabase
+          .from("comment_likes")
+          .insert({ comment_id: commentId, user_id: currentUserId });
+      }
+      await fetchComments();
+    } catch (err) {
+      console.error("Error toggling comment like:", err);
+    }
+  };
+
+  const handleReplySubmit = async (parentId: string, content: string) => {
+    if (!currentUserId || !post) return;
+    try {
+      const { error: insertError } = await supabase
+        .from("comments")
+        .insert({
+          post_id: post.id,
+          user_id: currentUserId,
+          content: content.trim(),
+          parent_comment_id: parentId
+        });
+      
+      if (insertError) throw insertError;
+
+      // Fetch the parent comment to find the author to notify
+      const { data: parentComment } = await supabase
+        .from("comments")
+        .select("user_id")
+        .eq("id", parentId)
+        .single();
+
+      if (parentComment && parentComment.user_id !== currentUserId) {
+        await supabase
+          .from("notifications")
+          .insert({
+            recipient_id: parentComment.user_id,
+            actor_id: currentUserId,
+            type: "comment",
+            post_id: post.id
+          });
+      }
+
+      await fetchComments();
+      window.dispatchEvent(new Event('postUpdated'));
+    } catch (err) {
+      console.error("Error submitting reply:", err);
+      throw err;
+    }
+  };
+
+  const handleCommentDelete = async (commentId: string) => {
+    if (!currentUserId || !post) return;
+    try {
+      const { error } = await supabase
+        .from("comments")
+        .delete()
+        .eq("id", commentId);
+      
+      if (error) throw error;
+      
+      await fetchComments();
+      window.dispatchEvent(new Event('postUpdated'));
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      alert("Failed to delete comment");
     }
   };
 
@@ -295,7 +408,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
   const originalPost = isRepost ? post.original_post : post;
 
   return (
-    <div className={`bg-surface flex flex-col w-full h-full relative ${!isModal ? 'border border-border rounded-2xl shadow-sm' : ''}`}>
+    <div className={`bg-surface flex flex-col min-h-0 w-full h-full relative ${!isModal ? 'border border-border rounded-2xl shadow-sm' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
         <div className="flex items-center gap-3">
@@ -432,11 +545,13 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
       )}
 
       {/* Scrollable Content */}
-      <div className="overflow-y-auto flex-1 bg-surface">
+      <div className="overflow-y-auto flex-1 min-h-0 bg-surface">
         {/* Repost Caption */}
         {isRepost && post.content && (
           <div className="p-6 pb-2">
-            <p className="text-body whitespace-pre-wrap leading-relaxed text-lg">{post.content}</p>
+            <p className="text-body whitespace-pre-wrap leading-relaxed text-lg">
+              <HashtagText text={post.content} />
+            </p>
           </div>
         )}
 
@@ -483,14 +598,14 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
               {originalPost?.type === "note" && (
                 <div className={`w-full aspect-square sm:aspect-video rounded-xl flex items-center justify-center p-6 sm:p-12 text-center transition-all duration-300 ${originalPost.background || 'bg-white border border-border'}`}>
                   <p className={`text-xl sm:text-2xl md:text-3xl font-medium whitespace-pre-wrap leading-relaxed ${originalPost.background === 'bg-white' || originalPost.background?.includes('bg-white') ? 'text-gray-800' : 'text-white'}`}>
-                    {originalPost.content}
+                    <HashtagText text={originalPost.content} />
                   </p>
                 </div>
               )}
 
               {originalPost?.type === "text" && (
                 <p className="text-body whitespace-pre-wrap leading-relaxed text-lg">
-                  {originalPost.content}
+                  <HashtagText text={originalPost.content} />
                 </p>
               )}
               
@@ -511,7 +626,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
 
               {originalPost?.type === "media" && originalPost.content && (
                 <p className="text-body whitespace-pre-wrap leading-relaxed mt-4">
-                  {originalPost.content}
+                  <HashtagText text={originalPost.content} />
                 </p>
               )}
             </div>
@@ -593,24 +708,17 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
           ) : comments.length === 0 ? (
             <p className="text-sm text-gray-500">No comments yet. Be the first!</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3">
-                  {comment.profiles.avatar_url ? (
-                      <img src={comment.profiles.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0 border border-border" />
-                  ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-500 shrink-0 border border-border">
-                        {comment.profiles.name.charAt(0).toUpperCase()}
-                      </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-semibold text-sm text-heading">{comment.profiles.name}</span>
-                      <span className="text-xs text-gray-400">{getRelativeTime(comment.created_at)}</span>
-                    </div>
-                    <p className="text-sm text-body mt-0.5 whitespace-pre-wrap">{comment.content}</p>
-                  </div>
-                </div>
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  currentUserId={currentUserId || null}
+                  postOwnerId={post.user_id}
+                  onLike={handleCommentLike}
+                  onReplySubmit={handleReplySubmit}
+                  onDelete={handleCommentDelete}
+                />
               ))}
             </div>
           )}
