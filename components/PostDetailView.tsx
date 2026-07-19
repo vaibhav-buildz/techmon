@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle, Share2, Repeat2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import FollowListModal from "./FollowListModal";
+import SaveButton from "./SaveButton";
 import EditPostModal from "./EditPostModal";
 import SharePostModal from "./SharePostModal";
 import { Post, CommentResult } from "@/lib/types";
@@ -469,6 +471,16 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
             >
               <Send className="w-5 h-5" />
             </button>
+
+            {currentUserId && (
+              <SaveButton
+                postId={post.id}
+                currentUserId={currentUserId}
+                initialSavedCollectionIds={post.savedCollectionIds}
+                iconClassName="w-6 h-6"
+                className="text-gray-400"
+              />
+            )}
           </div>
 
           <span className="text-sm text-gray-400">

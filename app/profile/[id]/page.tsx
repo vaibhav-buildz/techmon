@@ -40,7 +40,13 @@ export default function ProfilePage() {
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"posts" | "reposts">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "reposts" | "saved">("posts");
+  
+  // Collections & Saved Posts state
+  const [collections, setCollections] = useState<any[]>([]);
+  const [activeCollectionId, setActiveCollectionId] = useState<string>("all");
+  const [savedPosts, setSavedPosts] = useState<Post[]>([]);
+  const [savedPostsLoading, setSavedPostsLoading] = useState(false);
   
   // Follow state
   const [isFollowing, setIsFollowing] = useState(false);
@@ -177,18 +183,18 @@ export default function ProfilePage() {
     }
   }, [id, fetchFollowCounts]);
 
-  const fetchPosts = useCallback(async (userId: string, currentViewerId: string | null, authorProfile: Profile | null) => {
-    if (!authorProfile) return;
+  const fetchPostsData = useCallback(async (userId: string, currentViewerId: string | null, authorProfile: Profile | null, specificPostIds?: string[]) => {
+    if (!authorProfile) return [];
     try {
-      setPostsLoading(true);
-
-      console.log("[ProfilePage] Fetching posts for user_id:", userId);
-
-      const { data: postsData, error: postsError } = await supabase
-        .from("posts")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+      let postsQuery = supabase.from("posts").select("*").order("created_at", { ascending: false });
+      if (specificPostIds) {
+        if (specificPostIds.length === 0) return [];
+        postsQuery = postsQuery.in("id", specificPostIds);
+      } else {
+        postsQuery = postsQuery.eq("user_id", userId);
+      }
+      
+      const { data: postsData, error: postsError } = await postsQuery;
 
       if (postsError) {
         console.error("[ProfilePage] Posts query error:", postsError);
@@ -198,9 +204,7 @@ export default function ProfilePage() {
       console.log("[ProfilePage] Posts fetched:", postsData?.length ?? 0, "for user_id:", userId);
       
       if (!postsData || postsData.length === 0) {
-        setPosts([]);
-        setPostsCount(0);
-        return;
+        return [];
       }
 
       const postIds = postsData.map((post) => post.id);
@@ -269,6 +273,22 @@ export default function ProfilePage() {
         }
       }
 
+      // Fetch saved posts for these posts
+      let savedPostsData: any[] = [];
+      if (postIds.length > 0 && currentViewerId) {
+        const { data: fetchSavedData, error: savedError } = await supabase
+          .from("saved_posts")
+          .select("post_id, collection_id")
+          .eq("user_id", currentViewerId)
+          .in("post_id", postIds);
+          
+        if (savedError) {
+          console.error("Error fetching saved posts:", savedError);
+        } else {
+          savedPostsData = fetchSavedData || [];
+        }
+      }
+
       const sharedPostMap = new Map(sharedPostsData.map(p => [p.id, p]));
 
       const mergedPosts = postsData.map((post) => {
@@ -293,6 +313,7 @@ export default function ProfilePage() {
           commentCount: postComments.length,
           isLikedByMe,
           isRepostedByMe,
+          savedCollectionIds: savedPostsData.filter(s => s.post_id === post.id).map(s => s.collection_id),
         };
 
         if (post.type === "repost" && post.shared_post_id) {
@@ -316,16 +337,20 @@ export default function ProfilePage() {
         return merged;
       });
 
-      setPosts(mergedPosts as Post[]);
-      setPostsCount(mergedPosts.filter(p => p.type !== "repost").length);
+      return mergedPosts as Post[];
     } catch (err: any) {
       console.error("[ProfilePage] Posts fetch failed:", err.message);
-      setPosts([]);
-      setPostsCount(0);
-    } finally {
-      setPostsLoading(false);
+      return [];
     }
   }, []);
+
+  const loadProfilePosts = useCallback(async (userId: string, currentViewerId: string | null, authorProfile: Profile | null) => {
+    setPostsLoading(true);
+    const data = await fetchPostsData(userId, currentViewerId, authorProfile);
+    setPosts(data);
+    setPostsCount(data.filter(p => p.type !== "repost").length);
+    setPostsLoading(false);
+  }, [fetchPostsData]);
 
   useEffect(() => {
     if (!id) return;
@@ -334,17 +359,17 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile && !loading) {
-      fetchPosts(profile.id, currentUserId, profile);
+      loadProfilePosts(profile.id, currentUserId, profile);
       fetchProfileStories(profile.id, currentUserId);
     }
-  }, [profile, currentUserId, loading, fetchPosts, fetchProfileStories]);
+  }, [profile, currentUserId, loading, loadProfilePosts, fetchProfileStories]);
 
   // Listen for custom events from Modals
   useEffect(() => {
     if (!profile) return;
 
     const handleRefresh = () => {
-      fetchPosts(profile.id, currentUserId, profile);
+      loadProfilePosts(profile.id, currentUserId, profile);
     };
 
     window.addEventListener('postCreated', handleRefresh);
@@ -356,7 +381,7 @@ export default function ProfilePage() {
       window.removeEventListener('postDeleted', handleRefresh);
       window.removeEventListener('postUpdated', handleRefresh);
     };
-  }, [profile, currentUserId, fetchPosts]);
+  }, [profile, currentUserId, loadProfilePosts]);
 
   // Escape key listener for avatar viewer
   useEffect(() => {
@@ -369,6 +394,63 @@ export default function ProfilePage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [avatarViewerOpen]);
+
+  // Fetch Collections
+  const fetchCollections = useCallback(async () => {
+    if (!isOwner || !currentUserId) return;
+    const { data, error } = await supabase
+      .from("collections")
+      .select("id, name")
+      .eq("user_id", currentUserId)
+      .order("created_at", { ascending: true });
+    
+    if (!error && data) {
+      setCollections(data);
+    }
+  }, [isOwner, currentUserId]);
+
+  useEffect(() => {
+    fetchCollections();
+  }, [fetchCollections]);
+
+  // Fetch Saved Posts
+  useEffect(() => {
+    if (activeTab === "saved" && isOwner && currentUserId) {
+      const loadSavedPosts = async () => {
+        setSavedPostsLoading(true);
+        let query = supabase.from("saved_posts").select("post_id").eq("user_id", currentUserId).order("created_at", { ascending: false });
+        
+        if (activeCollectionId !== "all") {
+          query = query.eq("collection_id", activeCollectionId);
+        }
+        
+        const { data: savedData, error: savedError } = await query;
+        if (savedError || !savedData || savedData.length === 0) {
+          setSavedPosts([]);
+          setSavedPostsLoading(false);
+          return;
+        }
+        
+        const postIds = savedData.map(s => s.post_id);
+        const data = await fetchPostsData(currentUserId, currentUserId, profile, postIds);
+        setSavedPosts(data);
+        setSavedPostsLoading(false);
+      };
+      
+      loadSavedPosts();
+    }
+  }, [activeTab, activeCollectionId, isOwner, currentUserId, fetchPostsData, profile]);
+
+  const handleDeleteCollection = async (collectionId: string) => {
+    if (!confirm("Are you sure you want to delete this collection?")) return;
+    const { error } = await supabase.from("collections").delete().eq("id", collectionId);
+    if (!error) {
+      if (activeCollectionId === collectionId) setActiveCollectionId("all");
+      fetchCollections();
+    } else {
+      alert("Failed to delete collection.");
+    }
+  };
 
   const handleFollowToggle = async () => {
     if (!currentUserId || isOwner) return;
@@ -799,28 +881,96 @@ export default function ProfilePage() {
                   >
                     Reposts
                   </button>
+                  {isOwner && (
+                    <button
+                      onClick={() => setActiveTab("saved")}
+                      className={`font-heading font-semibold text-lg transition-colors border-b-2 pb-1 ${
+                        activeTab === "saved"
+                          ? "text-accent border-accent"
+                          : "text-gray-400 border-transparent hover:text-gray-600"
+                      }`}
+                    >
+                      Saved
+                    </button>
+                  )}
                 </div>
                 
-                {postsLoading ? (
-                  <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
-                ) : (
+                {activeTab === "saved" && isOwner && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                      <button
+                        onClick={() => setActiveCollectionId("all")}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                          activeCollectionId === "all"
+                            ? "bg-accent text-white"
+                            : "bg-surface border border-border text-heading hover:bg-gray-50"
+                        }`}
+                      >
+                        All Posts
+                      </button>
+                      {collections.filter(c => c.name !== "All Posts").map(collection => (
+                        <div key={collection.id} className="relative group flex items-center">
+                          <button
+                            onClick={() => setActiveCollectionId(collection.id)}
+                            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                              activeCollectionId === collection.id
+                                ? "bg-accent text-white"
+                                : "bg-surface border border-border text-heading hover:bg-gray-50"
+                            }`}
+                          >
+                            {collection.name}
+                          </button>
+                          {activeCollectionId === collection.id && (
+                            <button
+                              onClick={() => handleDeleteCollection(collection.id)}
+                              className="absolute -top-1 -right-1 bg-white border border-border rounded-full p-0.5 text-gray-500 hover:text-red-500 shadow-sm"
+                              title="Delete collection"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {activeTab !== "saved" && (
+                  postsLoading ? (
+                    <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
+                  ) : (
+                    <>
+                      {activeTab === "posts" && posts.filter(p => p.type !== "repost").length === 0 && (
+                        <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
+                          No posts yet
+                        </div>
+                      )}
+                      {activeTab === "reposts" && posts.filter(p => p.type === "repost").length === 0 && (
+                        <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
+                          No reposts yet
+                        </div>
+                      )}
+                      {(activeTab === "posts" ? posts.filter(p => p.type !== "repost").length > 0 : posts.filter(p => p.type === "repost").length > 0) && (
+                        <PostGrid 
+                          posts={posts.filter(p => activeTab === "posts" ? p.type !== "repost" : p.type === "repost")} 
+                          loading={false} 
+                          currentUserId={currentUserId} 
+                        />
+                      )}
+                    </>
+                  )
+                )}
+
+                {activeTab === "saved" && isOwner && (
                   <>
-                    {activeTab === "posts" && posts.filter(p => p.type !== "repost").length === 0 && (
+                    {savedPostsLoading ? (
+                      <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
+                    ) : savedPosts.length === 0 ? (
                       <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
-                        No posts yet
+                        No saved posts yet
                       </div>
-                    )}
-                    {activeTab === "reposts" && posts.filter(p => p.type === "repost").length === 0 && (
-                      <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
-                        No reposts yet
-                      </div>
-                    )}
-                    {(activeTab === "posts" ? posts.filter(p => p.type !== "repost").length > 0 : posts.filter(p => p.type === "repost").length > 0) && (
-                      <PostGrid 
-                        posts={posts.filter(p => activeTab === "posts" ? p.type !== "repost" : p.type === "repost")} 
-                        loading={false} 
-                        currentUserId={currentUserId} 
-                      />
+                    ) : (
+                      <PostGrid posts={savedPosts} loading={false} currentUserId={currentUserId} />
                     )}
                   </>
                 )}

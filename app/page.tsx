@@ -123,6 +123,22 @@ export default function Home() {
         }
       }
 
+      // 6. Fetch saved posts
+      let savedPostsData: any[] = [];
+      if (postIds.length > 0 && currentUserId) {
+        const { data: fetchSavedData, error: savedError } = await supabase
+          .from("saved_posts")
+          .select("post_id, collection_id")
+          .eq("user_id", currentUserId)
+          .in("post_id", postIds);
+          
+        if (savedError) {
+          console.error("Error fetching saved posts:", savedError);
+        } else {
+          savedPostsData = fetchSavedData || [];
+        }
+      }
+
       // Merge
       const sharedPostMap = new Map(sharedPostsData.map(p => [p.id, p]));
 
@@ -147,6 +163,7 @@ export default function Home() {
           commentCount: postComments.length,
           isLikedByMe,
           isRepostedByMe,
+          savedCollectionIds: savedPostsData.filter(s => s.post_id === post.id).map(s => s.collection_id),
         };
 
         if (post.type === "repost" && post.shared_post_id) {

@@ -14,6 +14,7 @@ export type Post = {
   commentCount: number;
   isLikedByMe: boolean;
   isRepostedByMe?: boolean;
+  savedCollectionIds?: string[];
   profiles: {
     name: string;
     avatar_url: string;

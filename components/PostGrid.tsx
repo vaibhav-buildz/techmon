@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types";
+import SaveButton from "@/components/SaveButton";
+import Link from "next/link";
 import PostDetailModal from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle, AlertCircle, Camera, Share2, Repeat2 } from "lucide-react";
@@ -288,6 +290,15 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
                     <MessageCircle className="w-5 h-5 fill-white" />
                     <span>{post.commentCount || 0}</span>
                   </div>
+                  {currentUserId && (
+                    <SaveButton
+                      postId={post.id}
+                      currentUserId={currentUserId}
+                      initialSavedCollectionIds={post.savedCollectionIds}
+                      iconClassName="w-5 h-5"
+                      className="text-white hover:text-white/80"
+                    />
+                  )}
                   <div className="relative flex items-center">
                     <button
                       onClick={(e) => {

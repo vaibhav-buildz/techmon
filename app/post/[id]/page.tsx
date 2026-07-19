@@ -82,6 +82,20 @@ export default function StandalonePostPage() {
 
       const postLikes = likesData || [];
       const isLikedByMe = viewerId ? postLikes.some((l) => l.user_id === viewerId) : false;
+
+      // Fetch saved posts status
+      let savedCollectionIds: string[] = [];
+      if (viewerId) {
+        const { data: savedData, error: savedError } = await supabase
+          .from("saved_posts")
+          .select("collection_id")
+          .eq("user_id", viewerId)
+          .eq("post_id", postData.id);
+          
+        if (!savedError && savedData) {
+          savedCollectionIds = savedData.map(s => s.collection_id);
+        }
+      }
       
       const authorProfile = profileMap.get(postData.user_id) || { name: 'Unknown', avatar_url: '', headline: '' };
 
@@ -95,6 +109,7 @@ export default function StandalonePostPage() {
         likeCount: postLikes.length,
         commentCount: (commentsData || []).length,
         isLikedByMe,
+        savedCollectionIds,
       };
 
       if (originalPostData) {
