@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import Sidebar from "./Sidebar";
+import TopNavbar from "./TopNavbar";
 import TopBar from "./TopBar";
 import { addAccount } from "@/lib/accountManager";
 
@@ -76,9 +76,9 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar user={user} profile={profile} />
-      <main className="flex-1 flex flex-col md:ml-64 pb-14 md:pb-0">
+    <div className="min-h-screen flex flex-col pt-14 md:pt-16 bg-background">
+      <TopNavbar user={user} profile={profile} />
+      <main className="flex-1 flex flex-col pb-14 md:pb-0">
         {children}
       </main>
     </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { X, Check } from "lucide-react";
-import { Post } from "./PostDetailModal";
+import { Post } from "@/lib/types";
 
 type Props = {
   isOpen: boolean;

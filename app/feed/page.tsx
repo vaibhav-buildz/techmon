@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import PostGrid from "@/components/PostGrid";
-import { Post } from "@/components/PostDetailModal";
+import { Post } from "@/lib/types";
+import ThreeColumnLayout from "@/components/ThreeColumnLayout";
+import SuggestedUsers from "@/components/SuggestedUsers";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -28,13 +30,23 @@ export default function FeedPage() {
       }
 
       const postIds = postsData.map(p => p.id);
-      const userIds = [...new Set(postsData.map(p => p.user_id))];
+      const userIds = new Set(postsData.map(p => p.user_id));
+
+      const sharedPostIds = postsData.filter(p => p.type === "repost" && p.shared_post_id).map(p => p.shared_post_id);
+      let sharedPostsData: any[] = [];
+      if (sharedPostIds.length > 0) {
+        const { data: spData } = await supabase.from('posts').select('*').in('id', sharedPostIds);
+        if (spData) {
+          sharedPostsData = spData;
+          spData.forEach(p => userIds.add(p.user_id));
+        }
+      }
 
       // 2. Fetch profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("id, name, avatar_url, headline")
-        .in("id", userIds);
+        .in("id", Array.from(userIds));
         
       if (profilesError) throw profilesError;
 
@@ -70,14 +82,38 @@ export default function FeedPage() {
         }
       }
 
+      // 5. Fetch if reposted by me
+      let myRepostsData: any[] = [];
+      if (postIds.length > 0 && viewerId) {
+        const targetPostIds = postsData.map(p => p.type === "repost" && p.shared_post_id ? p.shared_post_id : p.id);
+        const { data: fetchRepostsData, error: repostsError } = await supabase
+          .from("posts")
+          .select("shared_post_id")
+          .eq("type", "repost")
+          .eq("user_id", viewerId)
+          .in("shared_post_id", targetPostIds);
+        
+        if (repostsError) {
+          console.error("Error fetching my reposts:", repostsError);
+        } else {
+          myRepostsData = fetchRepostsData || [];
+        }
+      }
+
       // Merge
+      const sharedPostMap = new Map(sharedPostsData.map(p => [p.id, p]));
+
       const mergedPosts = postsData.map((post) => {
         const postLikes = likesData.filter((l) => l.post_id === post.id);
         const postComments = commentsData.filter((c) => c.post_id === post.id);
         const isLikedByMe = viewerId ? postLikes.some((l) => l.user_id === viewerId) : false;
+        
+        const targetPostId = post.type === "repost" && post.shared_post_id ? post.shared_post_id : post.id;
+        const isRepostedByMe = myRepostsData.some((r) => r.shared_post_id === targetPostId);
+        
         const authorProfile = profileMap.get(post.user_id) || { name: 'Unknown', avatar_url: '', headline: '' };
 
-        return {
+        const merged: Post = {
           ...post,
           profiles: {
             name: authorProfile.name,
@@ -87,7 +123,28 @@ export default function FeedPage() {
           likeCount: postLikes.length,
           commentCount: postComments.length,
           isLikedByMe,
+          isRepostedByMe,
         };
+
+        if (post.type === "repost" && post.shared_post_id) {
+          const original = sharedPostMap.get(post.shared_post_id);
+          if (original) {
+            const opProfile = profileMap.get(original.user_id) || { name: 'Unknown', avatar_url: '', headline: '' };
+            merged.original_post = {
+              ...original,
+              profiles: {
+                name: opProfile.name,
+                avatar_url: opProfile.avatar_url || "",
+                headline: opProfile.headline || "",
+              },
+              likeCount: 0,
+              commentCount: 0,
+              isLikedByMe: false,
+            };
+          }
+        }
+
+        return merged;
       });
 
       setPosts(mergedPosts as Post[]);
@@ -126,15 +183,17 @@ export default function FeedPage() {
   }, [currentUserId, fetchPosts]);
 
   return (
-    <div className="min-h-screen py-12 bg-background text-body">
-      <div className="max-w-4xl mx-auto px-4 w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-heading font-bold text-heading">Explore</h1>
-          <p className="text-body mt-2">Discover posts from developers around the world.</p>
+    <ThreeColumnLayout
+      rightColumn={<SuggestedUsers currentUserId={currentUserId} />}
+    >
+      <div className="flex flex-col gap-6 pb-20 md:pb-0">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-heading">Explore</h1>
+          <p className="text-sm text-gray-500 mt-1">Discover posts from developers around the world.</p>
         </div>
         
         <PostGrid posts={posts} loading={loading} currentUserId={currentUserId} />
       </div>
-    </div>
+    </ThreeColumnLayout>
   );
 }

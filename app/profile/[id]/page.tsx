@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import PostDetailModal, { Post } from "@/components/PostDetailModal";
+import { Post } from "@/lib/types";
+import PostDetailModal from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
@@ -202,6 +203,25 @@ export default function ProfilePage() {
       }
 
       const postIds = postsData.map((post) => post.id);
+      const userIds = new Set(postsData.map(p => p.user_id));
+
+      const sharedPostIds = postsData.filter(p => p.type === "repost" && p.shared_post_id).map(p => p.shared_post_id);
+      let sharedPostsData: any[] = [];
+      if (sharedPostIds.length > 0) {
+        const { data: spData } = await supabase.from('posts').select('*').in('id', sharedPostIds);
+        if (spData) {
+          sharedPostsData = spData;
+          spData.forEach(p => userIds.add(p.user_id));
+        }
+      }
+
+      // 3. Fetch all needed profiles (author + any original post authors)
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, name, avatar_url, headline")
+        .in("id", Array.from(userIds));
+
+      const profileMap = new Map(profilesData?.map(p => [p.id, p]) || []);
 
       let likesData: any[] = [];
       if (postIds.length > 0) {
@@ -231,22 +251,68 @@ export default function ProfilePage() {
         }
       }
 
+      let myRepostsData: any[] = [];
+      if (postIds.length > 0 && currentViewerId) {
+        const targetPostIds = postsData.map(p => p.type === "repost" && p.shared_post_id ? p.shared_post_id : p.id);
+        const { data: fetchRepostsData, error: repostsError } = await supabase
+          .from("posts")
+          .select("shared_post_id")
+          .eq("type", "repost")
+          .eq("user_id", currentViewerId)
+          .in("shared_post_id", targetPostIds);
+        
+        if (repostsError) {
+          console.error("Error fetching my reposts:", repostsError);
+        } else {
+          myRepostsData = fetchRepostsData || [];
+        }
+      }
+
+      const sharedPostMap = new Map(sharedPostsData.map(p => [p.id, p]));
+
       const mergedPosts = postsData.map((post) => {
         const postLikes = likesData.filter((l) => l.post_id === post.id);
         const postComments = commentsData.filter((c) => c.post_id === post.id);
         const isLikedByMe = currentViewerId ? postLikes.some((l) => l.user_id === currentViewerId) : false;
+        
+        const targetPostId = post.type === "repost" && post.shared_post_id ? post.shared_post_id : post.id;
+        const isRepostedByMe = myRepostsData.some((r) => r.shared_post_id === targetPostId);
+        
+        // Use profileMap as fallback (even though for the outer post it's always authorProfile)
+        const outerProfile = profileMap.get(post.user_id) || authorProfile;
 
-        return {
+        const merged: Post = {
           ...post,
           profiles: {
-            name: authorProfile.name,
-            avatar_url: authorProfile.avatar_url || "",
-            headline: authorProfile.headline || "",
+            name: outerProfile.name,
+            avatar_url: outerProfile.avatar_url || "",
+            headline: outerProfile.headline || "",
           },
           likeCount: postLikes.length,
           commentCount: postComments.length,
           isLikedByMe,
+          isRepostedByMe,
         };
+
+        if (post.type === "repost" && post.shared_post_id) {
+          const original = sharedPostMap.get(post.shared_post_id);
+          if (original) {
+            const opProfile = profileMap.get(original.user_id) || { name: 'Unknown', avatar_url: '', headline: '' };
+            merged.original_post = {
+              ...original,
+              profiles: {
+                name: opProfile.name,
+                avatar_url: opProfile.avatar_url || "",
+                headline: opProfile.headline || "",
+              },
+              likeCount: 0,
+              commentCount: 0,
+              isLikedByMe: false,
+            };
+          }
+        }
+
+        return merged;
       });
 
       setPosts(mergedPosts as Post[]);

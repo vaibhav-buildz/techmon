@@ -4,9 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PostGrid from "@/components/PostGrid";
-import { Post } from "@/components/PostDetailModal";
+import { Post } from "@/lib/types";
 import StoriesBar from "@/components/StoriesBar";
 import { Users } from "lucide-react";
+import ThreeColumnLayout from "@/components/ThreeColumnLayout";
+import SuggestedUsers from "@/components/SuggestedUsers";
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -51,13 +53,23 @@ export default function Home() {
       }
 
       const postIds = postsData.map(p => p.id);
-      const userIds = [...new Set(postsData.map(p => p.user_id))];
+      const userIds = new Set(postsData.map(p => p.user_id));
+
+      const sharedPostIds = postsData.filter(p => p.type === "repost" && p.shared_post_id).map(p => p.shared_post_id);
+      let sharedPostsData: any[] = [];
+      if (sharedPostIds.length > 0) {
+        const { data: spData } = await supabase.from('posts').select('*').in('id', sharedPostIds);
+        if (spData) {
+          sharedPostsData = spData;
+          spData.forEach(p => userIds.add(p.user_id));
+        }
+      }
 
       // 3. Fetch profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("id, name, avatar_url, headline")
-        .in("id", userIds);
+        .in("id", Array.from(userIds));
         
       if (profilesError) throw profilesError;
 
@@ -93,14 +105,38 @@ export default function Home() {
         }
       }
 
+      // 5. Fetch if reposted by me
+      let myRepostsData: any[] = [];
+      if (postIds.length > 0) {
+        const targetPostIds = postsData.map(p => p.type === "repost" && p.shared_post_id ? p.shared_post_id : p.id);
+        const { data: fetchRepostsData, error: repostsError } = await supabase
+          .from("posts")
+          .select("shared_post_id")
+          .eq("type", "repost")
+          .eq("user_id", currentUserId)
+          .in("shared_post_id", targetPostIds);
+        
+        if (repostsError) {
+          console.error("Error fetching my reposts:", repostsError);
+        } else {
+          myRepostsData = fetchRepostsData || [];
+        }
+      }
+
       // Merge
+      const sharedPostMap = new Map(sharedPostsData.map(p => [p.id, p]));
+
       const mergedPosts = postsData.map((post) => {
         const postLikes = likesData.filter((l) => l.post_id === post.id);
         const postComments = commentsData.filter((c) => c.post_id === post.id);
         const isLikedByMe = postLikes.some((l) => l.user_id === currentUserId);
+        
+        const targetPostId = post.type === "repost" && post.shared_post_id ? post.shared_post_id : post.id;
+        const isRepostedByMe = myRepostsData.some((r) => r.shared_post_id === targetPostId);
+        
         const authorProfile = profileMap.get(post.user_id) || { name: 'Unknown', avatar_url: '', headline: '' };
 
-        return {
+        const merged: Post = {
           ...post,
           profiles: {
             name: authorProfile.name,
@@ -110,7 +146,28 @@ export default function Home() {
           likeCount: postLikes.length,
           commentCount: postComments.length,
           isLikedByMe,
+          isRepostedByMe,
         };
+
+        if (post.type === "repost" && post.shared_post_id) {
+          const original = sharedPostMap.get(post.shared_post_id);
+          if (original) {
+            const opProfile = profileMap.get(original.user_id) || { name: 'Unknown', avatar_url: '', headline: '' };
+            merged.original_post = {
+              ...original,
+              profiles: {
+                name: opProfile.name,
+                avatar_url: opProfile.avatar_url || "",
+                headline: opProfile.headline || "",
+              },
+              likeCount: 0,
+              commentCount: 0,
+              isLikedByMe: false,
+            };
+          }
+        }
+
+        return merged;
       });
 
       setPosts(mergedPosts as Post[]);
@@ -205,20 +262,22 @@ export default function Home() {
   // LOGGED IN: Following Feed
   if (userId) {
     return (
-      <div className="min-h-screen py-12 bg-background text-body">
-        <div className="max-w-4xl mx-auto px-4 w-full">
+      <ThreeColumnLayout
+        rightColumn={<SuggestedUsers currentUserId={userId} />}
+      >
+        <div className="flex flex-col gap-6 pb-20 md:pb-0">
           {/* Stories Bar */}
           {userProfile && (
             <StoriesBar userId={userId} userProfile={userProfile} />
           )}
 
-          <div className="mb-8">
-            <h1 className="text-3xl font-heading font-bold text-heading">Following</h1>
-            <p className="text-body mt-2">Posts from people you follow.</p>
+          <div>
+            <h1 className="text-2xl font-heading font-bold text-heading">Following</h1>
+            <p className="text-sm text-gray-500 mt-1">Posts from people you follow.</p>
           </div>
           
           {!postsLoading && posts.length === 0 ? (
-            <div className="bg-surface border border-border shadow-sm rounded-xl p-16 text-center flex flex-col items-center gap-4">
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-12 text-center flex flex-col items-center gap-4">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100 mb-2">
                 <Users className="w-8 h-8 text-gray-300" />
               </div>
@@ -235,7 +294,7 @@ export default function Home() {
             <PostGrid posts={posts} loading={postsLoading} currentUserId={userId} />
           )}
         </div>
-      </div>
+      </ThreeColumnLayout>
     );
   }
 

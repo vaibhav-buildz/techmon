@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { X, Heart, UserPlus, MessageCircle, Bell, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import PostDetailModal, { Post } from "@/components/PostDetailModal";
+import PostDetailModal from "@/components/PostDetailModal";
+import { Post } from "@/lib/types";
 
 type NotificationResult = {
   id: string;
