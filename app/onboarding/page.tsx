@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import SkillsAutocomplete from "@/components/SkillsAutocomplete";
 import { addAccount } from "@/lib/accountManager";
 
 export default function OnboardingPage() {
@@ -17,7 +18,7 @@ export default function OnboardingPage() {
   const [headline, setHeadline] = useState("");
   const [organization, setOrganization] = useState("");
   const [bio, setBio] = useState("");
-  const [skills, setSkills] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -59,8 +60,6 @@ export default function OnboardingPage() {
     setSubmitting(true);
     setError(null);
 
-    const skillsArray = skills.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
-
     try {
       const { error } = await supabase.from("profiles").insert({
         id: userId,
@@ -68,7 +67,7 @@ export default function OnboardingPage() {
         headline,
         organization,
         bio,
-        skills: skillsArray,
+        skills: skills,
       });
 
       if (error) throw error;
@@ -140,7 +139,7 @@ export default function OnboardingPage() {
 
               <div>
                 <label className="block text-sm font-medium text-heading mb-1">
-                  Headline
+                  Headline (what do you do?)
                 </label>
                 <input
                   type="text"
@@ -148,20 +147,21 @@ export default function OnboardingPage() {
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow font-mono"
-                  placeholder="Software Engineer at Acme Corp"
+                  placeholder="e.g. Full Stack Developer | Final Year CS Student"
                 />
+                <p className="text-xs text-body mt-1">A short line describing your role or focus area</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-heading mb-1">
-                  Organization (College / Company)
+                  College / Company
                 </label>
                 <input
                   type="text"
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
-                  placeholder="Acme Corp"
+                  placeholder="e.g. IEC College of Engineering, or Google"
                 />
               </div>
 
@@ -180,15 +180,10 @@ export default function OnboardingPage() {
 
               <div>
                 <label className="block text-sm font-medium text-heading mb-1">
-                  Skills (comma-separated)
+                  Skills
                 </label>
-                <input
-                  type="text"
-                  value={skills}
-                  onChange={(e) => setSkills(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow font-mono"
-                  placeholder="React, TypeScript, Node.js"
-                />
+                <SkillsAutocomplete skills={skills} onChange={setSkills} />
+                <p className="text-xs text-body mt-2">Start typing to see suggestions, or press Enter/comma to add a custom skill.</p>
               </div>
             </div>
 

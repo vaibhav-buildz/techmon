@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SkillsAutocomplete from "@/components/SkillsAutocomplete";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function EditProfilePage() {
   const [headline, setHeadline] = useState("");
   const [organization, setOrganization] = useState("");
   const [bio, setBio] = useState("");
-  const [skills, setSkills] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
   const [githubUrl, setGithubUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
@@ -50,7 +51,7 @@ export default function EditProfilePage() {
           setHeadline(profile.headline || "");
           setOrganization(profile.organization || "");
           setBio(profile.bio || "");
-          setSkills(profile.skills ? profile.skills.join(", ") : "");
+          setSkills(profile.skills || []);
           setGithubUrl(profile.github_url || "");
           setLinkedinUrl(profile.linkedin_url || "");
           setPortfolioUrl(profile.portfolio_url || "");
@@ -103,10 +104,8 @@ export default function EditProfilePage() {
     setSubmitting(true);
     setError(null);
 
-    const skillsArray = skills
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+    setSubmitting(true);
+    setError(null);
 
     try {
       const { error } = await supabase
@@ -116,7 +115,7 @@ export default function EditProfilePage() {
           headline,
           organization,
           bio,
-          skills: skillsArray,
+          skills: skills,
           github_url: githubUrl,
           linkedin_url: linkedinUrl,
           portfolio_url: portfolioUrl,
@@ -251,7 +250,7 @@ export default function EditProfilePage() {
 
             <div>
               <label className="block text-sm font-medium text-heading mb-1">
-                Headline
+                Headline (what do you do?)
               </label>
               <input
                 type="text"
@@ -259,20 +258,21 @@ export default function EditProfilePage() {
                 value={headline}
                 onChange={(e) => setHeadline(e.target.value)}
                 className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow font-mono"
-                placeholder="Software Engineer at Acme Corp"
+                placeholder="e.g. Full Stack Developer | Final Year CS Student"
               />
+              <p className="text-xs text-body mt-1">A short line describing your role or focus area</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-heading mb-1">
-                Organization
+                College / Company
               </label>
               <input
                 type="text"
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
                 className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
-                placeholder="Acme Corp"
+                placeholder="e.g. IEC College of Engineering, or Google"
               />
             </div>
 
@@ -326,7 +326,7 @@ export default function EditProfilePage() {
           <div className="space-y-8 flex flex-col">
             
             <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
-              <h2 className="font-mono text-xs uppercase text-accent">&gt; About</h2>
+              <h2 className="font-mono text-xs uppercase text-accent">&gt; BIO</h2>
               <div>
                 <textarea
                   rows={6}
@@ -341,26 +341,8 @@ export default function EditProfilePage() {
             <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
               <h2 className="font-mono text-xs uppercase text-accent">&gt; Skills</h2>
               <div>
-                <input
-                  type="text"
-                  value={skills}
-                  onChange={(e) => setSkills(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow font-mono"
-                  placeholder="React, TypeScript, Node.js (comma separated)"
-                />
-                <p className="text-xs text-body mt-2">Enter skills separated by commas.</p>
-                {skills.trim().length > 0 && (
-                  <div className="flex flex-wrap gap-2.5 mt-4 pt-4 border-t border-border">
-                    {skills.split(',').map((s) => s.trim()).filter((s) => s.length > 0).map((skill, idx) => (
-                      <span
-                        key={idx}
-                        className="font-mono text-xs bg-blue-50 px-3 py-1 text-accent rounded-full border border-accent/20"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <SkillsAutocomplete skills={skills} onChange={setSkills} />
+                <p className="text-xs text-body mt-2">Start typing to see suggestions, or press Enter/comma to add a custom skill.</p>
               </div>
             </div>
 

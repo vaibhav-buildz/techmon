@@ -750,7 +750,7 @@ export default function ProfilePage() {
                 {/* Bio */}
                 {profile.bio && (
                   <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
-                    <h2 className="font-mono text-xs uppercase text-accent">&gt; About</h2>
+                    <h2 className="font-mono text-xs uppercase text-accent">&gt; BIO</h2>
                     <p className="text-body leading-relaxed whitespace-pre-wrap">
                       {profile.bio}
                     </p>
