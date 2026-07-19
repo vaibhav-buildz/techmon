@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle, Share2, Repeat2, Bookmark } from "lucide-react";
+import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle, Share2, Repeat2, Bookmark, Archive, ArchiveRestore } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import FollowListModal from "./FollowListModal";
 import SaveButton from "./SaveButton";
@@ -260,6 +260,30 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
     }
   };
 
+  const handleArchiveToggle = async () => {
+    setShowMenu(false);
+    if (!currentUserId || currentUserId !== post.user_id) return;
+
+    const newArchivedState = !post.archived;
+    
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .update({ archived: newArchivedState })
+        .eq("id", post.id)
+        .eq("user_id", currentUserId);
+
+      if (error) throw error;
+      
+      alert(newArchivedState ? "Post archived" : "Post restored");
+      window.dispatchEvent(new Event('postUpdated'));
+      if (onClose && newArchivedState) onClose();
+    } catch (err: any) {
+      console.error("Error toggling archive:", err);
+      alert("Failed to update post.");
+    }
+  };
+
   if (!post) return null;
 
   const author = post.profiles;
@@ -331,6 +355,16 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
                           <Edit2 className="w-4 h-4" /> Edit
                         </button>
                       )}
+                      <button
+                        onClick={handleArchiveToggle}
+                        className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                      >
+                        {post.archived ? (
+                          <><ArchiveRestore className="w-4 h-4" /> Unarchive</>
+                        ) : (
+                          <><Archive className="w-4 h-4" /> Archive</>
+                        )}
+                      </button>
                       <button
                         onClick={() => {
                           setShowMenu(false);

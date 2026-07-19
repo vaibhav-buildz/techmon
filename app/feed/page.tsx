@@ -20,6 +20,7 @@ export default function FeedPage() {
       const { data: postsData, error: postsError } = await supabase
         .from("posts")
         .select("*")
+        .eq("archived", false)
         .order("created_at", { ascending: false });
 
       if (postsError) throw postsError;

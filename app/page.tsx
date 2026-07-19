@@ -43,6 +43,7 @@ export default function Home() {
         .from("posts")
         .select("*")
         .in("user_id", followingIds)
+        .eq("archived", false)
         .order("created_at", { ascending: false });
 
       if (postsError) throw postsError;

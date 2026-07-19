@@ -31,7 +31,7 @@ export default function MiniProfileCard({ userId }: { userId: string }) {
       const [followersRes, followingRes, postsRes] = await Promise.all([
         supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", userId),
         supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", userId),
-        supabase.from("posts").select("*", { count: "exact", head: true }).eq("user_id", userId)
+        supabase.from("posts").select("*", { count: "exact", head: true }).eq("user_id", userId).eq("archived", false)
       ]);
 
       setCounts({

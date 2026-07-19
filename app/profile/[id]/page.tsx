@@ -11,7 +11,7 @@ import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -186,7 +186,7 @@ export default function ProfilePage() {
   const fetchPostsData = useCallback(async (userId: string, currentViewerId: string | null, authorProfile: Profile | null, specificPostIds?: string[]) => {
     if (!authorProfile) return [];
     try {
-      let postsQuery = supabase.from("posts").select("*").order("created_at", { ascending: false });
+      let postsQuery = supabase.from("posts").select("*").eq("archived", false).order("created_at", { ascending: false });
       if (specificPostIds) {
         if (specificPostIds.length === 0) return [];
         postsQuery = postsQuery.in("id", specificPostIds);
@@ -597,6 +597,14 @@ export default function ProfilePage() {
                         >
                           <Edit2 className="w-4 h-4 text-gray-400" />
                           Edit Profile
+                        </Link>
+                        <Link
+                          href="/archive"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                        >
+                          <Archive className="w-4 h-4 text-gray-400" />
+                          Archive
                         </Link>
                         <Link
                           href="/settings"

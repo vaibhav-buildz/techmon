@@ -15,6 +15,7 @@ export type Post = {
   isLikedByMe: boolean;
   isRepostedByMe?: boolean;
   savedCollectionIds?: string[];
+  archived?: boolean;
   profiles: {
     name: string;
     avatar_url: string;
