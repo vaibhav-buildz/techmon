@@ -40,6 +40,7 @@ export default function ProfilePage() {
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"posts" | "reposts">("posts");
   
   // Follow state
   const [isFollowing, setIsFollowing] = useState(false);
@@ -316,7 +317,7 @@ export default function ProfilePage() {
       });
 
       setPosts(mergedPosts as Post[]);
-      setPostsCount(mergedPosts.length);
+      setPostsCount(mergedPosts.filter(p => p.type !== "repost").length);
     } catch (err: any) {
       console.error("[ProfilePage] Posts fetch failed:", err.message);
       setPosts([]);
@@ -775,10 +776,54 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Posts Grid */}
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h2 className="font-heading font-semibold text-xl text-heading">Posts</h2>
-                <PostGrid posts={posts} loading={postsLoading} currentUserId={currentUserId} />
+              {/* Posts/Reposts Tabs */}
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-center gap-6 mb-6">
+                  <button
+                    onClick={() => setActiveTab("posts")}
+                    className={`font-heading font-semibold text-lg transition-colors border-b-2 pb-1 ${
+                      activeTab === "posts"
+                        ? "text-accent border-accent"
+                        : "text-gray-400 border-transparent hover:text-gray-600"
+                    }`}
+                  >
+                    Posts
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("reposts")}
+                    className={`font-heading font-semibold text-lg transition-colors border-b-2 pb-1 ${
+                      activeTab === "reposts"
+                        ? "text-accent border-accent"
+                        : "text-gray-400 border-transparent hover:text-gray-600"
+                    }`}
+                  >
+                    Reposts
+                  </button>
+                </div>
+                
+                {postsLoading ? (
+                  <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
+                ) : (
+                  <>
+                    {activeTab === "posts" && posts.filter(p => p.type !== "repost").length === 0 && (
+                      <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
+                        No posts yet
+                      </div>
+                    )}
+                    {activeTab === "reposts" && posts.filter(p => p.type === "repost").length === 0 && (
+                      <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
+                        No reposts yet
+                      </div>
+                    )}
+                    {(activeTab === "posts" ? posts.filter(p => p.type !== "repost").length > 0 : posts.filter(p => p.type === "repost").length > 0) && (
+                      <PostGrid 
+                        posts={posts.filter(p => activeTab === "posts" ? p.type !== "repost" : p.type === "repost")} 
+                        loading={false} 
+                        currentUserId={currentUserId} 
+                      />
+                    )}
+                  </>
+                )}
               </div>
 
             </div>
