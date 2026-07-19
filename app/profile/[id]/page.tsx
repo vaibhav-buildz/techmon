@@ -11,7 +11,7 @@ import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -40,13 +40,7 @@ export default function ProfilePage() {
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"posts" | "reposts" | "saved">("posts");
-  
-  // Collections & Saved Posts state
-  const [collections, setCollections] = useState<any[]>([]);
-  const [activeCollectionId, setActiveCollectionId] = useState<string>("all");
-  const [savedPosts, setSavedPosts] = useState<Post[]>([]);
-  const [savedPostsLoading, setSavedPostsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"posts" | "reposts">("posts");
   
   // Follow state
   const [isFollowing, setIsFollowing] = useState(false);
@@ -395,62 +389,6 @@ export default function ProfilePage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [avatarViewerOpen]);
 
-  // Fetch Collections
-  const fetchCollections = useCallback(async () => {
-    if (!isOwner || !currentUserId) return;
-    const { data, error } = await supabase
-      .from("collections")
-      .select("id, name")
-      .eq("user_id", currentUserId)
-      .order("created_at", { ascending: true });
-    
-    if (!error && data) {
-      setCollections(data);
-    }
-  }, [isOwner, currentUserId]);
-
-  useEffect(() => {
-    fetchCollections();
-  }, [fetchCollections]);
-
-  // Fetch Saved Posts
-  useEffect(() => {
-    if (activeTab === "saved" && isOwner && currentUserId) {
-      const loadSavedPosts = async () => {
-        setSavedPostsLoading(true);
-        let query = supabase.from("saved_posts").select("post_id").eq("user_id", currentUserId).order("created_at", { ascending: false });
-        
-        if (activeCollectionId !== "all") {
-          query = query.eq("collection_id", activeCollectionId);
-        }
-        
-        const { data: savedData, error: savedError } = await query;
-        if (savedError || !savedData || savedData.length === 0) {
-          setSavedPosts([]);
-          setSavedPostsLoading(false);
-          return;
-        }
-        
-        const postIds = savedData.map(s => s.post_id);
-        const data = await fetchPostsData(currentUserId, currentUserId, profile, postIds);
-        setSavedPosts(data);
-        setSavedPostsLoading(false);
-      };
-      
-      loadSavedPosts();
-    }
-  }, [activeTab, activeCollectionId, isOwner, currentUserId, fetchPostsData, profile]);
-
-  const handleDeleteCollection = async (collectionId: string) => {
-    if (!confirm("Are you sure you want to delete this collection?")) return;
-    const { error } = await supabase.from("collections").delete().eq("id", collectionId);
-    if (!error) {
-      if (activeCollectionId === collectionId) setActiveCollectionId("all");
-      fetchCollections();
-    } else {
-      alert("Failed to delete collection.");
-    }
-  };
 
   const handleFollowToggle = async () => {
     if (!currentUserId || isOwner) return;
@@ -589,29 +527,38 @@ export default function ProfilePage() {
                   {menuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-52 bg-surface border border-border shadow-xl rounded-xl z-50 overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="absolute right-0 mt-2 w-56 bg-surface border border-border shadow-xl rounded-2xl z-50 overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-150">
                         <Link
                           href="/profile/edit"
                           onClick={() => setMenuOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
                         >
-                          <Edit2 className="w-4 h-4 text-gray-400" />
+                          <Edit2 className="w-5 h-5 text-gray-400" />
                           Edit Profile
+                        </Link>
+                        <Link
+                          href="/activity"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                        >
+                          <Activity className="w-5 h-5 text-gray-400" />
+                          Your Activity
                         </Link>
                         <Link
                           href="/archive"
                           onClick={() => setMenuOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
                         >
-                          <Archive className="w-4 h-4 text-gray-400" />
+                          <Archive className="w-5 h-5 text-gray-400" />
                           Archive
                         </Link>
+                        <div className="h-px bg-border my-1" />
                         <Link
                           href="/settings"
                           onClick={() => setMenuOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
                         >
-                          <Settings className="w-4 h-4 text-gray-400" />
+                          <Settings className="w-5 h-5 text-gray-400" />
                           Settings
                         </Link>
                         <button
@@ -621,7 +568,7 @@ export default function ProfilePage() {
                           }}
                           className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
                         >
-                          <Users className="w-4 h-4 text-gray-400" />
+                          <Users className="w-5 h-5 text-gray-400" />
                           Switch Account
                         </button>
                         <div className="h-px bg-border my-1" />
@@ -632,7 +579,7 @@ export default function ProfilePage() {
                           }}
                           className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
                         >
-                          <LogOut className="w-4 h-4 text-red-500" />
+                          <LogOut className="w-5 h-5 text-red-500" />
                           Logout
                         </button>
                       </div>
@@ -889,62 +836,9 @@ export default function ProfilePage() {
                   >
                     Reposts
                   </button>
-                  {isOwner && (
-                    <button
-                      onClick={() => setActiveTab("saved")}
-                      className={`font-heading font-semibold text-lg transition-colors border-b-2 pb-1 ${
-                        activeTab === "saved"
-                          ? "text-accent border-accent"
-                          : "text-gray-400 border-transparent hover:text-gray-600"
-                      }`}
-                    >
-                      Saved
-                    </button>
-                  )}
                 </div>
                 
-                {activeTab === "saved" && isOwner && (
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                      <button
-                        onClick={() => setActiveCollectionId("all")}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                          activeCollectionId === "all"
-                            ? "bg-accent text-white"
-                            : "bg-surface border border-border text-heading hover:bg-gray-50"
-                        }`}
-                      >
-                        All Posts
-                      </button>
-                      {collections.filter(c => c.name !== "All Posts").map(collection => (
-                        <div key={collection.id} className="relative group flex items-center">
-                          <button
-                            onClick={() => setActiveCollectionId(collection.id)}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                              activeCollectionId === collection.id
-                                ? "bg-accent text-white"
-                                : "bg-surface border border-border text-heading hover:bg-gray-50"
-                            }`}
-                          >
-                            {collection.name}
-                          </button>
-                          {activeCollectionId === collection.id && (
-                            <button
-                              onClick={() => handleDeleteCollection(collection.id)}
-                              className="absolute -top-1 -right-1 bg-white border border-border rounded-full p-0.5 text-gray-500 hover:text-red-500 shadow-sm"
-                              title="Delete collection"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {activeTab !== "saved" && (
-                  postsLoading ? (
+                {postsLoading ? (
                     <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
                   ) : (
                     <>
@@ -966,22 +860,7 @@ export default function ProfilePage() {
                         />
                       )}
                     </>
-                  )
-                )}
-
-                {activeTab === "saved" && isOwner && (
-                  <>
-                    {savedPostsLoading ? (
-                      <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
-                    ) : savedPosts.length === 0 ? (
-                      <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
-                        No saved posts yet
-                      </div>
-                    ) : (
-                      <PostGrid posts={savedPosts} loading={false} currentUserId={currentUserId} />
-                    )}
-                  </>
-                )}
+                  )}
               </div>
 
             </div>

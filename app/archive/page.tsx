@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import TopNavbar from "@/components/TopNavbar";
+
 import PostGrid from "@/components/PostGrid";
 import { Post } from "@/lib/types";
 
@@ -136,7 +136,7 @@ export default function ArchivePage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <TopNavbar currentUserId={currentUserId} />
+
 
       <div className="max-w-3xl mx-auto px-4 pt-24 pb-12">
         <h1 className="text-2xl font-heading font-bold text-heading mb-6">Archive</h1>

@@ -3,11 +3,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types";
-import SaveButton from "@/components/SaveButton";
 import Link from "next/link";
 import PostDetailModal from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle, AlertCircle, Camera, Share2, Repeat2 } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle, AlertCircle, Camera, Share2, Repeat2, Archive, ArchiveRestore } from "lucide-react";
 
 type Props = {
   posts: Post[];
@@ -65,6 +64,32 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleArchiveGridPost = async (post: Post) => {
+    if (!currentUserId || post.user_id !== currentUserId) return;
+    
+    const newArchivedState = !post.archived;
+    
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .update({ archived: newArchivedState })
+        .eq("id", post.id)
+        .eq("user_id", currentUserId);
+
+      if (error) throw error;
+      
+      // Optimistically remove from grid whether archiving or unarchiving
+      setPosts((current) => current.filter(p => p.id !== post.id));
+      
+      alert(newArchivedState ? "Post archived" : "Post unarchived");
+      window.dispatchEvent(new Event('postUpdated'));
+      setActiveMenuPostId(null);
+    } catch (err: any) {
+      console.error("Error toggling archive:", err);
+      alert("Failed to update post.");
     }
   };
 
@@ -290,15 +315,6 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
                     <MessageCircle className="w-5 h-5 fill-white" />
                     <span>{post.commentCount || 0}</span>
                   </div>
-                  {currentUserId && (
-                    <SaveButton
-                      postId={post.id}
-                      currentUserId={currentUserId}
-                      initialSavedCollectionIds={post.savedCollectionIds}
-                      iconClassName="w-5 h-5"
-                      className="text-white hover:text-white/80"
-                    />
-                  )}
                   <div className="relative flex items-center">
                     <button
                       onClick={(e) => {
@@ -360,6 +376,16 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
                             <Edit2 className="w-3.5 h-3.5" /> Edit
                           </button>
                         )}
+                        <button
+                          onClick={() => handleArchiveGridPost(post)}
+                          className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          {post.archived ? (
+                            <><ArchiveRestore className="w-3.5 h-3.5" /> Unarchive</>
+                          ) : (
+                            <><Archive className="w-3.5 h-3.5" /> Archive</>
+                          )}
+                        </button>
                         <button
                           onClick={() => {
                             setActiveMenuPostId(null);
