@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle, Share2, Repeat2 } from "lucide-react";
+import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle, Share2, Repeat2, Bookmark } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import FollowListModal from "./FollowListModal";
 import SaveButton from "./SaveButton";
 import EditPostModal from "./EditPostModal";
 import SharePostModal from "./SharePostModal";
+import LikesModal from "./LikesModal";
 import { Post, CommentResult } from "@/lib/types";
 
 type Props = {
@@ -41,6 +42,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReposted, setIsReposted] = useState(post.isRepostedByMe || false);
 
@@ -226,6 +228,38 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
     handleRepostToggle();
   };
 
+  const handleMenuSaveToggle = async () => {
+    setShowMenu(false);
+    if (!currentUserId) return;
+    
+    const isSaved = (post.savedCollectionIds || []).length > 0;
+    
+    if (isSaved) {
+      const { error } = await supabase
+        .from("saved_posts")
+        .delete()
+        .match({ post_id: post.id, user_id: currentUserId });
+      if (!error) {
+        window.dispatchEvent(new Event('postUpdated'));
+      }
+    } else {
+      const { data: cols } = await supabase.from("collections").select("id, name").eq("user_id", currentUserId);
+      let defaultCol = cols?.find(c => c.name === "All Posts");
+      if (!defaultCol) {
+        const { data } = await supabase.from("collections").insert({ user_id: currentUserId, name: "All Posts" }).select().single();
+        if (data) defaultCol = data;
+      }
+      if (defaultCol) {
+        await supabase.from("saved_posts").insert({
+          user_id: currentUserId,
+          post_id: post.id,
+          collection_id: defaultCol.id
+        });
+        window.dispatchEvent(new Event('postUpdated'));
+      }
+    }
+  };
+
   if (!post) return null;
 
   const author = post.profiles;
@@ -265,7 +299,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
         </div>
         
         <div className="flex items-center gap-2">
-          {currentUserId === post.user_id && (
+          {currentUserId && (
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
@@ -277,26 +311,37 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
               
               {showMenu && (
                 <div className="absolute right-0 mt-1 w-36 bg-surface border border-border shadow-lg rounded-xl overflow-hidden z-10 py-1">
-                  {(post.type === "note" || post.type === "media") && (
-                    <button
-                      onClick={() => {
-                        setShowMenu(false);
-                        setShowEditModal(true);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" /> Edit
-                    </button>
-                  )}
                   <button
-                    onClick={() => {
-                      setShowMenu(false);
-                      setShowDeleteConfirm(true);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                    onClick={handleMenuSaveToggle}
+                    className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" /> Delete
+                    <Bookmark className={`w-4 h-4 ${(post.savedCollectionIds || []).length > 0 ? "fill-current text-accent" : ""}`} /> 
+                    {(post.savedCollectionIds || []).length > 0 ? "Unsave" : "Save"}
                   </button>
+                  {currentUserId === post.user_id && (
+                    <>
+                      {(post.type === "note" || post.type === "media") && (
+                        <button
+                          onClick={() => {
+                            setShowMenu(false);
+                            setShowEditModal(true);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" /> Edit
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -320,6 +365,13 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
         </div>
       )}
 
+      {/* Modals */}
+      <LikesModal
+        isOpen={isLikesModalOpen}
+        onClose={() => setIsLikesModalOpen(false)}
+        postId={post.id}
+        currentUserId={currentUserId}
+      />
       {showDeleteConfirm && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-surface border border-border rounded-xl p-6 shadow-2xl max-w-sm w-full mx-4">
@@ -436,25 +488,36 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
         {/* Footer (Likes & Timestamp) */}
         <div className="px-6 py-4 flex items-center justify-between border-t border-border bg-surface">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => handleLike(post.id, post.isLikedByMe)}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors focus:outline-none ${
-                post.isLikedByMe
-                  ? "text-accent"
-                  : "text-gray-400 hover:text-accent"
-              }`}
-            >
-              {post.isLikedByMe ? (
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                  <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-                </svg>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handleLike(post.id, post.isLikedByMe)}
+                className={`flex items-center text-sm font-medium transition-colors focus:outline-none ${
+                  post.isLikedByMe
+                    ? "text-accent"
+                    : "text-gray-400 hover:text-accent"
+                }`}
+              >
+                {post.isLikedByMe ? (
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  </svg>
+                )}
+              </button>
+              {post.likeCount > 0 ? (
+                <button 
+                  onClick={() => setIsLikesModalOpen(true)}
+                  className={`text-base font-medium hover:underline focus:outline-none ${post.isLikedByMe ? "text-accent" : "text-gray-400"}`}
+                >
+                  {post.likeCount} {post.likeCount === 1 ? 'like' : 'likes'}
+                </button>
               ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                </svg>
+                <span className="text-base font-medium text-gray-400">{post.likeCount}</span>
               )}
-              <span className="text-base">{post.likeCount}</span>
-            </button>
+            </div>
 
             <button
               onClick={handleRepostToggle}
