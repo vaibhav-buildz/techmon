@@ -11,7 +11,7 @@ import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2 } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -569,43 +569,7 @@ export default function ProfilePage() {
                   {profile.name}
                 </h1>
 
-                {/* Buttons */}
                 <div className="flex items-center gap-2">
-                  {isOwner ? (
-                    <Link
-                      href="/profile/edit"
-                      className="px-4 py-1.5 bg-surface border border-border text-heading hover:bg-gray-50 transition-colors text-sm font-medium rounded-lg"
-                    >
-                      Edit Profile
-                    </Link>
-                  ) : currentUserId ? (
-                    <>
-                      <button
-                        onClick={handleFollowToggle}
-                        disabled={followLoading}
-                        className={`px-5 py-1.5 text-sm font-medium rounded-lg transition-colors group disabled:opacity-50 ${
-                          isFollowing 
-                            ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
-                            : "bg-accent text-white border border-transparent hover:bg-accent/90"
-                        }`}
-                      >
-                        {followLoading ? "Loading..." : isFollowing ? (
-                          <>
-                            <span className="block group-hover:hidden">Following</span>
-                            <span className="hidden group-hover:block">Unfollow</span>
-                          </>
-                        ) : "Follow"}
-                      </button>
-                      <button
-                        onClick={() => alert("Messaging coming soon")}
-                        className="flex items-center justify-center gap-1.5 px-4 py-1.5 bg-surface border border-border text-heading hover:bg-gray-50 transition-colors text-sm font-medium rounded-lg"
-                      >
-                        <MessageCircle className="w-4 h-4 text-gray-500" />
-                        <span>Message</span>
-                      </button>
-                    </>
-                  ) : null}
-
                   {/* Hamburger Menu (if owner) */}
                   {isOwner && (
                     <div className="relative">
@@ -621,14 +585,6 @@ export default function ProfilePage() {
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
                           <div className="absolute right-0 mt-2 w-56 bg-surface border border-border shadow-xl rounded-2xl z-50 overflow-hidden py-2 text-left animate-in fade-in slide-in-from-top-2 duration-150">
-                            <Link
-                              href="/profile/edit"
-                              onClick={() => setMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                            >
-                              <Edit2 className="w-5 h-5 text-gray-400" />
-                              Edit Profile
-                            </Link>
                             <Link
                               href="/activity"
                               onClick={() => setMenuOpen(false)}
@@ -796,32 +752,74 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 )}
+                
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-4 w-full">
+                  {isOwner ? (
+                    <Link
+                      href="/profile/edit"
+                      className="flex-1 md:flex-none px-6 py-2 bg-surface border border-border shadow-sm text-heading hover:bg-gray-50 transition-colors text-sm font-semibold rounded-xl text-center"
+                    >
+                      Edit Profile
+                    </Link>
+                  ) : currentUserId ? (
+                    <>
+                      <button
+                        onClick={handleFollowToggle}
+                        disabled={followLoading}
+                        className={`flex-1 md:flex-none px-6 py-2 text-sm font-semibold rounded-xl shadow-sm transition-colors group disabled:opacity-50 text-center ${
+                          isFollowing 
+                            ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
+                            : "bg-accent text-white border border-transparent hover:bg-accent/90"
+                        }`}
+                      >
+                        {followLoading ? "Loading..." : isFollowing ? (
+                          <>
+                            <span className="block group-hover:hidden">Following</span>
+                            <span className="hidden group-hover:block">Unfollow</span>
+                          </>
+                        ) : "Follow"}
+                      </button>
+                      <button
+                        onClick={() => alert("Messaging coming soon")}
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-surface border border-border shadow-sm text-heading hover:bg-gray-50 transition-colors text-sm font-semibold rounded-xl"
+                      >
+                        <MessageCircle className="w-4 h-4 text-gray-500" />
+                        <span>Message</span>
+                      </button>
+                    </>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Posts / Reposts Tabs */}
           <div className="pt-2">
-            <div className="flex items-center justify-center gap-8 mb-6 border-b border-border pb-3">
+            <div className="flex items-center justify-center gap-12 mb-6 border-b border-border pb-3">
               <button
                 onClick={() => setActiveTab("posts")}
-                className={`font-heading font-semibold text-base transition-colors border-b-2 -mb-3.5 pb-3 ${
+                className={`flex items-center gap-2 font-heading font-bold text-xs tracking-wider uppercase transition-colors border-b-2 -mb-3.5 pb-3 ${
                   activeTab === "posts"
                     ? "text-accent border-accent"
                     : "text-gray-400 border-transparent hover:text-gray-600"
                 }`}
+                title="Posts"
               >
-                Posts
+                <Grid className="w-4.5 h-4.5" />
+                <span>Posts</span>
               </button>
               <button
                 onClick={() => setActiveTab("reposts")}
-                className={`font-heading font-semibold text-base transition-colors border-b-2 -mb-3.5 pb-3 ${
+                className={`flex items-center gap-2 font-heading font-bold text-xs tracking-wider uppercase transition-colors border-b-2 -mb-3.5 pb-3 ${
                   activeTab === "reposts"
                     ? "text-accent border-accent"
                     : "text-gray-400 border-transparent hover:text-gray-600"
                 }`}
+                title="Reposts"
               >
-                Reposts
+                <Repeat2 className="w-4.5 h-4.5" />
+                <span>Reposts</span>
               </button>
             </div>
             
