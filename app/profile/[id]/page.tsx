@@ -446,26 +446,14 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-16 bg-background text-body">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8">
-            {/* Left Column Skeleton */}
-            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-6 h-fit animate-pulse">
-              <div className="flex flex-col items-center sm:items-start space-y-4">
-                <div className="w-24 h-24 rounded-full bg-gray-200"></div>
-                <div className="space-y-2 w-full">
-                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              </div>
-            </div>
-            {/* Right Column Skeleton */}
-            <div className="space-y-8 animate-pulse">
-              <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              </div>
+      <div className="min-h-screen py-10 md:py-14 bg-background text-body">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-8 animate-pulse">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12 pb-8 border-b border-border">
+            <div className="w-32 h-32 md:w-[150px] md:h-[150px] rounded-full bg-gray-200 shrink-0"></div>
+            <div className="flex-1 space-y-4 w-full text-center md:text-left">
+              <div className="h-8 bg-gray-200 rounded w-48 mx-auto md:mx-0"></div>
+              <div className="h-6 bg-gray-200 rounded w-64 mx-auto md:mx-0"></div>
+              <div className="h-4 bg-gray-200 rounded w-full max-w-md mx-auto md:mx-0"></div>
             </div>
           </div>
         </div>
@@ -507,242 +495,259 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="min-h-screen py-16 bg-background text-body">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div className="min-h-screen py-10 md:py-14 bg-background text-body">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-8">
           
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8">
-            {/* Left Column (Sticky Sidebar) */}
-            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8 h-fit lg:sticky lg:top-24 relative">
-              
-              {isOwner && (
-                <div className="absolute top-4 right-4 z-30">
-                  <button
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    className="p-1.5 text-body hover:text-heading hover:bg-gray-100 rounded-lg transition-all"
-                    aria-label="Menu"
+          {/* Profile Header (Instagram Horizontal Style) */}
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12 pb-8 border-b border-border">
+            
+            {/* Avatar (~150px) */}
+            <div className="shrink-0 flex justify-center">
+              {profileStories.length > 0 ? (
+                <button
+                  onClick={() => setStoryViewerOpen(true)}
+                  className="focus:outline-none cursor-pointer group rounded-full"
+                >
+                  <div
+                    className={`w-32 h-32 md:w-[150px] md:h-[150px] rounded-full overflow-hidden border-2 flex items-center justify-center ${
+                      profileStories.some((s) => !viewedStoryIds.has(s.id))
+                        ? "border-transparent"
+                        : "border-gray-200"
+                    }`}
+                    style={
+                      profileStories.some((s) => !viewedStoryIds.has(s.id))
+                        ? {
+                            background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+                            padding: "4px",
+                          }
+                        : {
+                            padding: "2px",
+                          }
+                    }
                   >
-                    <Menu className="w-6 h-6" />
-                  </button>
-
-                  {menuOpen && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-56 bg-surface border border-border shadow-xl rounded-2xl z-50 overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-150">
-                        <Link
-                          href="/profile/edit"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                        >
-                          <Edit2 className="w-5 h-5 text-gray-400" />
-                          Edit Profile
-                        </Link>
-                        <Link
-                          href="/activity"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                        >
-                          <Activity className="w-5 h-5 text-gray-400" />
-                          Your Activity
-                        </Link>
-                        <Link
-                          href="/archive"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                        >
-                          <Archive className="w-5 h-5 text-gray-400" />
-                          Archive
-                        </Link>
-                        <div className="h-px bg-border my-1" />
-                        <Link
-                          href="/settings"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                        >
-                          <Settings className="w-5 h-5 text-gray-400" />
-                          Settings
-                        </Link>
-                        <button
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setSwitchModalOpen(true);
-                          }}
-                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
-                        >
-                          <Users className="w-5 h-5 text-gray-400" />
-                          Switch Account
-                        </button>
-                        <div className="h-px bg-border my-1" />
-                        <button
-                          onClick={() => {
-                            setMenuOpen(false);
-                            handleLogout();
-                          }}
-                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
-                        >
-                          <LogOut className="w-5 h-5 text-red-500" />
-                          Logout
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-              
-              <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-6">
-                {/* Avatar */}
-                {profileStories.length > 0 ? (
-                  <button
-                    onClick={() => setStoryViewerOpen(true)}
-                    className="focus:outline-none cursor-pointer group rounded-full"
-                  >
-                    <div
-                      className={`w-24 h-24 rounded-full overflow-hidden border-2 flex items-center justify-center ${
-                        profileStories.some((s) => !viewedStoryIds.has(s.id))
-                          ? "border-transparent"
-                          : "border-gray-200"
-                      }`}
-                      style={
-                        profileStories.some((s) => !viewedStoryIds.has(s.id))
-                          ? {
-                              background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
-                              padding: "3px",
-                            }
-                          : {
-                              padding: "2px",
-                            }
-                      }
-                    >
-                      <div className="w-full h-full rounded-full overflow-hidden bg-surface flex items-center justify-center">
-                        {profile.avatar_url ? (
-                          <img
-                            src={profile.avatar_url}
-                            alt={profile.name}
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : (
-                          <div className="w-full h-full rounded-full bg-background flex items-center justify-center text-3xl font-medium text-gray-400">
-                            {initials}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ) : profile.avatar_url ? (
-                  <button
-                    onClick={() => setAvatarViewerOpen(true)}
-                    className="focus:outline-none cursor-pointer group rounded-full"
-                  >
-                    <div className="w-24 h-24 rounded-full overflow-hidden border border-border group-hover:opacity-90 transition-opacity">
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </button>
-                ) : (
-                  <div className="w-24 h-24 rounded-full overflow-hidden border border-border">
-                    <div className="w-full h-full rounded-full bg-background flex items-center justify-center text-3xl font-medium text-gray-400">
-                      {initials}
-                    </div>
-                  </div>
-                )}
-
-                {/* Basic Info */}
-                <div className="space-y-2 w-full">
-                  <h1 className="text-2xl font-heading font-bold tracking-tight text-heading">
-                    {profile.name}
-                  </h1>
-                  <p className="text-sm font-mono text-body">
-                    {profile.headline}
-                  </p>
-                  {profile.organization && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      {profile.organization}
-                    </p>
-                  )}
-
-                  {/* Counts: Posts · Followers · Following */}
-                  <div className="flex items-center gap-4 mt-3 flex-wrap text-sm">
-                    <div>
-                      <span className="font-semibold text-heading">{postsCount}</span>
-                      <span className="text-body ml-1">{postsCount === 1 ? "Post" : "Posts"}</span>
-                    </div>
-                    <span className="text-border">·</span>
-                    <button
-                      onClick={() => {
-                        setFollowListType("followers");
-                        setFollowListModalOpen(true);
-                      }}
-                      className="hover:text-accent hover:underline transition-colors flex items-center cursor-pointer"
-                    >
-                      <span className="font-semibold text-heading">{followersCount}</span>
-                      <span className="text-body ml-1">{followersCount === 1 ? "Follower" : "Followers"}</span>
-                    </button>
-                    <span className="text-border">·</span>
-                    <button
-                      onClick={() => {
-                        setFollowListType("following");
-                        setFollowListModalOpen(true);
-                      }}
-                      className="hover:text-accent hover:underline transition-colors flex items-center cursor-pointer"
-                    >
-                      <span className="font-semibold text-heading">{followingCount}</span>
-                      <span className="text-body ml-1">Following</span>
-                    </button>
-                  </div>
-                  
-                  {currentUserId && !isOwner && (
-                    <div className="mt-4">
-                      {followError && (
-                        <div className="mb-2 px-3 py-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-xs text-red-600">
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          {followError}
+                    <div className="w-full h-full rounded-full overflow-hidden bg-surface flex items-center justify-center">
+                      {profile.avatar_url ? (
+                        <img
+                          src={profile.avatar_url}
+                          alt={profile.name}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <div className="w-full h-full rounded-full bg-background flex items-center justify-center text-4xl font-medium text-gray-400">
+                          {initials}
                         </div>
                       )}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleFollowToggle}
-                          disabled={followLoading}
-                          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors group disabled:opacity-50 ${
-                            isFollowing 
-                              ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
-                              : "bg-accent text-white border border-transparent hover:bg-accent/90"
-                          }`}
-                        >
-                          {followLoading ? "Loading..." : isFollowing ? (
-                            <>
-                              <span className="block group-hover:hidden">Following</span>
-                              <span className="hidden group-hover:block">Unfollow</span>
-                            </>
-                          ) : "Follow"}
-                        </button>
-                        <button
-                          onClick={() => alert("Messaging coming soon")}
-                          className="flex items-center justify-center gap-2 px-4 py-2 bg-surface border border-border text-heading hover:bg-gray-50 transition-colors text-sm font-medium rounded-lg flex-1"
-                        >
-                          <MessageCircle className="w-4.5 h-4.5 text-gray-500" />
-                          <span>Message</span>
-                        </button>
-                      </div>
+                    </div>
+                  </div>
+                </button>
+              ) : profile.avatar_url ? (
+                <button
+                  onClick={() => setAvatarViewerOpen(true)}
+                  className="focus:outline-none cursor-pointer group rounded-full"
+                >
+                  <div className="w-32 h-32 md:w-[150px] md:h-[150px] rounded-full overflow-hidden border border-border group-hover:opacity-90 transition-opacity">
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </button>
+              ) : (
+                <div className="w-32 h-32 md:w-[150px] md:h-[150px] rounded-full overflow-hidden border border-border flex items-center justify-center bg-background">
+                  <span className="text-4xl font-medium text-gray-400">{initials}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Info Details */}
+            <div className="flex-1 min-w-0 space-y-4 text-center md:text-left w-full">
+              
+              {/* Row 1: Name + Actions + Hamburger Menu */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                <h1 className="text-2xl md:text-3xl font-heading font-bold tracking-tight text-heading">
+                  {profile.name}
+                </h1>
+
+                {/* Buttons */}
+                <div className="flex items-center gap-2">
+                  {isOwner ? (
+                    <Link
+                      href="/profile/edit"
+                      className="px-4 py-1.5 bg-surface border border-border text-heading hover:bg-gray-50 transition-colors text-sm font-medium rounded-lg"
+                    >
+                      Edit Profile
+                    </Link>
+                  ) : currentUserId ? (
+                    <>
+                      <button
+                        onClick={handleFollowToggle}
+                        disabled={followLoading}
+                        className={`px-5 py-1.5 text-sm font-medium rounded-lg transition-colors group disabled:opacity-50 ${
+                          isFollowing 
+                            ? "bg-surface border border-border text-heading hover:border-red-500 hover:text-red-600" 
+                            : "bg-accent text-white border border-transparent hover:bg-accent/90"
+                        }`}
+                      >
+                        {followLoading ? "Loading..." : isFollowing ? (
+                          <>
+                            <span className="block group-hover:hidden">Following</span>
+                            <span className="hidden group-hover:block">Unfollow</span>
+                          </>
+                        ) : "Follow"}
+                      </button>
+                      <button
+                        onClick={() => alert("Messaging coming soon")}
+                        className="flex items-center justify-center gap-1.5 px-4 py-1.5 bg-surface border border-border text-heading hover:bg-gray-50 transition-colors text-sm font-medium rounded-lg"
+                      >
+                        <MessageCircle className="w-4 h-4 text-gray-500" />
+                        <span>Message</span>
+                      </button>
+                    </>
+                  ) : null}
+
+                  {/* Hamburger Menu (if owner) */}
+                  {isOwner && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="p-1.5 text-body hover:text-heading hover:bg-gray-100 rounded-lg transition-all"
+                        aria-label="Menu"
+                      >
+                        <Menu className="w-6 h-6" />
+                      </button>
+
+                      {menuOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                          <div className="absolute right-0 mt-2 w-56 bg-surface border border-border shadow-xl rounded-2xl z-50 overflow-hidden py-2 text-left animate-in fade-in slide-in-from-top-2 duration-150">
+                            <Link
+                              href="/profile/edit"
+                              onClick={() => setMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                            >
+                              <Edit2 className="w-5 h-5 text-gray-400" />
+                              Edit Profile
+                            </Link>
+                            <Link
+                              href="/activity"
+                              onClick={() => setMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                            >
+                              <Activity className="w-5 h-5 text-gray-400" />
+                              Your Activity
+                            </Link>
+                            <Link
+                              href="/archive"
+                              onClick={() => setMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                            >
+                              <Archive className="w-5 h-5 text-gray-400" />
+                              Archive
+                            </Link>
+                            <div className="h-px bg-border my-1" />
+                            <Link
+                              href="/settings"
+                              onClick={() => setMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                            >
+                              <Settings className="w-5 h-5 text-gray-400" />
+                              Settings
+                            </Link>
+                            <button
+                              onClick={() => {
+                                setMenuOpen(false);
+                                setSwitchModalOpen(true);
+                              }}
+                              className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-body hover:bg-gray-50 transition-colors font-medium"
+                            >
+                              <Users className="w-5 h-5 text-gray-400" />
+                              Switch Account
+                            </button>
+                            <div className="h-px bg-border my-1" />
+                            <button
+                              onClick={() => {
+                                setMenuOpen(false);
+                                handleLogout();
+                              }}
+                              className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                            >
+                              <LogOut className="w-5 h-5 text-red-500" />
+                              Logout
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Links */}
-              {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
-                <div className="space-y-3 pt-6 border-t border-border">
-                  <h2 className="font-mono text-xs uppercase text-accent">&gt; Links</h2>
-                  <div className="flex flex-col gap-3">
+              {/* Follow Error Alert */}
+              {followError && (
+                <div className="px-3 py-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-xs text-red-600 w-fit mx-auto md:mx-0">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {followError}
+                </div>
+              )}
+
+              {/* Row 2: Stats (Posts, Followers, Following) */}
+              <div className="flex items-center justify-center md:justify-start gap-8 text-sm md:text-base">
+                <div>
+                  <span className="font-bold text-heading">{postsCount}</span>
+                  <span className="text-body ml-1.5">{postsCount === 1 ? "post" : "posts"}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setFollowListType("followers");
+                    setFollowListModalOpen(true);
+                  }}
+                  className="hover:text-accent transition-colors flex items-center cursor-pointer"
+                >
+                  <span className="font-bold text-heading">{followersCount}</span>
+                  <span className="text-body ml-1.5">{followersCount === 1 ? "follower" : "followers"}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setFollowListType("following");
+                    setFollowListModalOpen(true);
+                  }}
+                  className="hover:text-accent transition-colors flex items-center cursor-pointer"
+                >
+                  <span className="font-bold text-heading">{followingCount}</span>
+                  <span className="text-body ml-1.5">following</span>
+                </button>
+              </div>
+
+              {/* Row 3: Headline, Organization, Bio, Links, Skills */}
+              <div className="space-y-1.5 text-sm text-center md:text-left">
+                {profile.headline && (
+                  <p className="font-semibold text-heading font-mono">
+                    {profile.headline}
+                  </p>
+                )}
+                {profile.organization && (
+                  <p className="text-gray-500 font-medium">
+                    {profile.organization}
+                  </p>
+                )}
+                {profile.bio && (
+                  <p className="text-body leading-relaxed whitespace-pre-wrap pt-1">
+                    {profile.bio}
+                  </p>
+                )}
+
+                {/* Links */}
+                {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
                     {profile.github_url && (
                       <a
                         href={profile.github_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-body hover:text-accent transition-colors w-fit"
+                        className="flex items-center gap-1.5 text-sm text-accent hover:underline transition-colors"
                       >
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
                           <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
                         </svg>
                         GitHub
@@ -753,9 +758,9 @@ export default function ProfilePage() {
                         href={profile.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-body hover:text-accent transition-colors w-fit"
+                        className="flex items-center gap-1.5 text-sm text-accent hover:underline transition-colors"
                       >
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
                           <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                         </svg>
                         LinkedIn
@@ -766,9 +771,9 @@ export default function ProfilePage() {
                         href={profile.portfolio_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-body hover:text-accent transition-colors w-fit"
+                        className="flex items-center gap-1.5 text-sm text-accent hover:underline transition-colors"
                       >
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                         </svg>
@@ -776,94 +781,73 @@ export default function ProfilePage() {
                       </a>
                     )}
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-8">
-              
-              {/* Profile Details Cards */}
-              <div className="space-y-8">
-                {/* Bio */}
-                {profile.bio && (
-                  <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
-                    <h2 className="font-mono text-xs uppercase text-accent">&gt; BIO</h2>
-                    <p className="text-body leading-relaxed whitespace-pre-wrap">
-                      {profile.bio}
-                    </p>
-                  </div>
                 )}
 
                 {/* Skills */}
                 {profile.skills && profile.skills.length > 0 && (
-                  <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-5">
-                    <h2 className="font-mono text-xs uppercase text-accent">&gt; Skills</h2>
-                    <div className="flex flex-wrap gap-2.5">
-                      {profile.skills.map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="font-mono text-xs bg-blue-50 px-3 py-1 text-accent rounded-full border border-accent/20"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-2">
+                    {profile.skills.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="font-mono text-xs bg-blue-50 px-2.5 py-0.5 text-accent rounded-full border border-accent/20"
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
-
-              {/* Posts/Reposts Tabs */}
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center gap-6 mb-6">
-                  <button
-                    onClick={() => setActiveTab("posts")}
-                    className={`font-heading font-semibold text-lg transition-colors border-b-2 pb-1 ${
-                      activeTab === "posts"
-                        ? "text-accent border-accent"
-                        : "text-gray-400 border-transparent hover:text-gray-600"
-                    }`}
-                  >
-                    Posts
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("reposts")}
-                    className={`font-heading font-semibold text-lg transition-colors border-b-2 pb-1 ${
-                      activeTab === "reposts"
-                        ? "text-accent border-accent"
-                        : "text-gray-400 border-transparent hover:text-gray-600"
-                    }`}
-                  >
-                    Reposts
-                  </button>
-                </div>
-                
-                {postsLoading ? (
-                    <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
-                  ) : (
-                    <>
-                      {activeTab === "posts" && posts.filter(p => p.type !== "repost").length === 0 && (
-                        <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
-                          No posts yet
-                        </div>
-                      )}
-                      {activeTab === "reposts" && posts.filter(p => p.type === "repost").length === 0 && (
-                        <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
-                          No reposts yet
-                        </div>
-                      )}
-                      {(activeTab === "posts" ? posts.filter(p => p.type !== "repost").length > 0 : posts.filter(p => p.type === "repost").length > 0) && (
-                        <PostGrid 
-                          posts={posts.filter(p => activeTab === "posts" ? p.type !== "repost" : p.type === "repost")} 
-                          loading={false} 
-                          currentUserId={currentUserId} 
-                        />
-                      )}
-                    </>
-                  )}
-              </div>
-
             </div>
+          </div>
+
+          {/* Posts / Reposts Tabs */}
+          <div className="pt-2">
+            <div className="flex items-center justify-center gap-8 mb-6 border-b border-border pb-3">
+              <button
+                onClick={() => setActiveTab("posts")}
+                className={`font-heading font-semibold text-base transition-colors border-b-2 -mb-3.5 pb-3 ${
+                  activeTab === "posts"
+                    ? "text-accent border-accent"
+                    : "text-gray-400 border-transparent hover:text-gray-600"
+                }`}
+              >
+                Posts
+              </button>
+              <button
+                onClick={() => setActiveTab("reposts")}
+                className={`font-heading font-semibold text-base transition-colors border-b-2 -mb-3.5 pb-3 ${
+                  activeTab === "reposts"
+                    ? "text-accent border-accent"
+                    : "text-gray-400 border-transparent hover:text-gray-600"
+                }`}
+              >
+                Reposts
+              </button>
+            </div>
+            
+            {postsLoading ? (
+              <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
+            ) : (
+              <>
+                {activeTab === "posts" && posts.filter(p => p.type !== "repost").length === 0 && (
+                  <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
+                    No posts yet
+                  </div>
+                )}
+                {activeTab === "reposts" && posts.filter(p => p.type === "repost").length === 0 && (
+                  <div className="text-center py-12 text-gray-500 font-medium bg-surface border border-border rounded-xl">
+                    No reposts yet
+                  </div>
+                )}
+                {(activeTab === "posts" ? posts.filter(p => p.type !== "repost").length > 0 : posts.filter(p => p.type === "repost").length > 0) && (
+                  <PostGrid 
+                    posts={posts.filter(p => activeTab === "posts" ? p.type !== "repost" : p.type === "repost")} 
+                    loading={false} 
+                    currentUserId={currentUserId} 
+                  />
+                )}
+              </>
+            )}
           </div>
 
         </div>
