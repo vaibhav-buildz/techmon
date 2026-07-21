@@ -157,7 +157,7 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
             return {
               ...post,
               isLikedByMe: currentlyLiked,
-              likeCount: currentlyLiked ? post.likeCount : Math.max(0, post.likeCount - 1),
+              likeCount: currentlyLiked ? post.likeCount + 1 : Math.max(0, post.likeCount - 1),
             };
           }
           return post;

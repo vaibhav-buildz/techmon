@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react";
 import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle, Share2, Repeat2, Bookmark, Archive, ArchiveRestore } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import FollowListModal from "./FollowListModal";
 import EditPostModal from "./EditPostModal";
 import SharePostModal from "./SharePostModal";
 import LikesModal from "./LikesModal";
 import { Post, CommentResult } from "@/lib/types";
-import CommentsSection from "@/components/CommentsSection";
 import HashtagText from "@/components/HashtagText";
 import CommentItem from "@/components/CommentItem";
 
@@ -446,49 +444,52 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
               </button>
               
               {showMenu && (
-                <div className="absolute right-0 mt-1 w-36 bg-surface border border-border shadow-lg rounded-xl overflow-hidden z-10 py-1">
-                  <button
-                    onClick={handleMenuSaveToggle}
-                    className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                  >
-                    <Bookmark className={`w-4 h-4 ${(post.savedCollectionIds || []).length > 0 ? "fill-current text-accent" : ""}`} /> 
-                    {(post.savedCollectionIds || []).length > 0 ? "Unsave" : "Save"}
-                  </button>
-                  {currentUserId === post.user_id && (
-                    <>
-                      {(post.type === "note" || post.type === "media") && (
+                <>
+                  <div className="fixed inset-0 z-[9]" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 mt-1 w-36 bg-surface border border-border shadow-lg rounded-xl overflow-hidden z-10 py-1">
+                    <button
+                      onClick={handleMenuSaveToggle}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                    >
+                      <Bookmark className={`w-4 h-4 ${(post.savedCollectionIds || []).length > 0 ? "fill-current text-accent" : ""}`} /> 
+                      {(post.savedCollectionIds || []).length > 0 ? "Unsave" : "Save"}
+                    </button>
+                    {currentUserId === post.user_id && (
+                      <>
+                        {(post.type === "note" || post.type === "media") && (
+                          <button
+                            onClick={() => {
+                              setShowMenu(false);
+                              setShowEditModal(true);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" /> Edit
+                          </button>
+                        )}
+                        <button
+                          onClick={handleArchiveToggle}
+                          className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          {post.archived ? (
+                            <><ArchiveRestore className="w-4 h-4" /> Unarchive</>
+                          ) : (
+                            <><Archive className="w-4 h-4" /> Archive</>
+                          )}
+                        </button>
                         <button
                           onClick={() => {
                             setShowMenu(false);
-                            setShowEditModal(true);
+                            setShowDeleteConfirm(true);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                         >
-                          <Edit2 className="w-4 h-4" /> Edit
+                          <Trash2 className="w-4 h-4" /> Delete
                         </button>
-                      )}
-                      <button
-                        onClick={handleArchiveToggle}
-                        className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                      >
-                        {post.archived ? (
-                          <><ArchiveRestore className="w-4 h-4" /> Unarchive</>
-                        ) : (
-                          <><Archive className="w-4 h-4" /> Archive</>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowMenu(false);
-                          setShowDeleteConfirm(true);
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" /> Delete
-                      </button>
-                    </>
-                  )}
-                </div>
+                      </>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -516,7 +517,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
         isOpen={isLikesModalOpen}
         onClose={() => setIsLikesModalOpen(false)}
         postId={post.id}
-        currentUserId={currentUserId}
+        currentUserId={currentUserId ?? null}
       />
       {showDeleteConfirm && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-sm">
