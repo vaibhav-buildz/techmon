@@ -17,6 +17,7 @@ type NotificationResult = {
   actor_profile?: {
     name: string;
     avatar_url: string;
+    username?: string;
   };
 };
 
@@ -79,7 +80,7 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
         // 2. Fetch actor profiles
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
-          .select("id, name, avatar_url")
+          .select("id, name, avatar_url, username")
           .in("id", actorIds);
 
         if (profilesError) throw profilesError;
@@ -91,7 +92,7 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
           return {
             ...n,
             actor_profile: profile
-              ? { name: profile.name, avatar_url: profile.avatar_url || "" }
+              ? { name: profile.name, avatar_url: profile.avatar_url || "", username: profile.username }
               : { name: "Someone", avatar_url: "" },
           };
         });
@@ -136,7 +137,7 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
   const handleNotificationClick = async (notif: NotificationResult) => {
     if (notif.type === "follow") {
       onClose();
-      router.push(`/profile/${notif.actor_id}`);
+      router.push(`/profile/${notif.actor_profile?.username || notif.actor_id}`);
       return;
     }
 

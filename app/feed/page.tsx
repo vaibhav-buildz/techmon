@@ -47,7 +47,7 @@ export default function FeedPage() {
       // 2. Fetch profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url, headline")
+        .select("id, name, avatar_url, headline, username")
         .in("id", Array.from(userIds));
         
       if (profilesError) throw profilesError;

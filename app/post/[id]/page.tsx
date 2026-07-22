@@ -58,7 +58,7 @@ export default function StandalonePostPage() {
       // Fetch profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url, headline")
+        .select("id, name, avatar_url, headline, username")
         .in("id", Array.from(userIdsToFetch));
         
       if (profilesError) throw profilesError;
@@ -105,14 +105,15 @@ export default function StandalonePostPage() {
           name: authorProfile.name,
           avatar_url: authorProfile.avatar_url || "",
           headline: authorProfile.headline || "",
+          username: (authorProfile as any).username,
         },
         likeCount: postLikes.length,
-        commentCount: (commentsData || []).length,
+        commentCount: commentsData?.length || 0,
         isLikedByMe,
         savedCollectionIds,
       };
 
-      if (originalPostData) {
+      if (postData.type === "repost" && originalPostData) {
         const opProfile = profileMap.get(originalPostData.user_id) || { name: 'Unknown', avatar_url: '', headline: '' };
         mergedPost.original_post = {
           ...originalPostData,
@@ -120,6 +121,7 @@ export default function StandalonePostPage() {
             name: opProfile.name,
             avatar_url: opProfile.avatar_url || "",
             headline: opProfile.headline || "",
+            username: (opProfile as any).username,
           },
           likeCount: 0,
           commentCount: 0,

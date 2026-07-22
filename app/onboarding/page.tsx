@@ -14,6 +14,10 @@ export default function OnboardingPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   // Form state
+  const [username, setUsername] = useState("");
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"available" | "taken" | "invalid" | null>(null);
+  const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [headline, setHeadline] = useState("");
   const [organization, setOrganization] = useState("");
@@ -39,7 +43,7 @@ export default function OnboardingPage() {
           .single();
 
         if (profile) {
-          router.push(`/profile/${user.id}`);
+          router.push(`/profile/${profile.username || user.id}`);
         } else if (profileError && profileError.code !== "PGRST116") { // PGRST116 is "No rows found"
           throw profileError;
         }
@@ -53,9 +57,71 @@ export default function OnboardingPage() {
     checkUser();
   }, [router]);
 
+  // Debounced username availability check
+  useEffect(() => {
+    if (!username.trim()) {
+      setUsernameStatus(null);
+      setUsernameMessage(null);
+      setCheckingUsername(false);
+      return;
+    }
+
+    if (username.length < 3) {
+      setUsernameStatus("invalid");
+      setUsernameMessage("Username must be at least 3 characters");
+      setCheckingUsername(false);
+      return;
+    }
+
+    setCheckingUsername(true);
+    setUsernameStatus(null);
+    setUsernameMessage(null);
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("username", username);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setUsernameStatus("taken");
+          setUsernameMessage("Username is taken");
+        } else {
+          setUsernameStatus("available");
+          setUsernameMessage("Username is available");
+        }
+      } catch (err) {
+        console.error("[Onboarding] Error checking username:", err);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username]);
+
+  const handleUsernameChange = (val: string) => {
+    // Only allow lowercase letters, numbers, underscores
+    const sanitized = val.toLowerCase().replace(/[^a-z0-9_]/g, "");
+    setUsername(sanitized);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
+
+    if (!username.trim() || username.length < 3) {
+      setError("Please enter a valid username (at least 3 characters).");
+      return;
+    }
+
+    if (usernameStatus === "taken") {
+      setError("Username is taken. Please choose another one.");
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
@@ -63,6 +129,7 @@ export default function OnboardingPage() {
     try {
       const { error } = await supabase.from("profiles").insert({
         id: userId,
+        username: username.trim(),
         name,
         headline,
         organization,
@@ -78,7 +145,7 @@ export default function OnboardingPage() {
         addAccount(session, { name, avatar_url: "" });
       }
 
-      router.push(`/profile/${userId}`);
+      router.push(`/profile/${username.trim()}`);
     } catch (err: any) {
       setError(err.message);
       setSubmitting(false);
@@ -123,6 +190,42 @@ export default function OnboardingPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-heading mb-1">
+                  Username
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 text-gray-500 font-mono text-sm select-none">
+                    @
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm font-mono placeholder-gray-400 transition-shadow"
+                    placeholder="username"
+                    maxLength={30}
+                  />
+                </div>
+                {checkingUsername && (
+                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                    Checking availability...
+                  </p>
+                )}
+                {!checkingUsername && usernameStatus === "available" && (
+                  <p className="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                    ✓ Username is available
+                  </p>
+                )}
+                {!checkingUsername && (usernameStatus === "taken" || usernameStatus === "invalid") && (
+                  <p className="text-xs text-red-600 font-medium mt-1 flex items-center gap-1">
+                    ✕ {usernameMessage}
+                  </p>
+                )}
+                <p className="text-xs text-body mt-1">Only lowercase letters, numbers, and underscores</p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-heading mb-1">
                   Full Name

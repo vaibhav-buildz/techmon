@@ -18,11 +18,18 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
         setUser(session?.user || null);
 
         if (session?.user) {
-          const { data: profileData } = await supabase
+          let { data: profileData } = await supabase
             .from("profiles")
-            .select("id, name, avatar_url")
+            .select("id, name, avatar_url, username")
             .eq("id", session.user.id)
-            .single();
+            .maybeSingle();
+
+          if (profileData && !profileData.username) {
+            const gen = (profileData.name || "user").toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 15) || "user";
+            const autoUsername = `${gen}_${session.user.id.slice(0, 4)}`;
+            profileData.username = autoUsername;
+            await supabase.from("profiles").update({ username: autoUsername }).eq("id", session.user.id);
+          }
 
           setProfile(profileData || null);
           addAccount(session, profileData);
@@ -41,12 +48,19 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user || null);
       if (session?.user) {
-        const { data: profileData } = await supabase
+        let { data: profileData } = await supabase
           .from("profiles")
-          .select("id, name, avatar_url")
+          .select("id, name, avatar_url, username")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
         
+        if (profileData && !profileData.username) {
+          const gen = (profileData.name || "user").toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 15) || "user";
+          const autoUsername = `${gen}_${session.user.id.slice(0, 4)}`;
+          profileData.username = autoUsername;
+          await supabase.from("profiles").update({ username: autoUsername }).eq("id", session.user.id);
+        }
+
         setProfile(profileData || null);
         addAccount(session, profileData);
       } else {

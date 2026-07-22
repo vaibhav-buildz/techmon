@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Heart, Send, Trash2, MoreHorizontal, AlertCircle } from "lucide-react";
 import { CommentResult } from "@/lib/types";
 const getRelativeTime = (dateString: string) => {
@@ -72,22 +73,26 @@ export default function CommentItem({ comment, currentUserId, postOwnerId, onLik
 
   return (
     <div className={`flex gap-3 ${isReply ? 'mt-3' : 'mt-4'}`}>
-      {comment.profiles.avatar_url ? (
-        <img 
-          src={comment.profiles.avatar_url} 
-          alt="" 
-          className={`${isReply ? 'w-6 h-6' : 'w-8 h-8'} rounded-full object-cover shrink-0 border border-border`} 
-        />
-      ) : (
-        <div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-500 shrink-0 border border-border`}>
-          {comment.profiles.name.charAt(0).toUpperCase()}
-        </div>
-      )}
+      <Link href={`/profile/${comment.profiles.username || comment.user_id}`} className="shrink-0 hover:opacity-80 transition-opacity">
+        {comment.profiles.avatar_url ? (
+          <img 
+            src={comment.profiles.avatar_url} 
+            alt="" 
+            className={`${isReply ? 'w-6 h-6' : 'w-8 h-8'} rounded-full object-cover shrink-0 border border-border`} 
+          />
+        ) : (
+          <div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-500 shrink-0 border border-border`}>
+            {comment.profiles.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </Link>
       
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-baseline gap-2">
-            <span className="font-semibold text-sm text-heading">{comment.profiles.name}</span>
+            <Link href={`/profile/${comment.profiles.username || comment.user_id}`} className="font-semibold text-sm text-heading hover:underline">
+              {comment.profiles.name}
+            </Link>
             <span className="text-xs text-gray-400">{getRelativeTime(comment.created_at)}</span>
           </div>
           

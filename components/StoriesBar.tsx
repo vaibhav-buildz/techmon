@@ -68,7 +68,7 @@ export default function StoriesBar({ userId, userProfile }: Props) {
       const storyUserIds = [...new Set(storiesData.map((s) => s.user_id))];
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url")
+        .select("id, name, avatar_url, username")
         .in("id", storyUserIds);
 
       if (profilesError) throw profilesError;
@@ -118,6 +118,7 @@ export default function StoriesBar({ userId, userProfile }: Props) {
           userId: uid,
           name: profile?.name || "Unknown",
           avatar_url: profile?.avatar_url || "",
+          username: profile?.username,
           stories,
         });
       }

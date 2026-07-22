@@ -10,6 +10,7 @@ type ProfileListItem = {
   name: string;
   avatar_url?: string;
   headline?: string;
+  username?: string;
   isFollowing?: boolean;
 };
 
@@ -56,7 +57,7 @@ export default function LikesModal({
       // 2. Fetch profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url, headline")
+        .select("id, name, avatar_url, headline, username")
         .in("id", targetIds);
 
       if (profilesError) throw profilesError;
@@ -206,7 +207,7 @@ export default function LikesModal({
               {users.map((user) => (
                 <div key={user.id} className="flex items-center justify-between group">
                   <Link 
-                    href={`/profile/${user.id}`}
+                    href={`/profile/${user.username || user.id}`}
                     onClick={onClose}
                     className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
                   >

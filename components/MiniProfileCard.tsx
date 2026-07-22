@@ -21,7 +21,7 @@ export default function MiniProfileCard({ userId }: { userId: string }) {
       // 1. Profile
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, name, headline, avatar_url")
+        .select("id, name, headline, avatar_url, username")
         .eq("id", userId)
         .single();
       
@@ -71,7 +71,7 @@ export default function MiniProfileCard({ userId }: { userId: string }) {
         <div className="h-16 bg-accent/10 w-full relative" />
         
         <div className="px-4 pb-4 -mt-8 flex flex-col items-center text-center">
-          <Link href={`/profile/${userId}`} className="block relative bg-surface p-1 rounded-full hover:opacity-90 transition-opacity">
+          <Link href={`/profile/${profile.username || userId}`} className="block relative bg-surface p-1 rounded-full hover:opacity-90 transition-opacity">
             {profile.avatar_url ? (
               <img src={profile.avatar_url} alt="Profile" className="w-16 h-16 rounded-full object-cover border border-border" />
             ) : (
@@ -81,7 +81,7 @@ export default function MiniProfileCard({ userId }: { userId: string }) {
             )}
           </Link>
           
-          <Link href={`/profile/${userId}`} className="mt-2 block hover:underline">
+          <Link href={`/profile/${profile.username || userId}`} className="mt-2 block hover:underline">
             <h2 className="font-heading font-semibold text-heading text-lg">{profile.name}</h2>
           </Link>
           <p className="text-sm font-mono text-body mt-1 line-clamp-2">{profile.headline || "Add a headline in your profile"}</p>

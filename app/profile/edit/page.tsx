@@ -14,6 +14,12 @@ export default function EditProfilePage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   // Form state
+  const [username, setUsername] = useState("");
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"available" | "taken" | "invalid" | null>(null);
+  const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
+
   const [name, setName] = useState("");
   const [headline, setHeadline] = useState("");
   const [organization, setOrganization] = useState("");
@@ -47,6 +53,8 @@ export default function EditProfilePage() {
         }
 
         if (profile) {
+          setUsername(profile.username || "");
+          setOriginalUsername(profile.username || "");
           setName(profile.name || "");
           setHeadline(profile.headline || "");
           setOrganization(profile.organization || "");
@@ -66,6 +74,66 @@ export default function EditProfilePage() {
 
     fetchUserAndProfile();
   }, [router]);
+
+  // Debounced username availability check
+  useEffect(() => {
+    if (!username.trim()) {
+      setUsernameStatus(null);
+      setUsernameMessage(null);
+      setCheckingUsername(false);
+      return;
+    }
+
+    if (username.length < 3) {
+      setUsernameStatus("invalid");
+      setUsernameMessage("Username must be at least 3 characters");
+      setCheckingUsername(false);
+      return;
+    }
+
+    // If unchanged, it's valid/available for the current user
+    if (username === originalUsername) {
+      setUsernameStatus("available");
+      setUsernameMessage("This is your current username");
+      setCheckingUsername(false);
+      return;
+    }
+
+    setCheckingUsername(true);
+    setUsernameStatus(null);
+    setUsernameMessage(null);
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("username", username)
+          .neq("id", userId || "");
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setUsernameStatus("taken");
+          setUsernameMessage("Username is taken");
+        } else {
+          setUsernameStatus("available");
+          setUsernameMessage("Username is available");
+        }
+      } catch (err) {
+        console.error("[EditProfile] Error checking username:", err);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username, originalUsername, userId]);
+
+  const handleUsernameChange = (val: string) => {
+    const sanitized = val.toLowerCase().replace(/[^a-z0-9_]/g, "");
+    setUsername(sanitized);
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -101,8 +169,15 @@ export default function EditProfilePage() {
     e.preventDefault();
     if (!userId) return;
 
-    setSubmitting(true);
-    setError(null);
+    if (!username.trim() || username.length < 3) {
+      setError("Please enter a valid username (at least 3 characters).");
+      return;
+    }
+
+    if (usernameStatus === "taken") {
+      setError("Username is taken. Please choose another one.");
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
@@ -111,6 +186,7 @@ export default function EditProfilePage() {
       const { error } = await supabase
         .from("profiles")
         .update({
+          username: username.trim(),
           name,
           headline,
           organization,
@@ -125,7 +201,7 @@ export default function EditProfilePage() {
 
       if (error) throw error;
 
-      router.push(`/profile/${userId}`);
+      router.push(`/profile/${username.trim()}`);
     } catch (err: any) {
       setError(err.message);
       setSubmitting(false);
@@ -188,7 +264,7 @@ export default function EditProfilePage() {
           </div>
           {userId && (
             <Link
-              href={`/profile/${userId}`}
+              href={`/profile/${originalUsername || userId}`}
               className="text-sm font-medium text-body hover:text-accent transition-colors"
             >
               Cancel
@@ -207,32 +283,67 @@ export default function EditProfilePage() {
               </label>
               <div className="flex flex-col gap-4">
                 {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Avatar preview"
-                    className="w-20 h-20 rounded-full object-cover border border-border"
-                  />
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden border border-border">
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-background border border-border flex items-center justify-center text-gray-400 text-xs font-medium">
-                    None
+                  <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xl">
+                    {name?.charAt(0)?.toUpperCase() || "?"}
                   </div>
                 )}
                 <div>
-                  <label className={`cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors ${uploadingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
-                    {uploadingAvatar ? "Uploading..." : "Change photo"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarUpload}
-                      disabled={uploadingAvatar}
-                    />
-                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                    className="text-xs text-body file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-surface file:text-heading hover:file:bg-gray-100 transition-colors"
+                  />
+                  {uploadingAvatar && (
+                    <p className="text-xs text-accent mt-1">Uploading...</p>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="w-full h-px bg-border my-4"></div>
+          </div>
+
+          {/* Right Column (Fields) */}
+          <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-6">
+            
+            <div>
+              <label className="block text-sm font-medium text-heading mb-1">
+                Username
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-gray-500 font-mono text-sm select-none">
+                  @
+                </span>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  className="w-full pl-8 pr-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm font-mono placeholder-gray-400 transition-shadow"
+                  placeholder="username"
+                  maxLength={30}
+                />
+              </div>
+              {checkingUsername && (
+                <p className="text-xs text-gray-500 mt-1">Checking availability...</p>
+              )}
+              {!checkingUsername && usernameStatus === "available" && (
+                <p className="text-xs text-green-600 font-medium mt-1">✓ {usernameMessage}</p>
+              )}
+              {!checkingUsername && (usernameStatus === "taken" || usernameStatus === "invalid") && (
+                <p className="text-xs text-red-600 font-medium mt-1">✕ {usernameMessage}</p>
+              )}
+              <p className="text-xs text-body mt-1">Only lowercase letters, numbers, and underscores</p>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-heading mb-1">

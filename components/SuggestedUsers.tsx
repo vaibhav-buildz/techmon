@@ -31,7 +31,7 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
 
       let query = supabase
         .from("profiles")
-        .select("id, name, headline, avatar_url")
+        .select("id, name, headline, avatar_url, username")
         .limit(5);
 
       if (excludeIds.length > 0) {
@@ -102,7 +102,7 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
       <div className="space-y-4">
         {suggestions.map((profile) => (
           <div key={profile.id} className="flex items-center justify-between gap-2">
-            <Link href={`/profile/${profile.id}`} className="flex items-center gap-3 min-w-0 group flex-1">
+            <Link href={`/profile/${(profile as any).username || profile.id}`} className="flex items-center gap-3 min-w-0 group flex-1">
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt="Profile" className="w-10 h-10 rounded-full object-cover shrink-0 border border-border group-hover:opacity-90 transition-opacity" />
               ) : (

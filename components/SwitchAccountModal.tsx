@@ -35,7 +35,7 @@ export default function SwitchAccountModal({ isOpen, onClose, currentUserId }: P
     try {
       const account = await switchToAccount(userId);
       // Force reload/redirect to the profile page of the switched user
-      window.location.href = `/profile/${account.user_id}`;
+      window.location.href = `/profile/${(account as any).username || account.user_id}`;
     } catch (err: any) {
       setError(err.message || "Failed to switch accounts.");
       // Refresh list as the failed account might have been removed

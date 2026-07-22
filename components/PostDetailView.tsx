@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { X, MoreHorizontal, Trash2, Edit2, Send, AlertCircle, Share2, Repeat2, Bookmark, Archive, ArchiveRestore } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import EditPostModal from "./EditPostModal";
@@ -80,7 +81,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
       const userIds = [...new Set(commentsData.map((c) => c.user_id))];
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url")
+        .select("id, name, avatar_url, username")
         .in("id", userIds);
 
       if (profilesError) throw profilesError;
@@ -88,9 +89,10 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
 
       const processedComments = commentsData.map((c) => {
         const commentLikes = likesData?.filter(l => l.comment_id === c.id) || [];
+        const p = profileMap.get(c.user_id);
         return {
           ...c,
-          profiles: profileMap.get(c.user_id) || { name: "Unknown", avatar_url: "" },
+          profiles: p ? { name: p.name, avatar_url: p.avatar_url || "", username: p.username } : { name: "Unknown", avatar_url: "" },
           likeCount: commentLikes.length,
           isLikedByMe: currentUserId ? commentLikes.some(l => l.user_id === currentUserId) : false,
           replies: []
@@ -409,20 +411,20 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
     <div className={`bg-surface flex flex-col min-h-0 w-full h-full relative ${!isModal ? 'border border-border rounded-2xl shadow-sm' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface shrink-0">
-        <div className="flex items-center gap-3">
+        <Link href={`/profile/${author?.username || post.user_id}`} className="flex items-center gap-3 group">
           {author?.avatar_url ? (
             <img
               src={author.avatar_url}
               alt={author.name}
-              className="w-10 h-10 rounded-full object-cover border border-border"
+              className="w-10 h-10 rounded-full object-cover border border-border group-hover:opacity-90 transition-opacity"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-xs font-medium text-gray-400">
+            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-xs font-medium text-gray-400 group-hover:opacity-90 transition-opacity">
               {initials}
             </div>
           )}
           <div>
-            <div className="font-heading font-semibold text-heading flex items-center gap-2">
+            <div className="font-heading font-semibold text-heading flex items-center gap-2 group-hover:underline">
               {author?.name || "Unknown User"}
               {isRepost && <span className="text-xs text-gray-500 font-normal flex items-center gap-1"><Repeat2 className="w-3 h-3" /> reposted</span>}
             </div>
@@ -430,7 +432,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
               {author?.headline || "No headline"}
             </p>
           </div>
-        </div>
+        </Link>
         
         <div className="flex items-center gap-2">
           {currentUserId && (

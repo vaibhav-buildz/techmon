@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { X, Bookmark } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import SaveToHighlightModal from "./SaveToHighlightModal";
@@ -18,6 +19,7 @@ export type StoryGroup = {
   userId: string;
   name: string;
   avatar_url: string;
+  username?: string;
   stories: Story[];
 };
 
@@ -235,7 +237,11 @@ export default function StoryViewer({
 
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-8 pb-4 bg-gradient-to-b from-black/60 to-transparent">
-          <div className="flex items-center gap-3">
+          <Link
+            href={`/profile/${currentGroup.username || currentGroup.userId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
             {currentGroup.avatar_url ? (
               <img
                 src={currentGroup.avatar_url}
@@ -248,14 +254,14 @@ export default function StoryViewer({
               </div>
             )}
             <div>
-              <p className="text-white text-sm font-semibold leading-tight">
+              <p className="text-white text-sm font-semibold leading-tight hover:underline">
                 {currentGroup.name}
               </p>
               <p className="text-white/60 text-xs">
                 {timeAgo(currentStory.created_at)}
               </p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-1">
             {viewerId && (viewerId === currentGroup.userId || viewerId === currentStory.user_id) && (

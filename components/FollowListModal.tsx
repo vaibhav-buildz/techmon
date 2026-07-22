@@ -10,6 +10,7 @@ type ProfileListItem = {
   name: string;
   avatar_url?: string;
   headline?: string;
+  username?: string;
   isFollowingBack?: boolean; // Only relevant for followers of own profile
 };
 
@@ -73,7 +74,7 @@ export default function FollowListModal({
       // 2. Fetch profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url, headline")
+        .select("id, name, avatar_url, headline, username")
         .in("id", targetIds);
 
       if (profilesError) throw profilesError;
@@ -236,7 +237,7 @@ export default function FollowListModal({
                   className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                 >
                   <Link
-                    href={`/profile/${user.id}`}
+                    href={`/profile/${user.username || user.id}`}
                     onClick={onClose}
                     className="flex items-center gap-3 flex-1 min-w-0 mr-3 hover:opacity-80 transition-opacity"
                   >

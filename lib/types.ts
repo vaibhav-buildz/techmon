@@ -20,6 +20,7 @@ export type Post = {
     name: string;
     avatar_url: string;
     headline: string;
+    username?: string;
   };
 };
 
@@ -35,5 +36,6 @@ export type CommentResult = {
   profiles: {
     name: string;
     avatar_url: string;
+    username?: string;
   };
 };
