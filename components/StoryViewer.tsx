@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X } from "lucide-react";
+import { X, Bookmark } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import SaveToHighlightModal from "./SaveToHighlightModal";
 
 export type Story = {
   id: string;
@@ -54,6 +55,7 @@ export default function StoryViewer({
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [saveHighlightOpen, setSaveHighlightOpen] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -255,17 +257,47 @@ export default function StoryViewer({
             </div>
           </div>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="p-2 text-white/80 hover:text-white transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-1">
+            {viewerId && (viewerId === currentGroup.userId || viewerId === currentStory.user_id) && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPaused(true);
+                  setSaveHighlightOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium backdrop-blur-sm transition-colors"
+                title="Highlight"
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                <span>Highlight</span>
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-2 text-white/80 hover:text-white transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
+
+        {/* Save to Highlight Modal */}
+        {saveHighlightOpen && viewerId && (
+          <SaveToHighlightModal
+            isOpen={saveHighlightOpen}
+            onClose={() => {
+              setSaveHighlightOpen(false);
+              setPaused(false);
+            }}
+            userId={viewerId}
+            storyId={currentStory.id}
+            storyMediaUrl={currentStory.media_url}
+          />
+        )}
 
         {/* Media content */}
         <div className="flex-1 flex items-center justify-center w-full h-full overflow-hidden">

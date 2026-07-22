@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import CreatePostModal from "./CreatePostModal";
+import CameraCaptureModal from "./CameraCaptureModal";
 import SearchModal from "./SearchModal";
 import NotificationsPanel from "./NotificationsPanel";
 import { 
@@ -15,7 +16,9 @@ import {
   Heart, 
   PlusSquare,
   Plus,
-  CircleUserRound
+  CircleUserRound,
+  Camera,
+  SquarePen
 } from "lucide-react";
 
 type UserProfile = {
@@ -34,7 +37,9 @@ export default function TopNavbar({ user, profile }: Props) {
   const router = useRouter();
   
   // Modals state
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -64,7 +69,7 @@ export default function TopNavbar({ user, profile }: Props) {
     { label: "Feed", icon: Clapperboard, href: "/feed" },
     { label: "Messages", icon: MessageCircle, onClick: () => alert("Messages coming soon!") },
     { label: "Notifications", icon: Heart, onClick: () => setIsNotificationsPanelOpen(true) },
-    { label: "Create", icon: PlusSquare, onClick: () => setIsCreateModalOpen(true) },
+    { label: "Create", icon: PlusSquare, onClick: () => setIsCreateMenuOpen(!isCreateMenuOpen) },
     { 
       label: "Profile", 
       icon: profile?.avatar_url ? null : CircleUserRound, 
@@ -120,14 +125,56 @@ export default function TopNavbar({ user, profile }: Props) {
                     <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface"></span>
                   )}
                 </button>
-                <button 
-                  onClick={() => setIsCreateModalOpen(true)} 
-                  title="Create Post"
-                  className="flex items-center gap-1.5 px-4 py-2 ml-1 rounded-full bg-accent text-white hover:bg-accent/90 transition-colors font-medium shadow-sm"
-                >
-                  <Plus className="w-5 h-5 stroke-2" />
-                  <span>Post</span>
-                </button>
+                
+                {/* Create choice dropdown */}
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)} 
+                    title="Create"
+                    className="flex items-center gap-1.5 px-4 py-2 ml-1 rounded-full bg-accent text-white hover:bg-accent/90 transition-colors font-medium shadow-sm"
+                  >
+                    <Plus className="w-5 h-5 stroke-2" />
+                    <span>Post</span>
+                  </button>
+
+                  {isCreateMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsCreateMenuOpen(false)} />
+                      <div className="absolute right-0 mt-2 w-44 bg-surface border border-border shadow-xl rounded-2xl overflow-hidden z-50 py-1.5 animate-in fade-in zoom-in-95 duration-150">
+                        <button
+                          onClick={() => {
+                            setIsCreateMenuOpen(false);
+                            setIsCreateModalOpen(true);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                            <SquarePen className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="font-semibold">Post</div>
+                            <div className="text-[11px] text-body font-normal">Note or Photo/Video</div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsCreateMenuOpen(false);
+                            setIsStoryModalOpen(true);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 text-white flex items-center justify-center">
+                            <Camera className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="font-semibold">Story</div>
+                            <div className="text-[11px] text-body font-normal">24-hour photo or video</div>
+                          </div>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 <div className="w-px h-8 bg-border mx-1" />
 
@@ -207,6 +254,15 @@ export default function TopNavbar({ user, profile }: Props) {
             isOpen={isCreateModalOpen} 
             onClose={() => setIsCreateModalOpen(false)} 
             userId={user.id} 
+          />
+          <CameraCaptureModal
+            isOpen={isStoryModalOpen}
+            onClose={() => setIsStoryModalOpen(false)}
+            userId={user.id}
+            onStoryCreated={() => {
+              setIsStoryModalOpen(false);
+              window.dispatchEvent(new Event("storyCreated"));
+            }}
           />
           <SearchModal
             isOpen={isSearchModalOpen}

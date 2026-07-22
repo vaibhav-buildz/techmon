@@ -11,6 +11,7 @@ import PostGrid from "@/components/PostGrid";
 import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
+import HighlightsRow from "@/components/HighlightsRow";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2 } from "lucide-react";
 
 type Profile = {
@@ -793,6 +794,15 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Highlights Row */}
+          <HighlightsRow
+            profileId={profile.id}
+            isOwner={isOwner}
+            currentUserId={currentUserId}
+            profileName={profile.name}
+            profileAvatarUrl={profile.avatar_url || ""}
+          />
 
           {/* Posts / Reposts Tabs */}
           <div className="pt-2">
