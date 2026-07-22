@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, UserPlus, UserCheck, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import SuggestedUsers from "@/components/SuggestedUsers";
 
 type ProfileListItem = {
   id: string;
@@ -310,6 +311,13 @@ export default function FollowListModal({
               ))}
             </div>
           )}
+          
+          <SuggestedUsers 
+            currentUserId={currentUserId} 
+            layout="modal" 
+            limit={3} 
+            excludeProfileId={profileId} 
+          />
         </div>
       </div>
     </div>

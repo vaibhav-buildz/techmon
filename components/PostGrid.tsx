@@ -7,6 +7,8 @@ import Link from "next/link";
 import PostDetailModal from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import HashtagText from "@/components/HashtagText";
+import SuggestedUsers from "@/components/SuggestedUsers";
+import React from "react";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle, AlertCircle, Camera, Share2, Repeat2, Archive, ArchiveRestore } from "lucide-react";
 
 type Props = {
@@ -241,13 +243,18 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
         </div>
       )}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
-        {posts.map((post) => {
+        {posts.map((post, index) => {
           const isOwner = currentUserId && post.user_id === currentUserId;
 
           return (
-            <div 
-              key={post.id} 
-              onClick={() => setSelectedPost(post)}
+            <React.Fragment key={post.id}>
+              {index > 0 && index % 5 === 0 && (
+                <div className="col-span-2 md:col-span-3 my-4 py-2 border-y border-border overflow-hidden">
+                  <SuggestedUsers currentUserId={currentUserId} layout="horizontal" limit={4} />
+                </div>
+              )}
+              <div 
+                onClick={() => setSelectedPost(post)}
               className="aspect-square relative cursor-pointer group bg-surface border border-border overflow-hidden flex items-center justify-center hover:opacity-90 transition-opacity"
             >
               {(() => {
@@ -402,6 +409,7 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
                 )}
               </div>
             </div>
+            </React.Fragment>
           );
         })}
       </div>

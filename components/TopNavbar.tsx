@@ -44,6 +44,7 @@ export default function TopNavbar({ user, profile }: Props) {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
 
 
@@ -59,8 +60,39 @@ export default function TopNavbar({ user, profile }: Props) {
       if (!error && count !== null) {
         setUnreadCount(count);
       }
+
+      // Fetch unread messages
+      const { data: convos } = await supabase
+        .from("conversations")
+        .select("id")
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+        
+      if (convos && convos.length > 0) {
+        const convoIds = convos.map(c => c.id);
+        const { count: msgCount, error: msgError } = await supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .in("conversation_id", convoIds)
+          .eq("read", false)
+          .neq("sender_id", user.id);
+          
+        if (!msgError && msgCount !== null) {
+          setUnreadMessagesCount(msgCount);
+        }
+      }
     };
     fetchUnread();
+
+    const channel = supabase
+      .channel('navbar-messages-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        fetchUnread();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
 
@@ -68,7 +100,7 @@ export default function TopNavbar({ user, profile }: Props) {
     { label: "Home", icon: House, href: "/" },
     { label: "Search", icon: Search, onClick: () => setIsSearchModalOpen(true) },
     { label: "Feed", icon: Clapperboard, href: "/feed" },
-    { label: "Messages", icon: MessageCircle, onClick: () => alert("Messages coming soon!") },
+    { label: "Messages", icon: MessageCircle, href: "/messages" },
     { label: "Notifications", icon: Heart, onClick: () => setIsNotificationsPanelOpen(true) },
     { label: "Create", icon: PlusSquare, onClick: () => setIsCreateMenuOpen(!isCreateMenuOpen) },
     { 
@@ -90,8 +122,11 @@ export default function TopNavbar({ user, profile }: Props) {
         
         {/* Left: Logo */}
         <div className="flex items-center">
-          <Link href="/" className="text-xl md:text-2xl font-heading font-bold tracking-tight text-heading hover:text-accent transition-colors">
-            Techmon
+          <Link href="/" className="flex items-center gap-2 group">
+            <img src="/logo.svg" alt="Techmon Logo" className="w-7 h-7 md:w-8 md:h-8 group-hover:opacity-90 transition-opacity" />
+            <span className="text-xl md:text-2xl font-heading font-bold tracking-tight text-heading group-hover:text-accent transition-colors">
+              Techmon
+            </span>
           </Link>
         </div>
 
@@ -179,16 +214,22 @@ export default function TopNavbar({ user, profile }: Props) {
 
                 <div className="w-px h-8 bg-border mx-1" />
 
-                <button onClick={() => alert("Messages coming soon!")} title="Messages" className="p-2 rounded-full hover:bg-gray-100 transition-colors text-body">
+                <Link href="/messages" title="Messages" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-body">
                   <MessageCircle className="w-6 h-6 stroke-2" />
-                </button>
+                  {unreadMessagesCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface"></span>
+                  )}
+                </Link>
               </div>
 
               {/* Mobile Only Header Actions (if any) */}
               <div className="flex md:hidden items-center gap-2">
-                <button onClick={() => alert("Messages coming soon!")} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-body">
+                <Link href="/messages" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-body">
                   <MessageCircle className="w-6 h-6 stroke-2" />
-                </button>
+                  {unreadMessagesCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface"></span>
+                  )}
+                </Link>
               </div>
 
               {/* User Avatar Link */}

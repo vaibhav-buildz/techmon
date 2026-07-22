@@ -21,6 +21,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Techmon",
   description: "The developer network",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

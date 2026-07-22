@@ -12,6 +12,7 @@ import SwitchAccountModal from "@/components/SwitchAccountModal";
 import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
 import HighlightsRow from "@/components/HighlightsRow";
+import SuggestedUsers from "@/components/SuggestedUsers";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2 } from "lucide-react";
 
 type Profile = {
@@ -446,6 +447,43 @@ export default function ProfilePage() {
     }
   };
 
+  const handleMessageClick = async () => {
+    if (!currentUserId || !profile || isOwner) return;
+
+    try {
+      const { data: existingConvos, error: fetchError } = await supabase
+        .from("conversations")
+        .select("id")
+        .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${profile.id}),and(user1_id.eq.${profile.id},user2_id.eq.${currentUserId})`);
+
+      if (fetchError) throw fetchError;
+
+      if (existingConvos && existingConvos.length > 0) {
+        router.push(`/messages?conversation=${existingConvos[0].id}`);
+        return;
+      }
+
+      const { data: newConvo, error: insertError } = await supabase
+        .from("conversations")
+        .insert({
+          user1_id: currentUserId,
+          user2_id: profile.id,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      if (newConvo) {
+        router.push(`/messages?conversation=${newConvo.id}`);
+      }
+    } catch (err: any) {
+      console.error("[ProfilePage] Message error:", err);
+      setError("Failed to open messages.");
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen py-8 bg-background text-body">
@@ -751,7 +789,7 @@ export default function ProfilePage() {
                       )}
                     </button>
                     <button
-                      onClick={() => alert("Messaging coming soon")}
+                      onClick={handleMessageClick}
                       className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-surface border border-border shadow-sm text-heading hover:bg-gray-50 transition-colors text-sm font-semibold rounded-xl"
                     >
                       <MessageCircle className="w-4 h-4 text-gray-500" />
@@ -826,6 +864,17 @@ export default function ProfilePage() {
             </>
           )}
         </div>
+        
+        {!isOwner && currentUserId && (
+          <div className="pt-8 border-t border-border mt-8">
+            <SuggestedUsers 
+              currentUserId={currentUserId} 
+              layout="horizontal" 
+              limit={5} 
+              excludeProfileId={profile.id} 
+            />
+          </div>
+        )}
 
       </div>
 

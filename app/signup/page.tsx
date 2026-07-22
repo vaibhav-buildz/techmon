@@ -35,9 +35,15 @@ export default function SignupPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
-          <div className="text-left">
-            <h2 className="text-2xl font-heading font-bold tracking-tight text-heading">Create an account</h2>
-            <p className="text-sm text-body mt-2">Enter your details to sign up</p>
+          <div className="text-left flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <img src="/logo.svg" alt="Techmon Logo" className="w-8 h-8" />
+              <span className="text-2xl font-heading font-bold tracking-tight text-heading">Techmon</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-heading font-semibold text-heading">Create an account</h2>
+              <p className="text-sm text-body mt-1">Enter your details to sign up</p>
+            </div>
           </div>
 
           <div className="mt-8">

@@ -39,3 +39,19 @@ export type CommentResult = {
     username?: string;
   };
 };
+
+export type Conversation = {
+  id: string;
+  user1_id: string;
+  user2_id: string;
+  created_at: string;
+};
+
+export type Message = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+};

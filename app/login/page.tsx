@@ -64,9 +64,15 @@ export default function LoginPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
-          <div className="text-left">
-            <h2 className="text-2xl font-heading font-bold tracking-tight text-heading">Welcome back</h2>
-            <p className="text-sm text-body mt-2">Sign in to your account</p>
+          <div className="text-left flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <img src="/logo.svg" alt="Techmon Logo" className="w-8 h-8" />
+              <span className="text-2xl font-heading font-bold tracking-tight text-heading">Techmon</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-heading font-semibold text-heading">Welcome back</h2>
+              <p className="text-sm text-body mt-1">Sign in to your account</p>
+            </div>
           </div>
 
           <div className="mt-8 space-y-6">
