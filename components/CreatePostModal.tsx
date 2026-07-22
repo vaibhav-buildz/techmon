@@ -126,8 +126,8 @@ export default function CreatePostModal({ isOpen, onClose, userId }: Props) {
   const isDarkText = background.id === "white";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-surface border border-border shadow-xl rounded-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-surface border border-border shadow-xl rounded-2xl w-full max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden relative" onClick={(e) => e.stopPropagation()}>
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">

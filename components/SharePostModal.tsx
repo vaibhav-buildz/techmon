@@ -48,7 +48,7 @@ export default function SharePostModal({ isOpen, onClose, postId, currentUserId 
 
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url, headline")
+        .select("id, name, avatar_url, headline, username")
         .in("id", followingIds);
 
       if (profilesError) throw profilesError;

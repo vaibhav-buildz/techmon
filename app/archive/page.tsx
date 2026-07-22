@@ -36,7 +36,7 @@ export default function ArchivePage() {
       // Fetch profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url, headline")
+        .select("id, name, avatar_url, headline, username")
         .eq("id", userId)
         .single();
         

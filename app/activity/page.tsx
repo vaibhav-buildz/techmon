@@ -65,7 +65,7 @@ export default function ActivityPage() {
 
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("id, name, avatar_url, headline")
+        .select("id, name, avatar_url, headline, username")
         .in("id", Array.from(userIds));
 
       const profileMap = new Map(profilesData?.map(p => [p.id, p]) || []);

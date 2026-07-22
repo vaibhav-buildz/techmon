@@ -36,6 +36,12 @@ export default function StandalonePostPage() {
         return;
       }
 
+      if (postData.archived && postData.user_id !== viewerId) {
+        setError("Post not found.");
+        setLoading(false);
+        return;
+      }
+
       // Collect user IDs to fetch profiles
       const userIdsToFetch = new Set<string>();
       userIdsToFetch.add(postData.user_id);

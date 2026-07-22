@@ -505,16 +505,14 @@ export default function ProfilePage() {
               <div className="absolute right-0 top-10 w-56 bg-surface border border-border shadow-xl rounded-2xl overflow-hidden z-50 py-2 animate-in fade-in zoom-in-95 duration-150">
                 {isOwner ? (
                   <>
-                    <button
-                      onClick={() => {
-                        setMenuOpen(false);
-                        alert("Your Activity coming soon!");
-                      }}
+                    <Link
+                      href="/activity"
+                      onClick={() => setMenuOpen(false)}
                       className="w-full text-left px-4 py-2.5 text-sm text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors font-medium"
                     >
                       <Activity className="w-4 h-4 text-gray-500" />
                       Your Activity
-                    </button>
+                    </Link>
                     <Link
                       href="/archive"
                       onClick={() => setMenuOpen(false)}

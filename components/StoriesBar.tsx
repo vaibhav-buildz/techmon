@@ -55,10 +55,7 @@ export default function StoriesBar({ userId, userProfile }: Props) {
 
       if (storiesError) throw storiesError;
 
-      console.log("[StoriesBar] Fetched stories:", storiesData?.length ?? 0, "for users:", allUserIds);
-
       if (!storiesData || storiesData.length === 0) {
-        console.log("[StoriesBar] No active stories found");
         setStoryGroups([]);
         setMyStories([]);
         return;
@@ -104,7 +101,6 @@ export default function StoriesBar({ userId, userProfile }: Props) {
 
       // Separate own stories
       const ownStories = groupMap.get(userId) || [];
-      console.log("[StoriesBar] Own stories:", ownStories.length, "Followed groups:", followingIds.length);
       setMyStories(ownStories);
 
       // Build groups for followed users (exclude self — self is rendered as the "+" item)
@@ -148,7 +144,6 @@ export default function StoriesBar({ userId, userProfile }: Props) {
 
   // Called when a story is successfully created via the capture modal
   const handleStoryCreated = useCallback(() => {
-    console.log("[StoriesBar] Story created, refetching...");
     fetchStories(false); // refetch without skeleton
   }, [fetchStories]);
 
