@@ -306,14 +306,14 @@ export default function MessagesPage() {
 
   if (loading) {
     return (
-      <div className="h-screen pt-14 md:pt-16 pb-14 md:pb-0 flex items-center justify-center bg-background">
+      <div className="flex-1 flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-[100dvh] pt-14 md:pt-16 bg-background flex overflow-hidden">
+    <div className="flex-1 flex overflow-hidden h-full">
       {/* Left Panel: Conversations List */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-border bg-surface flex flex-col ${activeConversationId ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-border bg-surface z-10 shrink-0">
