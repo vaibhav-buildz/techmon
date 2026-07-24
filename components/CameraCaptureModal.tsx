@@ -628,7 +628,7 @@ export default function CameraCaptureModal({
 
       if (insertError) throw insertError;
 
-      onStoryCreated();
+      onStoryCreated?.();
       onClose();
     } catch (err: any) {
       console.error("Error sharing story:", err);

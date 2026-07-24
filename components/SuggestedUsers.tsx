@@ -5,7 +5,19 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { CircleUserRound, Users } from "lucide-react";
 
-export default function SuggestedUsers({ currentUserId }: { currentUserId: string | null }) {
+type Props = {
+  currentUserId: string | null;
+  layout?: "vertical" | "horizontal" | "modal";
+  limit?: number;
+  excludeProfileId?: string;
+};
+
+export default function SuggestedUsers({
+  currentUserId,
+  layout = "vertical",
+  limit = 5,
+  excludeProfileId,
+}: Props) {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -15,6 +27,9 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
       setLoading(true);
       
       let excludeIds = currentUserId ? [currentUserId] : [];
+      if (excludeProfileId && !excludeIds.includes(excludeProfileId)) {
+        excludeIds.push(excludeProfileId);
+      }
 
       if (currentUserId) {
         const { data: followData } = await supabase
@@ -23,7 +38,10 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
           .eq("follower_id", currentUserId);
 
         if (followData) {
-          excludeIds = [...excludeIds, ...followData.map((f) => f.following_id)];
+          const followedIds = followData.map((f) => f.following_id);
+          followedIds.forEach(id => {
+            if (!excludeIds.includes(id)) excludeIds.push(id);
+          });
         }
       }
 
@@ -32,7 +50,7 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
       let query = supabase
         .from("profiles")
         .select("id, name, headline, avatar_url, username")
-        .limit(5);
+        .limit(limit);
 
       if (excludeIds.length > 0) {
         query = query.not("id", "in", excludeString);
@@ -45,7 +63,7 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, limit, excludeProfileId]);
 
   useEffect(() => {
     fetchSuggestions();
@@ -75,8 +93,8 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
     return (
       <div className="bg-surface border border-border rounded-xl p-4 animate-pulse">
         <div className="h-4 bg-gray-200 rounded w-1/3 mb-4" />
-        <div className="space-y-4">
-          {[1, 2, 3].map(i => (
+        <div className={layout === "horizontal" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" : "space-y-4"}>
+          {[1, 2, 3].slice(0, limit).map(i => (
             <div key={i} className="flex gap-3 items-center">
               <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
               <div className="flex-1 space-y-2">
@@ -99,9 +117,9 @@ export default function SuggestedUsers({ currentUserId }: { currentUserId: strin
         <h3 className="font-heading font-semibold text-heading">Suggested for you</h3>
       </div>
       
-      <div className="space-y-4">
+      <div className={layout === "horizontal" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" : "space-y-4"}>
         {suggestions.map((profile) => (
-          <div key={profile.id} className="flex items-center justify-between gap-2">
+          <div key={profile.id} className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-gray-50/50 transition-colors">
             <Link href={`/profile/${(profile as any).username || profile.id}`} className="flex items-center gap-3 min-w-0 group flex-1">
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt="Profile" className="w-10 h-10 rounded-full object-cover shrink-0 border border-border group-hover:opacity-90 transition-opacity" />
