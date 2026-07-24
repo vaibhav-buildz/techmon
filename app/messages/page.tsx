@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Conversation, Message } from "@/lib/types";
 import Link from "next/link";
-import { Send, MessageCircle, ArrowLeft } from "lucide-react";
+import { Send, MessageCircle, ArrowLeft, Paperclip, Camera, Image as ImageIcon, X } from "lucide-react";
+import CameraCaptureModal from "@/components/CameraCaptureModal";
 
 type UserProfile = {
   id: string;
@@ -31,6 +32,15 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Media sharing states
+  const [mediaFile, setMediaFile] = useState<File | Blob | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch initial data
   useEffect(() => {
@@ -186,22 +196,35 @@ export default function MessagesPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUser || !activeConversationId) return;
+    if ((!newMessage.trim() && !mediaFile) || !currentUser || !activeConversationId || isSending) return;
 
+    setIsSending(true);
     const content = newMessage.trim();
     setNewMessage("");
 
     const tempId = `temp-${Date.now()}`;
+    let tempMediaUrl = mediaPreview;
+    let currentMediaType = mediaType;
+    let currentMediaFile = mediaFile;
+
     const optimisticMsg: Message = {
       id: tempId,
       conversation_id: activeConversationId,
       sender_id: currentUser.id,
       content,
       read: false,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      media_url: tempMediaUrl || undefined,
+      media_type: currentMediaType || undefined
     };
     
     setMessages(prev => [...prev, optimisticMsg]);
+    
+    // Clear local state so user can type next message
+    setMediaFile(null);
+    setMediaPreview(null);
+    setMediaType(null);
+    setShowAttachmentMenu(false);
     
     setConversations(prev => {
       let updated = prev.map(c => {
@@ -218,12 +241,30 @@ export default function MessagesPage() {
       return updated;
     });
 
+    let uploadedMediaUrl = null;
+    if (currentMediaFile) {
+      const fileExt = currentMediaType === "video" ? "mp4" : "jpg";
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${currentUser.id}/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("messages")
+        .upload(filePath, currentMediaFile, { contentType: currentMediaFile.type || (currentMediaType === "video" ? "video/mp4" : "image/jpeg") });
+        
+      if (!uploadError) {
+        const { data: publicUrlData } = supabase.storage.from("messages").getPublicUrl(filePath);
+        uploadedMediaUrl = publicUrlData.publicUrl;
+      }
+    }
+
     const { error, data } = await supabase
       .from("messages")
       .insert({
         conversation_id: activeConversationId,
         sender_id: currentUser.id,
-        content
+        content,
+        media_url: uploadedMediaUrl,
+        media_type: currentMediaType
       })
       .select()
       .single();
@@ -234,6 +275,31 @@ export default function MessagesPage() {
     } else if (data) {
       setMessages(prev => prev.map(m => m.id === tempId ? data as Message : m));
     }
+    setIsSending(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setMediaFile(file);
+      setMediaType(file.type.startsWith("video/") ? "video" : "image");
+      setMediaPreview(URL.createObjectURL(file));
+      setShowAttachmentMenu(false);
+    }
+  };
+
+  const handleCameraCapture = (blob: Blob, type: "image" | "video") => {
+    setMediaFile(blob);
+    setMediaType(type);
+    setMediaPreview(URL.createObjectURL(blob));
+    setIsCameraModalOpen(false);
+  };
+
+  const cancelMedia = () => {
+    setMediaFile(null);
+    setMediaPreview(null);
+    setMediaType(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
@@ -247,7 +313,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="h-screen pt-14 md:pt-16 pb-14 md:pb-0 bg-background flex overflow-hidden">
+    <div className="h-[100dvh] pt-14 md:pt-16 bg-background flex overflow-hidden">
       {/* Left Panel: Conversations List */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-border bg-surface flex flex-col ${activeConversationId ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-border bg-surface z-10 shrink-0">
@@ -369,7 +435,16 @@ export default function MessagesPage() {
                             ? 'bg-[#2F5D8A] text-white rounded-br-sm' 
                             : 'bg-white border border-gray-100 text-heading rounded-bl-sm'
                         }`}>
-                          <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                          {msg.media_url && (
+                            <div className="mb-2 -mx-2 -mt-1 overflow-hidden rounded-t-xl relative">
+                              {msg.media_type === "video" ? (
+                                <video src={msg.media_url} controls className="w-full max-h-64 object-cover" />
+                              ) : (
+                                <img src={msg.media_url} alt="Attachment" className="w-full max-h-64 object-cover" />
+                              )}
+                            </div>
+                          )}
+                          {msg.content && <p className="whitespace-pre-wrap break-words">{msg.content}</p>}
                         </div>
                       </div>
                     </div>
@@ -380,23 +455,82 @@ export default function MessagesPage() {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 bg-surface border-t border-border shrink-0">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-gray-100 border-none rounded-full px-5 py-2.5 text-sm text-heading focus:outline-none focus:ring-2 focus:ring-accent/50"
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim()}
-                  className="p-2.5 rounded-full bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              </form>
+            <div className="p-4 bg-surface border-t border-border shrink-0 pb-safe">
+              {mediaPreview && (
+                <div className="mb-3 relative inline-block">
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border border-border bg-gray-100">
+                    {mediaType === "video" ? (
+                      <video src={mediaPreview} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <button
+                    onClick={cancelMedia}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow hover:bg-red-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              <div className="relative">
+                {showAttachmentMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowAttachmentMenu(false)} />
+                    <div className="absolute bottom-full left-0 mb-2 bg-surface border border-border shadow-lg rounded-xl overflow-hidden z-20 py-1 w-48">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <ImageIcon className="w-4 h-4" /> Upload from device
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAttachmentMenu(false);
+                          setIsCameraModalOpen(true);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <Camera className="w-4 h-4" /> Take Photo
+                      </button>
+                    </div>
+                  </>
+                )}
+                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                    className="p-2 text-gray-400 hover:text-heading hover:bg-gray-100 rounded-full transition-colors shrink-0"
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </button>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                  />
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-gray-100 border-none rounded-full px-5 py-2.5 text-sm text-heading focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={(!newMessage.trim() && !mediaFile) || isSending}
+                    className="p-2.5 rounded-full bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {isSending ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
+                  </button>
+                </form>
+              </div>
             </div>
           </>
         ) : (
@@ -405,6 +539,15 @@ export default function MessagesPage() {
           </div>
         )}
       </div>
+      {isCameraModalOpen && currentUser && (
+        <CameraCaptureModal
+          isOpen={isCameraModalOpen}
+          onClose={() => setIsCameraModalOpen(false)}
+          userId={currentUser.id}
+          mode="message"
+          onCapture={handleCameraCapture}
+        />
+      )}
     </div>
   );
 }

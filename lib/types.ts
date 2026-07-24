@@ -53,5 +53,7 @@ export type Message = {
   sender_id: string;
   content: string;
   read: boolean;
+  media_url?: string;
+  media_type?: string;
   created_at: string;
 };

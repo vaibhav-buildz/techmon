@@ -23,7 +23,9 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
-  onStoryCreated: () => void;
+  onStoryCreated?: () => void;
+  mode?: "story" | "message";
+  onCapture?: (blob: Blob, mediaType: "image" | "video") => void;
 };
 
 type CaptureTab = "camera" | "upload";
@@ -62,6 +64,8 @@ export default function CameraCaptureModal({
   onClose,
   userId,
   onStoryCreated,
+  mode = "story",
+  onCapture,
 }: Props) {
   const [activeTab, setActiveTab] = useState<CaptureTab>("camera");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -483,6 +487,12 @@ export default function CameraCaptureModal({
   const handleShare = useCallback(async () => {
     if (!capturedBlob || !capturedPreview) return;
 
+    if (mode === "message" && onCapture) {
+      onCapture(capturedBlob, mediaType);
+      onClose();
+      return;
+    }
+
     setUploading(true);
     setError(null);
 
@@ -636,6 +646,8 @@ export default function CameraCaptureModal({
     userId,
     onStoryCreated,
     onClose,
+    mode,
+    onCapture,
   ]);
 
   // Handle close — stop stream
@@ -809,29 +821,31 @@ export default function CameraCaptureModal({
             </button>
 
             {/* Central Editor Toolbar (Text & Draw only) */}
-            <div className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              {/* Text Tool */}
-              <button
-                onClick={addTextOverlay}
-                className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                title="Add Text"
-              >
-                <Type className="w-5 h-5" />
-              </button>
+            {mode === "story" && (
+              <div className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                {/* Text Tool */}
+                <button
+                  onClick={addTextOverlay}
+                  className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                  title="Add Text"
+                >
+                  <Type className="w-5 h-5" />
+                </button>
 
-              {/* Draw Tool */}
-              <button
-                onClick={() => setActiveTool(activeTool === "draw" ? "none" : "draw")}
-                className={`p-2 rounded-full transition-colors ${
-                  activeTool === "draw"
-                    ? "bg-white text-gray-900 font-bold"
-                    : "text-white/80 hover:text-white hover:bg-white/20"
-                }`}
-                title="Draw"
-              >
-                <Pencil className="w-5 h-5" />
-              </button>
-            </div>
+                {/* Draw Tool */}
+                <button
+                  onClick={() => setActiveTool(activeTool === "draw" ? "none" : "draw")}
+                  className={`p-2 rounded-full transition-colors ${
+                    activeTool === "draw"
+                      ? "bg-white text-gray-900 font-bold"
+                      : "text-white/80 hover:text-white hover:bg-white/20"
+                  }`}
+                  title="Draw"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+              </div>
+            )}
 
             {/* Retake Button */}
             <button
@@ -972,8 +986,8 @@ export default function CameraCaptureModal({
               onClick={handleShare}
               disabled={uploading}
               className="w-14 h-14 rounded-full bg-accent text-white shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
-              aria-label="Share to Story"
-              title="Share to Story"
+              aria-label={mode === "story" ? "Share to Story" : "Send Media"}
+              title={mode === "story" ? "Share to Story" : "Send Media"}
             >
               {uploading ? (
                 <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -989,7 +1003,7 @@ export default function CameraCaptureModal({
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
             <h2 className="text-white font-heading font-semibold text-lg">
-              Create Story
+              {mode === "story" ? "Create Story" : "Capture Media"}
             </h2>
             <button
               onClick={handleClose}
