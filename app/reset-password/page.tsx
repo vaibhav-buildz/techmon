@@ -12,35 +12,48 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
-  const [hasRecoverySession, setHasRecoverySession] = useState(false);
+
+  const [checking, setChecking] = useState(true);
+  const [isRecoverySession, setIsRecoverySession] = useState(false);
 
   useEffect(() => {
-    // Check if we have an active session (or recovery session created by Supabase link)
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          setHasRecoverySession(true);
-        }
-      } catch (err) {
-        console.error("Session check error:", err);
-      } finally {
-        setCheckingSession(false);
+    let timer: NodeJS.Timeout;
+
+    const checkRecovery = async () => {
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      const hasRecoveryParams = hash.includes("type=recovery") || search.includes("type=recovery") || search.includes("code=");
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (hasRecoveryParams || session) {
+        setIsRecoverySession(true);
+        setChecking(false);
       }
     };
 
-    checkSession();
+    checkRecovery();
 
-    // Listen for auth state change (e.g. PASSWORD_RECOVERY event)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY" || session) {
-        setHasRecoverySession(true);
+    // Listen specifically for PASSWORD_RECOVERY auth event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      const hasRecoveryParams = hash.includes("type=recovery") || search.includes("type=recovery");
+
+      if (event === "PASSWORD_RECOVERY" || hasRecoveryParams || session) {
+        setIsRecoverySession(true);
+        setChecking(false);
       }
     });
 
+    // Timeout fallback after 2.5 seconds for expired or invalid links
+    timer = setTimeout(() => {
+      setChecking(false);
+    }, 2500);
+
     return () => {
       subscription.unsubscribe();
+      clearTimeout(timer);
     };
   }, []);
 
@@ -95,9 +108,10 @@ export default function ResetPasswordPage() {
             </div>
           </div>
 
-          {checkingSession ? (
-            <div className="py-8 flex justify-center">
+          {checking ? (
+            <div className="py-8 flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm text-gray-500">Verifying password reset link...</p>
             </div>
           ) : success ? (
             <div className="space-y-6">
@@ -111,10 +125,10 @@ export default function ResetPasswordPage() {
                 Sign In Now
               </Link>
             </div>
-          ) : !hasRecoverySession ? (
+          ) : !isRecoverySession ? (
             <div className="space-y-6">
               <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900 leading-relaxed">
-                No active password reset session found. Your reset link may have expired or is invalid. Please request a new reset link.
+                No active password reset session detected. Your link may have expired or is invalid.
               </div>
               <Link
                 href="/forgot-password"
