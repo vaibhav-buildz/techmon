@@ -197,6 +197,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // If password recovery link lands on root, redirect immediately to /reset-password
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    if (hash.includes("type=recovery") || search.includes("type=recovery")) {
+      window.location.href = `/reset-password${hash || search}`;
+      return;
+    }
+
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id || null;
@@ -221,7 +229,12 @@ export default function Home() {
     
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        const currentHash = typeof window !== "undefined" ? window.location.hash : "";
+        window.location.href = `/reset-password${currentHash}`;
+        return;
+      }
       const uid = session?.user?.id || null;
       setUserId(uid);
       if (uid) {
