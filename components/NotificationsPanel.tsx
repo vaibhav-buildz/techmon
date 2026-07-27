@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Heart, UserPlus, MessageCircle, Bell, AlertCircle } from "lucide-react";
+import { X, Heart, UserPlus, MessageCircle, Bell, AlertCircle, Shield } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import PostDetailModal from "@/components/PostDetailModal";
@@ -14,6 +14,7 @@ type NotificationResult = {
   post_id: string | null;
   read: boolean;
   actor_id: string;
+  message?: string | null;
   actor_profile?: {
     name: string;
     avatar_url: string;
@@ -135,6 +136,10 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
   }, [isOpen, onClose]);
 
   const handleNotificationClick = async (notif: NotificationResult) => {
+    if (notif.type === "login_alert") {
+      return;
+    }
+
     if (notif.type === "follow") {
       onClose();
       router.push(`/profile/${notif.actor_profile?.username || notif.actor_id}`);
@@ -275,6 +280,7 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
                 {notifications.map((notif) => {
                   let icon = null;
                   let text = "";
+                  const isLoginAlert = notif.type === "login_alert";
 
                   if (notif.type === "like") {
                     icon = <Heart className="w-4 h-4 text-red-500 fill-red-500" />;
@@ -285,41 +291,55 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
                   } else if (notif.type === "comment") {
                     icon = <MessageCircle className="w-4 h-4 text-blue-500" />;
                     text = "commented on your post";
+                  } else if (isLoginAlert) {
+                    icon = <Shield className="w-4 h-4 text-amber-500" />;
                   }
 
                   return (
-                    <button
+                    <div
                       key={notif.id}
-                      onClick={() => handleNotificationClick(notif)}
+                      onClick={() => !isLoginAlert && handleNotificationClick(notif)}
                       className={`w-full flex items-start gap-4 px-4 py-4 transition-colors text-left ${
-                        !notif.read ? "bg-accent/5 hover:bg-accent/10" : "hover:bg-gray-50"
-                      }`}
+                        !isLoginAlert ? "cursor-pointer" : ""
+                      } ${!notif.read ? "bg-accent/5 hover:bg-accent/10" : "hover:bg-gray-50"}`}
                     >
                       <div className="relative shrink-0 mt-1">
-                        {notif.actor_profile?.avatar_url ? (
+                        {isLoginAlert ? (
+                          <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+                            <Shield className="w-5 h-5" />
+                          </div>
+                        ) : notif.actor_profile?.avatar_url ? (
                           <img src={notif.actor_profile.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border border-border" />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-500 border border-border">
                             {notif.actor_profile?.name ? notif.actor_profile.name.charAt(0).toUpperCase() : "?"}
                           </div>
                         )}
-                        <div className="absolute -bottom-1 -right-1 bg-surface rounded-full p-0.5 border border-border shadow-sm">
-                          {icon}
-                        </div>
+                        {!isLoginAlert && (
+                          <div className="absolute -bottom-1 -right-1 bg-surface rounded-full p-0.5 border border-border shadow-sm">
+                            {icon}
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex-1 min-w-0 pr-2">
-                        <p className="text-sm text-body leading-snug">
-                          <span className="font-heading font-semibold text-heading mr-1">
-                            {notif.actor_profile?.name}
-                          </span>
-                          {text}
-                        </p>
+                        {isLoginAlert ? (
+                          <p className="text-sm text-heading font-medium leading-snug">
+                            {notif.message || "New login detected on your account"}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-body leading-snug">
+                            <span className="font-heading font-semibold text-heading mr-1">
+                              {notif.actor_profile?.name}
+                            </span>
+                            {text}
+                          </p>
+                        )}
                         <p className="text-xs text-gray-400 mt-1">
                           {timeAgo(notif.created_at)}
                         </p>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

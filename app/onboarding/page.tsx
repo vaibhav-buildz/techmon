@@ -15,6 +15,7 @@ export default function OnboardingPage() {
 
   // Form state
   const [username, setUsername] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"available" | "taken" | "invalid" | null>(null);
   const [usernameMessage, setUsernameMessage] = useState<string | null>(null);
@@ -24,46 +25,42 @@ export default function OnboardingPage() {
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
 
-  const generateSuggestedUsername = async (user: any): Promise<string> => {
-    const meta = user.user_metadata || {};
-    const rawName =
-      meta.full_name ||
-      meta.name ||
-      meta.preferred_username ||
-      meta.user_name ||
-      (user.email ? user.email.split("@")[0] : "user");
-
-    let base = rawName
-      .toLowerCase()
-      .trim()
-      .replace(/[\s.-]+/g, "_")
-      .replace(/[^a-z0-9_]/g, "");
+  const generateSuggestions = async (user: any): Promise<string[]> => {
+    const emailPrefix = user.email ? user.email.split("@")[0] : "";
+    let base = emailPrefix.toLowerCase().trim().replace(/[^a-z0-9_]/g, "");
 
     if (!base || base.length < 3) {
-      base = (base + "user").slice(0, 15);
+      base = (base + "_user").slice(0, 15);
     }
+    base = base.slice(0, 18);
 
-    base = base.slice(0, 20);
+    const candidates = [
+      base,
+      `${base}_${Math.floor(10 + Math.random() * 90)}`,
+      `${base}_dev`,
+      `${base}${Math.floor(100 + Math.random() * 900)}`,
+      `dev_${base.slice(0, 14)}`,
+      `${base}_code`,
+      `${base}_${Math.floor(100 + Math.random() * 900)}`,
+    ];
 
-    let candidate = base;
-    let attempts = 0;
+    const uniqueCandidates = Array.from(new Set(candidates)).filter(
+      (c) => c.length >= 3 && c.length <= 30
+    );
 
-    while (attempts < 15) {
+    try {
       const { data } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("username", candidate);
+        .select("username")
+        .in("username", uniqueCandidates);
 
-      if (!data || data.length === 0) {
-        return candidate;
-      }
-
-      const randNum = Math.floor(100 + Math.random() * 900);
-      candidate = `${base.slice(0, 16)}_${randNum}`;
-      attempts++;
+      const takenSet = new Set((data || []).map((p) => p.username));
+      const available = uniqueCandidates.filter((c) => !takenSet.has(c));
+      return available.slice(0, 4);
+    } catch (err) {
+      console.error("[Onboarding] Error checking suggestion availability:", err);
+      return uniqueCandidates.slice(0, 4);
     }
-
-    return `${base.slice(0, 14)}_${Date.now().toString().slice(-4)}`;
   };
 
   useEffect(() => {
@@ -91,15 +88,18 @@ export default function OnboardingPage() {
           throw profileError;
         }
 
-        // Auto-suggest name and username if no profile exists
+        // Auto-suggest name and email-based username suggestions
         const meta = user.user_metadata || {};
         const fullName = meta.full_name || meta.name || "";
         if (fullName) {
           setName(fullName);
         }
 
-        const suggestedUsername = await generateSuggestedUsername(user);
-        setUsername(suggestedUsername);
+        const suggestedList = await generateSuggestions(user);
+        setSuggestions(suggestedList);
+        if (suggestedList.length > 0) {
+          setUsername(suggestedList[0]);
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -276,7 +276,30 @@ export default function OnboardingPage() {
                     ✕ {usernameMessage}
                   </p>
                 )}
-                <p className="text-xs text-body mt-1">Only lowercase letters, numbers, and underscores</p>
+
+                {suggestions.length > 0 && (
+                  <div className="mt-2.5 space-y-1.5">
+                    <p className="text-xs text-body font-medium">Suggested usernames:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.map((sug) => (
+                        <button
+                          key={sug}
+                          type="button"
+                          onClick={() => handleUsernameChange(sug)}
+                          className={`px-2.5 py-1 text-xs rounded-full border transition-all font-mono ${
+                            username === sug
+                              ? "border-accent bg-accent text-white shadow-xs"
+                              : "border-accent/30 text-accent bg-accent/5 hover:bg-accent/15"
+                          }`}
+                        >
+                          @{sug}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-body mt-1.5">Only lowercase letters, numbers, and underscores</p>
               </div>
 
               <div>
