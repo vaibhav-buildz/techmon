@@ -106,7 +106,7 @@ export default function TopNavbar({ user, profile }: Props) {
     { 
       label: "Profile", 
       icon: profile?.avatar_url ? null : CircleUserRound, 
-      href: `/profile/${profile?.username || user?.id}`,
+      href: profile?.username ? `/profile/${profile.username}` : "/onboarding",
       customIcon: profile?.avatar_url ? (
         <img src={profile.avatar_url} alt="Profile" className="w-6 h-6 rounded-full object-cover border border-border" />
       ) : null
@@ -234,7 +234,7 @@ export default function TopNavbar({ user, profile }: Props) {
 
               {/* User Avatar Link */}
               <Link
-                href={`/profile/${profile?.username || user.id}`}
+                href={profile?.username ? `/profile/${profile.username}` : "/onboarding"}
                 className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border border-border focus:outline-none hover:ring-2 hover:ring-accent transition-all block"
               >
                 {profile?.avatar_url ? (

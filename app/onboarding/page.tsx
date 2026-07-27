@@ -24,6 +24,48 @@ export default function OnboardingPage() {
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
 
+  const generateSuggestedUsername = async (user: any): Promise<string> => {
+    const meta = user.user_metadata || {};
+    const rawName =
+      meta.full_name ||
+      meta.name ||
+      meta.preferred_username ||
+      meta.user_name ||
+      (user.email ? user.email.split("@")[0] : "user");
+
+    let base = rawName
+      .toLowerCase()
+      .trim()
+      .replace(/[\s.-]+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+
+    if (!base || base.length < 3) {
+      base = (base + "user").slice(0, 15);
+    }
+
+    base = base.slice(0, 20);
+
+    let candidate = base;
+    let attempts = 0;
+
+    while (attempts < 15) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", candidate);
+
+      if (!data || data.length === 0) {
+        return candidate;
+      }
+
+      const randNum = Math.floor(100 + Math.random() * 900);
+      candidate = `${base.slice(0, 16)}_${randNum}`;
+      attempts++;
+    }
+
+    return `${base.slice(0, 14)}_${Date.now().toString().slice(-4)}`;
+  };
+
   useEffect(() => {
     const checkUser = async () => {
       try {
@@ -42,11 +84,22 @@ export default function OnboardingPage() {
           .eq("id", user.id)
           .single();
 
-        if (profile) {
-          router.push(`/profile/${profile.username || user.id}`);
+        if (profile && profile.username) {
+          router.push(`/profile/${profile.username}`);
+          return;
         } else if (profileError && profileError.code !== "PGRST116") { // PGRST116 is "No rows found"
           throw profileError;
         }
+
+        // Auto-suggest name and username if no profile exists
+        const meta = user.user_metadata || {};
+        const fullName = meta.full_name || meta.name || "";
+        if (fullName) {
+          setName(fullName);
+        }
+
+        const suggestedUsername = await generateSuggestedUsername(user);
+        setUsername(suggestedUsername);
       } catch (err: any) {
         setError(err.message);
       } finally {

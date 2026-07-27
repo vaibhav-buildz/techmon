@@ -5,11 +5,14 @@ import { supabase } from "@/lib/supabase";
 import TopNavbar from "./TopNavbar";
 import TopBar from "./TopBar";
 import { addAccount } from "@/lib/accountManager";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -24,15 +27,12 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
             .eq("id", session.user.id)
             .maybeSingle();
 
-          if (profileData && !profileData.username) {
-            const gen = (profileData.name || "user").toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 15) || "user";
-            const autoUsername = `${gen}_${session.user.id.slice(0, 4)}`;
-            profileData.username = autoUsername;
-            await supabase.from("profiles").update({ username: autoUsername }).eq("id", session.user.id);
+          if (profileData && profileData.username) {
+            setProfile(profileData);
+            addAccount(session, profileData);
+          } else {
+            setProfile(null);
           }
-
-          setProfile(profileData || null);
-          addAccount(session, profileData);
         } else {
           setProfile(null);
         }
@@ -54,15 +54,12 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           .eq("id", session.user.id)
           .maybeSingle();
         
-        if (profileData && !profileData.username) {
-          const gen = (profileData.name || "user").toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 15) || "user";
-          const autoUsername = `${gen}_${session.user.id.slice(0, 4)}`;
-          profileData.username = autoUsername;
-          await supabase.from("profiles").update({ username: autoUsername }).eq("id", session.user.id);
+        if (profileData && profileData.username) {
+          setProfile(profileData);
+          addAccount(session, profileData);
+        } else {
+          setProfile(null);
         }
-
-        setProfile(profileData || null);
-        addAccount(session, profileData);
       } else {
         setProfile(null);
       }
@@ -73,6 +70,24 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
       subscription.unsubscribe();
     };
   }, []);
+
+  // Central guard: If user is authenticated but has no profile row, redirect to /onboarding
+  useEffect(() => {
+    if (loading) return;
+
+    const publicAuthRoutes = [
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+      "/auth/callback",
+      "/onboarding",
+    ];
+
+    if (user && !profile && !publicAuthRoutes.includes(pathname)) {
+      router.push("/onboarding");
+    }
+  }, [loading, user, profile, pathname, router]);
 
   if (loading) {
     return <div className="min-h-screen bg-background" />;
