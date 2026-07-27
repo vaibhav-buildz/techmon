@@ -13,7 +13,7 @@ import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
 import HighlightsRow from "@/components/HighlightsRow";
 import SuggestedUsers from "@/components/SuggestedUsers";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2 } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -544,34 +544,13 @@ export default function ProfilePage() {
                 {isOwner ? (
                   <>
                     <Link
-                      href="/activity"
+                      href="/settings"
                       onClick={() => setMenuOpen(false)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors font-medium"
-                    >
-                      <Activity className="w-4 h-4 text-gray-500" />
-                      Your Activity
-                    </Link>
-                    <Link
-                      href="/archive"
-                      onClick={() => setMenuOpen(false)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors font-medium"
-                    >
-                      <Archive className="w-4 h-4 text-gray-500" />
-                      Archive
-                    </Link>
-
-                    <div className="h-px bg-border my-1" />
-
-                    <button
-                      onClick={() => {
-                        setMenuOpen(false);
-                        alert("Settings coming soon!");
-                      }}
                       className="w-full text-left px-4 py-2.5 text-sm text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors font-medium"
                     >
                       <Settings className="w-4 h-4 text-gray-500" />
                       Settings
-                    </button>
+                    </Link>
                     <button
                       onClick={() => {
                         setMenuOpen(false);
