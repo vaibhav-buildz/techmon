@@ -111,33 +111,33 @@ export default function SuggestedUsers({
   if (suggestions.length === 0) return null;
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <Users className="w-5 h-5 text-gray-500" />
-        <h3 className="font-heading font-semibold text-heading">Suggested for you</h3>
+    <div className="bg-surface border border-border rounded-none p-5 shadow-xs">
+      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
+        <Users className="w-4 h-4 text-accent" />
+        <h3 className="font-heading font-bold text-sm text-heading uppercase tracking-wider">Suggested Contributors</h3>
       </div>
       
       <div className={layout === "horizontal" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" : "space-y-4"}>
         {suggestions.map((profile) => (
-          <div key={profile.id} className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-gray-50/50 transition-colors">
+          <div key={profile.id} className="flex items-center justify-between gap-2 p-1.5 hover:bg-gray-50/80 transition-colors">
             <Link href={`/profile/${(profile as any).username || profile.id}`} className="flex items-center gap-3 min-w-0 group flex-1">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="Profile" className="w-10 h-10 rounded-full object-cover shrink-0 border border-border group-hover:opacity-90 transition-opacity" />
+                <img src={profile.avatar_url} alt="Profile" className="w-9 h-9 rounded-full object-cover shrink-0 border border-border group-hover:opacity-90 transition-opacity" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 group-hover:opacity-90 transition-opacity text-sm font-medium text-gray-500">
-                  {profile.name?.charAt(0)?.toUpperCase() || <CircleUserRound className="w-5 h-5" />}
+                <div className="w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center shrink-0 text-xs font-mono font-bold text-heading">
+                  {profile.name?.charAt(0)?.toUpperCase() || <CircleUserRound className="w-4 h-4" />}
                 </div>
               )}
               <div className="min-w-0">
-                <p className="font-semibold text-sm text-heading truncate group-hover:underline">{profile.name}</p>
-                <p className="text-xs font-mono text-gray-500 truncate">{profile.headline || "Developer"}</p>
+                <p className="font-heading font-bold text-xs text-heading truncate group-hover:text-accent">{profile.name}</p>
+                <p className="text-[11px] font-mono text-muted uppercase tracking-wider truncate">{profile.headline || "Developer"}</p>
               </div>
             </Link>
             
             <button
               onClick={() => handleFollow(profile.id)}
               disabled={processingId === profile.id}
-              className="px-3 py-1.5 text-xs font-medium rounded-full bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-50 shrink-0"
+              className="px-3 py-1 text-[11px] font-mono uppercase tracking-wider bg-accent text-white border border-accent hover:bg-accent/90 transition-colors disabled:opacity-50 shrink-0 rounded-none"
             >
               {processingId === profile.id ? "..." : "Follow"}
             </button>

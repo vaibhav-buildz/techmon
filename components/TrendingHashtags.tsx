@@ -51,28 +51,28 @@ export default function TrendingHashtags() {
   if (hashtags.length === 0) return null;
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 shadow-sm mt-4">
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="w-5 h-5 text-gray-500" />
-        <h3 className="font-heading font-semibold text-heading">Trending</h3>
+    <div className="bg-surface border border-border rounded-none p-5 shadow-xs mt-4">
+      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
+        <TrendingUp className="w-4 h-4 text-accent" />
+        <h3 className="font-heading font-bold text-sm text-heading uppercase tracking-wider">Trending Topics</h3>
       </div>
       
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col divide-y divide-border">
         {hashtags.map((tag) => (
           <Link
             key={tag.tag}
             href={`/hashtag/${tag.tag}`}
-            className="flex items-center justify-between group"
+            className="flex items-center justify-between py-2.5 group hover:bg-gray-50/80 transition-colors px-1"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-50 border border-border flex items-center justify-center shrink-0 group-hover:bg-gray-100 transition-colors">
-                <Hash className="w-5 h-5 text-gray-400 group-hover:text-heading transition-colors" />
+              <div className="w-7 h-7 bg-background border border-border flex items-center justify-center shrink-0">
+                <Hash className="w-3.5 h-3.5 text-muted group-hover:text-accent transition-colors" />
               </div>
               <div className="flex flex-col">
-                <span className="font-heading font-semibold text-sm text-heading group-hover:text-accent transition-colors">
+                <span className="font-heading font-bold text-sm text-heading group-hover:text-accent transition-colors">
                   #{tag.tag}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-[11px] font-mono text-muted uppercase tracking-wider">
                   {tag.post_count} post{tag.post_count === 1 ? '' : 's'}
                 </span>
               </div>

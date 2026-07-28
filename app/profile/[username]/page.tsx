@@ -638,11 +638,11 @@ export default function ProfilePage() {
             {/* Header Row: Name & Username */}
             <div className="flex flex-col md:flex-row items-center gap-3">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-heading font-bold text-heading tracking-tight leading-none">
+                <h1 className="text-3xl sm:text-4xl font-heading font-bold text-heading tracking-tight leading-none">
                   {profile.name}
                 </h1>
                 {profile.username && (
-                  <p className="text-sm font-mono text-gray-500 mt-1">
+                  <p className="text-xs font-mono uppercase tracking-wider text-muted mt-1.5">
                     @{profile.username}
                   </p>
                 )}
@@ -650,10 +650,10 @@ export default function ProfilePage() {
             </div>
 
             {/* Stats Row: Posts · Followers · Following */}
-            <div className="flex items-center justify-center md:justify-start gap-8 pt-1 text-sm font-medium">
+            <div className="flex items-center justify-center md:justify-start gap-8 pt-1 font-mono text-xs uppercase tracking-wider">
               <div className="text-center md:text-left">
-                <span className="font-heading font-bold text-heading text-base mr-1.5">{postsCount}</span>
-                <span className="text-body text-xs sm:text-sm">posts</span>
+                <span className="font-bold text-heading text-sm mr-1.5">{postsCount}</span>
+                <span className="text-muted">posts</span>
               </div>
               <button
                 onClick={() => {
@@ -662,8 +662,8 @@ export default function ProfilePage() {
                 }}
                 className="text-center md:text-left hover:opacity-75 transition-opacity focus:outline-none"
               >
-                <span className="font-heading font-bold text-heading text-base mr-1.5">{followersCount}</span>
-                <span className="text-body text-xs sm:text-sm">followers</span>
+                <span className="font-bold text-heading text-sm mr-1.5">{followersCount}</span>
+                <span className="text-muted">followers</span>
               </button>
               <button
                 onClick={() => {
@@ -672,8 +672,8 @@ export default function ProfilePage() {
                 }}
                 className="text-center md:text-left hover:opacity-75 transition-opacity focus:outline-none"
               >
-                <span className="font-heading font-bold text-heading text-base mr-1.5">{followingCount}</span>
-                <span className="text-body text-xs sm:text-sm">following</span>
+                <span className="font-bold text-heading text-sm mr-1.5">{followingCount}</span>
+                <span className="text-muted">following</span>
               </button>
             </div>
 
@@ -685,23 +685,23 @@ export default function ProfilePage() {
                 </p>
               )}
               {profile.organization && (
-                <p className="text-xs text-body font-medium">
+                <p className="text-xs text-muted font-sans font-medium">
                   📍 {profile.organization}
                 </p>
               )}
               {profile.bio && (
-                <p className="text-sm text-heading leading-relaxed whitespace-pre-line max-w-xl">
+                <p className="text-sm font-sans text-heading leading-relaxed whitespace-pre-line max-w-xl">
                   {profile.bio}
                 </p>
               )}
 
               {/* Skills Tags */}
               {profile.skills && profile.skills.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 pt-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-3">
                   {profile.skills.map((skill, index) => (
                     <span
                       key={index}
-                      className="px-2.5 py-0.5 rounded-full bg-accent/10 text-accent font-mono text-[11px] font-medium"
+                      className="px-2.5 py-0.5 rounded-none border border-heading/30 text-heading font-mono text-[11px] uppercase tracking-wider bg-surface"
                     >
                       {skill}
                     </span>
@@ -711,19 +711,19 @@ export default function ProfilePage() {
 
               {/* Social / External Links */}
               {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
-                <div className="flex items-center justify-center md:justify-start gap-4 pt-2 text-xs font-medium">
+                <div className="flex items-center justify-center md:justify-start gap-4 pt-3 font-mono text-xs uppercase tracking-wider">
                   {profile.github_url && (
-                    <a href={profile.github_url} target="_blank" rel="noopener noreferrer" className="text-body hover:text-accent transition-colors flex items-center gap-1">
+                    <a href={profile.github_url} target="_blank" rel="noopener noreferrer" className="text-heading hover:text-accent transition-colors flex items-center gap-1">
                       <span>GitHub</span>
                     </a>
                   )}
                   {profile.linkedin_url && (
-                    <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-body hover:text-accent transition-colors flex items-center gap-1">
+                    <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-heading hover:text-accent transition-colors flex items-center gap-1">
                       <span>LinkedIn</span>
                     </a>
                   )}
                   {profile.portfolio_url && (
-                    <a href={profile.portfolio_url} target="_blank" rel="noopener noreferrer" className="text-body hover:text-accent transition-colors flex items-center gap-1">
+                    <a href={profile.portfolio_url} target="_blank" rel="noopener noreferrer" className="text-heading hover:text-accent transition-colors flex items-center gap-1">
                       <span>Portfolio</span>
                     </a>
                   )}
@@ -732,9 +732,9 @@ export default function ProfilePage() {
             </div>
 
             {/* ACTION ROW: Edit Profile (Owner) OR Follow / Message (Visitor) */}
-            <div className="pt-3">
+            <div className="pt-4">
               {followError && (
-                <div className="mb-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg border border-red-100">
+                <div className="mb-2 text-xs font-mono text-red-600 bg-red-50 p-2 border border-red-200 rounded-none">
                   {followError}
                 </div>
               )}
@@ -743,9 +743,9 @@ export default function ProfilePage() {
                 {isOwner ? (
                   <Link
                     href="/profile/edit"
-                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-surface border border-border shadow-sm text-heading hover:bg-gray-50 transition-colors text-sm font-semibold rounded-xl"
+                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-surface border border-heading/40 text-heading hover:border-heading transition-colors font-mono text-xs uppercase tracking-wider rounded-none"
                   >
-                    <Edit2 className="w-4 h-4 text-gray-500" />
+                    <Edit2 className="w-3.5 h-3.5 text-heading" />
                     <span>Edit Profile</span>
                   </Link>
                 ) : currentUserId ? (
@@ -753,14 +753,14 @@ export default function ProfilePage() {
                     <button
                       onClick={handleFollowToggle}
                       disabled={followLoading}
-                      className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 font-semibold text-sm rounded-xl transition-all shadow-sm ${
+                      className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 font-mono text-xs uppercase tracking-wider rounded-none transition-all ${
                         isFollowing
-                          ? "bg-surface border border-border text-heading hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                          : "bg-accent text-white hover:bg-accent/90"
+                          ? "bg-surface border border-heading/40 text-heading hover:border-red-600 hover:text-red-600"
+                          : "bg-accent text-white hover:bg-accent/90 border border-accent"
                       }`}
                     >
                       {followLoading ? (
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       ) : isFollowing ? (
                         "Following"
                       ) : (
@@ -769,9 +769,9 @@ export default function ProfilePage() {
                     </button>
                     <button
                       onClick={handleMessageClick}
-                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-surface border border-border shadow-sm text-heading hover:bg-gray-50 transition-colors text-sm font-semibold rounded-xl"
+                      className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-surface border border-heading/40 text-heading hover:border-heading transition-colors font-mono text-xs uppercase tracking-wider rounded-none"
                     >
-                      <MessageCircle className="w-4 h-4 text-gray-500" />
+                      <MessageCircle className="w-3.5 h-3.5 text-heading" />
                       <span>Message</span>
                     </button>
                   </>

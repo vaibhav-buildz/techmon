@@ -232,23 +232,22 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen py-12 bg-background text-body">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center md:justify-start">
-        <div className="w-full max-w-xl">
-          <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-8">
-          <div className="text-left">
-            <h1 className="text-2xl font-heading font-bold tracking-tight text-heading">Complete your profile</h1>
-            <p className="text-sm text-body mt-2">Tell us a bit about yourself to get started.</p>
+    <div className="min-h-screen py-16 bg-background text-body flex items-center justify-center">
+      <div className="w-full max-w-xl px-4">
+        <div className="bg-surface border border-border rounded-none p-8 md:p-10 space-y-8 shadow-xs">
+          <div className="text-left space-y-2">
+            <h1 className="text-3xl font-heading font-bold tracking-tight text-heading">Complete your profile</h1>
+            <p className="text-sm font-sans text-muted">Tell us a bit about yourself to complete your author card.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-heading mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-heading mb-1.5">
                   Username
                 </label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3 text-gray-500 font-mono text-sm select-none">
+                  <span className="absolute left-0 text-muted font-mono text-sm select-none">
                     @
                   </span>
                   <input
@@ -256,40 +255,40 @@ export default function OnboardingPage() {
                     required
                     value={username}
                     onChange={(e) => handleUsernameChange(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm font-mono placeholder-gray-400 transition-shadow"
+                    className="w-full pl-6 pr-3 py-2 bg-transparent border-b-2 border-border focus:border-accent text-sm font-mono text-heading placeholder-gray-400 focus:outline-none transition-colors rounded-none"
                     placeholder="username"
                     maxLength={30}
                   />
                 </div>
                 {checkingUsername && (
-                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <p className="text-xs font-mono text-muted mt-1">
                     Checking availability...
                   </p>
                 )}
                 {!checkingUsername && usernameStatus === "available" && (
-                  <p className="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                  <p className="text-xs font-mono text-green-700 font-medium mt-1">
                     ✓ Username is available
                   </p>
                 )}
                 {!checkingUsername && (usernameStatus === "taken" || usernameStatus === "invalid") && (
-                  <p className="text-xs text-red-600 font-medium mt-1 flex items-center gap-1">
+                  <p className="text-xs font-mono text-red-600 font-medium mt-1">
                     ✕ {usernameMessage}
                   </p>
                 )}
 
                 {suggestions.length > 0 && (
-                  <div className="mt-2.5 space-y-1.5">
-                    <p className="text-xs text-body font-medium">Suggested usernames:</p>
+                  <div className="mt-3 space-y-1.5">
+                    <p className="text-xs font-mono uppercase tracking-wider text-muted">Suggested usernames:</p>
                     <div className="flex flex-wrap gap-2">
                       {suggestions.map((sug) => (
                         <button
                           key={sug}
                           type="button"
                           onClick={() => handleUsernameChange(sug)}
-                          className={`px-2.5 py-1 text-xs rounded-full border transition-all font-mono ${
+                          className={`px-2.5 py-1 text-xs rounded-none border transition-all font-mono ${
                             username === sug
-                              ? "border-accent bg-accent text-white shadow-xs"
-                              : "border-accent/30 text-accent bg-accent/5 hover:bg-accent/15"
+                              ? "border-accent bg-accent text-white"
+                              : "border-border text-heading bg-surface hover:border-heading"
                           }`}
                         >
                           @{sug}
@@ -299,11 +298,11 @@ export default function OnboardingPage() {
                   </div>
                 )}
 
-                <p className="text-xs text-body mt-1.5">Only lowercase letters, numbers, and underscores</p>
+                <p className="text-xs font-mono text-muted mt-1.5">Only lowercase letters, numbers, and underscores</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-heading mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-heading mb-1.5">
                   Full Name
                 </label>
                 <input
@@ -311,13 +310,13 @@ export default function OnboardingPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
+                  className="w-full px-3 py-2 bg-transparent border-b-2 border-border focus:border-accent text-sm text-heading placeholder-gray-400 focus:outline-none transition-colors rounded-none"
                   placeholder="Jane Doe"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-heading mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-heading mb-1.5">
                   Headline (what do you do?)
                 </label>
                 <input
@@ -325,49 +324,49 @@ export default function OnboardingPage() {
                   required
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow font-mono"
+                  className="w-full px-3 py-2 bg-transparent border-b-2 border-border focus:border-accent text-sm text-heading placeholder-gray-400 focus:outline-none transition-colors rounded-none font-mono"
                   placeholder="e.g. Full Stack Developer | Final Year CS Student"
                 />
-                <p className="text-xs text-body mt-1">A short line describing your role or focus area</p>
+                <p className="text-xs text-muted mt-1">A short line describing your role or focus area</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-heading mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-heading mb-1.5">
                   College / Company
                 </label>
                 <input
                   type="text"
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow"
+                  className="w-full px-3 py-2 bg-transparent border-b-2 border-border focus:border-accent text-sm text-heading placeholder-gray-400 focus:outline-none transition-colors rounded-none"
                   placeholder="e.g. IEC College of Engineering, or Google"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-heading mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-heading mb-1.5">
                   Bio
                 </label>
                 <textarea
                   rows={4}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm placeholder-gray-400 transition-shadow resize-none"
+                  className="w-full px-3 py-2 bg-surface border border-border focus:border-accent text-sm text-heading placeholder-gray-400 focus:outline-none transition-colors rounded-none resize-none"
                   placeholder="Tell us about yourself..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-heading mb-1">
+                <label className="block font-mono text-xs uppercase tracking-wider text-heading mb-1.5">
                   Skills
                 </label>
                 <SkillsAutocomplete skills={skills} onChange={setSkills} />
-                <p className="text-xs text-body mt-2">Start typing to see suggestions, or press Enter/comma to add a custom skill.</p>
+                <p className="text-xs text-muted mt-2">Start typing to see suggestions, or press Enter/comma to add a custom skill.</p>
               </div>
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+              <div className="font-mono text-xs text-red-600 bg-red-50 p-3 border border-red-200 rounded-none">
                 {error}
               </div>
             )}
@@ -376,13 +375,12 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-2.5 px-4 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                className="w-full py-3 px-4 bg-accent text-white font-mono text-xs uppercase tracking-wider hover:bg-accent/90 transition-colors border border-accent disabled:opacity-50 rounded-none"
               >
                 {submitting ? "Saving..." : "Complete Profile"}
               </button>
             </div>
           </form>
-        </div>
         </div>
       </div>
     </div>

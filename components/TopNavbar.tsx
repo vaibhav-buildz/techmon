@@ -118,13 +118,12 @@ export default function TopNavbar({ user, profile }: Props) {
   return (
     <>
       {/* Fixed Top Navbar */}
-      <header className="fixed top-0 inset-x-0 h-14 md:h-16 bg-surface border-b border-border z-40 flex items-center justify-between px-4 sm:px-6">
+      <header className="fixed top-0 inset-x-0 h-14 md:h-16 bg-background/95 border-b border-border z-40 flex items-center justify-between px-4 sm:px-6 backdrop-blur-xs">
         
         {/* Left: Logo */}
         <div className="flex items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <img src="/logo.svg" alt="Techmon Logo" className="w-7 h-7 md:w-8 md:h-8 group-hover:opacity-90 transition-opacity" />
-            <span className="text-xl md:text-2xl font-heading font-bold tracking-tight text-heading group-hover:text-accent transition-colors">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <span className="text-2xl md:text-3xl font-heading font-bold tracking-tight text-heading group-hover:text-accent transition-colors">
               Techmon
             </span>
           </Link>
@@ -135,30 +134,30 @@ export default function TopNavbar({ user, profile }: Props) {
           <div className="hidden md:flex flex-1 max-w-sm mx-8">
             <button 
               onClick={() => setIsSearchModalOpen(true)}
-              className="flex items-center w-full bg-gray-100 hover:bg-gray-200 transition-colors h-10 rounded-full px-4 text-gray-500 text-sm font-medium focus:outline-none"
+              className="flex items-center w-full bg-surface border border-border hover:border-heading transition-colors h-9 px-3 text-gray-500 text-xs font-mono tracking-wide focus:outline-none"
             >
-              <Search className="w-4 h-4 mr-2" />
-              <span>Search Techmon...</span>
+              <Search className="w-3.5 h-3.5 mr-2 text-muted" />
+              <span>SEARCH TECHMON...</span>
             </button>
           </div>
         )}
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-2">
           {user ? (
             <>
               {/* Desktop Nav Actions */}
-              <div className="hidden md:flex items-center gap-3 mr-3">
-                <Link href="/" title="Home" className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${pathname === '/' ? 'text-accent' : 'text-body'}`}>
-                  <House className={`w-6 h-6 ${pathname === '/' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+              <div className="hidden md:flex items-center gap-4 mr-2">
+                <Link href="/" title="Home" className={`p-1.5 hover:text-accent transition-colors ${pathname === '/' ? 'text-accent' : 'text-heading'}`}>
+                  <House className={`w-5 h-5 ${pathname === '/' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 </Link>
-                <Link href="/feed" title="Feed" className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${pathname === '/feed' ? 'text-accent' : 'text-body'}`}>
-                  <Clapperboard className={`w-6 h-6 ${pathname === '/feed' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                <Link href="/feed" title="Feed" className={`p-1.5 hover:text-accent transition-colors ${pathname === '/feed' ? 'text-accent' : 'text-heading'}`}>
+                  <Clapperboard className={`w-5 h-5 ${pathname === '/feed' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 </Link>
-                <button onClick={() => setIsNotificationsPanelOpen(true)} title="Notifications" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-body">
-                  <Heart className="w-6 h-6 stroke-2" />
+                <button onClick={() => setIsNotificationsPanelOpen(true)} title="Notifications" className="relative p-1.5 hover:text-accent transition-colors text-heading">
+                  <Heart className="w-5 h-5 stroke-2" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface"></span>
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full"></span>
                   )}
                 </button>
                 
@@ -167,29 +166,27 @@ export default function TopNavbar({ user, profile }: Props) {
                   <button 
                     onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)} 
                     title="Create"
-                    className="flex items-center gap-1.5 px-4 py-2 ml-1 rounded-full bg-accent text-white hover:bg-accent/90 transition-colors font-medium shadow-sm"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-accent text-white font-mono text-xs uppercase tracking-wider border border-accent hover:bg-accent/90 transition-colors"
                   >
-                    <Plus className="w-5 h-5 stroke-2" />
+                    <Plus className="w-4 h-4 stroke-2" />
                     <span>Post</span>
                   </button>
 
                   {isCreateMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setIsCreateMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-44 bg-surface border border-border shadow-xl rounded-2xl overflow-hidden z-50 py-1.5 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute right-0 mt-2 w-48 bg-surface border border-border shadow-lg rounded-none z-50 py-1 divide-y divide-border animate-in fade-in duration-100">
                         <button
                           onClick={() => {
                             setIsCreateMenuOpen(false);
                             setIsCreateModalOpen(true);
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors group"
                         >
-                          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-                            <SquarePen className="w-4 h-4" />
-                          </div>
+                          <SquarePen className="w-4 h-4 text-accent" />
                           <div>
-                            <div className="font-semibold">Post</div>
-                            <div className="text-[11px] text-body font-normal">Note or Photo/Video</div>
+                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent">Article / Note</div>
+                            <div className="text-[10px] text-muted font-sans">Text or Media Post</div>
                           </div>
                         </button>
                         <button
@@ -197,14 +194,12 @@ export default function TopNavbar({ user, profile }: Props) {
                             setIsCreateMenuOpen(false);
                             setIsStoryModalOpen(true);
                           }}
-                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors group"
                         >
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 text-white flex items-center justify-center">
-                            <Camera className="w-4 h-4" />
-                          </div>
+                          <Camera className="w-4 h-4 text-accent" />
                           <div>
-                            <div className="font-semibold">Story</div>
-                            <div className="text-[11px] text-body font-normal">24-hour photo or video</div>
+                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent">Story</div>
+                            <div className="text-[10px] text-muted font-sans">24-hour dispatch</div>
                           </div>
                         </button>
                       </div>
@@ -212,22 +207,22 @@ export default function TopNavbar({ user, profile }: Props) {
                   )}
                 </div>
 
-                <div className="w-px h-8 bg-border mx-1" />
+                <div className="w-px h-6 bg-border mx-1" />
 
-                <Link href="/messages" title="Messages" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-body">
-                  <MessageCircle className="w-6 h-6 stroke-2" />
+                <Link href="/messages" title="Messages" className="relative p-1.5 hover:text-accent transition-colors text-heading">
+                  <MessageCircle className="w-5 h-5 stroke-2" />
                   {unreadMessagesCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface"></span>
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full"></span>
                   )}
                 </Link>
               </div>
 
               {/* Mobile Only Header Actions (if any) */}
               <div className="flex md:hidden items-center gap-2">
-                <Link href="/messages" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-body">
-                  <MessageCircle className="w-6 h-6 stroke-2" />
+                <Link href="/messages" className="relative p-1.5 text-heading">
+                  <MessageCircle className="w-5 h-5 stroke-2" />
                   {unreadMessagesCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface"></span>
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full"></span>
                   )}
                 </Link>
               </div>
@@ -235,21 +230,21 @@ export default function TopNavbar({ user, profile }: Props) {
               {/* User Avatar Link */}
               <Link
                 href={profile?.username ? `/profile/${profile.username}` : "/onboarding"}
-                className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border border-border focus:outline-none hover:ring-2 hover:ring-accent transition-all block"
+                className="w-8 h-8 rounded-full overflow-hidden border border-heading/30 focus:outline-none hover:border-accent transition-all block"
               >
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-background flex items-center justify-center text-sm font-semibold text-gray-500">
-                    {profile?.name?.charAt(0)?.toUpperCase() || <CircleUserRound className="w-5 h-5" />}
+                  <div className="w-full h-full bg-surface flex items-center justify-center font-mono text-xs font-bold text-heading">
+                    {profile?.name?.charAt(0)?.toUpperCase() || <CircleUserRound className="w-4 h-4" />}
                   </div>
                 )}
               </Link>
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <Link href="/login" className="text-sm font-medium text-heading hover:text-accent transition-colors">Log In</Link>
-              <Link href="/signup" className="text-sm font-medium bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition-colors">Sign Up</Link>
+              <Link href="/login" className="font-mono text-xs uppercase tracking-wider text-heading hover:text-accent transition-colors">Log In</Link>
+              <Link href="/signup" className="font-mono text-xs uppercase tracking-wider px-4 py-2 bg-accent text-white hover:bg-accent/90 transition-colors border border-accent rounded-none">Sign Up</Link>
             </div>
           )}
         </div>

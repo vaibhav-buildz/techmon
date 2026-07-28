@@ -222,13 +222,13 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
 
   if (posts.length === 0) {
     return (
-      <div className="bg-surface border border-border shadow-sm rounded-xl p-12 flex flex-col items-center justify-center text-center gap-4">
-        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
-          <Camera className="w-8 h-8 text-gray-300" />
+      <div className="bg-surface border border-border rounded-none p-12 flex flex-col items-center justify-center text-center gap-4 shadow-xs">
+        <div className="w-12 h-12 bg-background flex items-center justify-center border border-border">
+          <Camera className="w-6 h-6 text-muted" />
         </div>
         <div>
-          <h3 className="font-heading font-semibold text-lg text-heading">No posts yet</h3>
-          <p className="text-body text-sm mt-1">When there are posts, they'll show up here.</p>
+          <h3 className="font-heading font-bold text-xl text-heading">No posts yet</h3>
+          <p className="text-muted text-sm mt-1">Published articles and posts will appear here.</p>
         </div>
       </div>
     );

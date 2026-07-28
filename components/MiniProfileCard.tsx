@@ -66,45 +66,45 @@ export default function MiniProfileCard({ userId }: { userId: string }) {
 
   return (
     <>
-      <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-surface border border-border rounded-none overflow-hidden shadow-xs">
         {/* Cover Photo Placeholder */}
-        <div className="h-16 bg-accent/10 w-full relative" />
+        <div className="h-14 bg-accent/10 w-full relative border-b border-border" />
         
-        <div className="px-4 pb-4 -mt-8 flex flex-col items-center text-center">
+        <div className="px-4 pb-4 -mt-7 flex flex-col items-center text-center">
           <Link href={`/profile/${profile.username || userId}`} className="block relative bg-surface p-1 rounded-full hover:opacity-90 transition-opacity">
             {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profile" className="w-16 h-16 rounded-full object-cover border border-border" />
+              <img src={profile.avatar_url} alt="Profile" className="w-14 h-14 rounded-full object-cover border border-border" />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-background border border-border flex items-center justify-center text-xl font-medium text-gray-500">
-                {profile.name?.charAt(0)?.toUpperCase() || <CircleUserRound className="w-8 h-8" />}
+              <div className="w-14 h-14 rounded-full bg-background border border-border flex items-center justify-center text-lg font-mono font-bold text-heading">
+                {profile.name?.charAt(0)?.toUpperCase() || <CircleUserRound className="w-7 h-7" />}
               </div>
             )}
           </Link>
           
-          <Link href={`/profile/${profile.username || userId}`} className="mt-2 block hover:underline">
-            <h2 className="font-heading font-semibold text-heading text-lg">{profile.name}</h2>
+          <Link href={`/profile/${profile.username || userId}`} className="mt-2 block group">
+            <h2 className="font-heading font-bold text-heading text-lg group-hover:text-accent transition-colors">{profile.name}</h2>
           </Link>
-          <p className="text-sm font-mono text-body mt-1 line-clamp-2">{profile.headline || "Add a headline in your profile"}</p>
+          <p className="text-xs font-mono text-muted uppercase tracking-wider mt-1 line-clamp-2">{profile.headline || "Developer"}</p>
         </div>
 
-        <div className="border-t border-border flex justify-between text-center divide-x divide-border">
-          <div className="flex-1 flex flex-col py-3">
-            <span className="text-sm font-semibold text-heading">{counts.posts}</span>
-            <span className="text-xs text-gray-500">Posts</span>
+        <div className="border-t border-border flex justify-between text-center divide-x divide-border font-mono text-xs uppercase tracking-wider">
+          <div className="flex-1 flex flex-col py-2.5">
+            <span className="font-bold text-heading text-sm">{counts.posts}</span>
+            <span className="text-[10px] text-muted">Posts</span>
           </div>
           <button 
             onClick={() => { setFollowListType("followers"); setFollowListModalOpen(true); }}
-            className="flex-1 flex flex-col py-3 hover:bg-gray-50 transition-colors"
+            className="flex-1 flex flex-col py-2.5 hover:bg-gray-50/80 transition-colors"
           >
-            <span className="text-sm font-semibold text-heading">{counts.followers}</span>
-            <span className="text-xs text-gray-500">Followers</span>
+            <span className="font-bold text-heading text-sm">{counts.followers}</span>
+            <span className="text-[10px] text-muted">Followers</span>
           </button>
           <button 
             onClick={() => { setFollowListType("following"); setFollowListModalOpen(true); }}
-            className="flex-1 flex flex-col py-3 hover:bg-gray-50 transition-colors"
+            className="flex-1 flex flex-col py-2.5 hover:bg-gray-50/80 transition-colors"
           >
-            <span className="text-sm font-semibold text-heading">{counts.following}</span>
-            <span className="text-xs text-gray-500">Following</span>
+            <span className="font-bold text-heading text-sm">{counts.following}</span>
+            <span className="text-[10px] text-muted">Following</span>
           </button>
         </div>
       </div>
