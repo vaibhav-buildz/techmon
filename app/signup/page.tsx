@@ -71,8 +71,9 @@ export default function SignupPage() {
       <div className="w-full max-w-md px-4">
         <div className="bg-surface border border-border rounded-none p-8 md:p-10 space-y-8 shadow-xs">
           <div className="text-left space-y-3">
-            <Link href="/" className="inline-block">
-              <span className="text-2xl font-heading font-bold tracking-tight text-heading hover:text-accent transition-colors">
+            <Link href="/" className="inline-flex items-center gap-2.5 group">
+              <img src="/logo.svg" alt="Techmon Logo" className="w-8 h-8" />
+              <span className="text-2xl font-heading font-bold tracking-tight text-heading group-hover:text-accent transition-colors">
                 Techmon
               </span>
             </Link>

@@ -6,8 +6,11 @@ export default function TopBar() {
   return (
     <nav className="w-full border-b border-border bg-background text-body h-16 flex items-center shrink-0">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-heading font-bold tracking-tight text-heading hover:text-accent transition-colors">
-          Techmon
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <img src="/logo.svg" alt="Techmon Logo" className="w-7 h-7" />
+          <span className="text-2xl font-heading font-bold tracking-tight text-heading group-hover:text-accent transition-colors">
+            Techmon
+          </span>
         </Link>
         <div className="flex items-center gap-4">
           <Link

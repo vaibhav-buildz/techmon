@@ -49,6 +49,25 @@ async function getIpAndLocation() {
   }
 }
 
+export function clearLoginSessionFlags(userId?: string) {
+  if (typeof window === "undefined") return;
+  if (userId) {
+    sessionStorage.removeItem(`techmon_logged_login_${userId}`);
+    localStorage.removeItem(`techmon_last_login_${userId}`);
+  } else {
+    Object.keys(sessionStorage).forEach((key) => {
+      if (key.startsWith("techmon_logged_login_")) {
+        sessionStorage.removeItem(key);
+      }
+    });
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("techmon_last_login_")) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+}
+
 export async function logLogin(userId: string) {
   if (!userId || typeof window === "undefined") return;
 
@@ -58,10 +77,31 @@ export async function logLogin(userId: string) {
   }
 
   try {
-    sessionStorage.setItem(sessionKey, "true");
-
     const ua = navigator.userAgent;
     const { browser, os, device } = parseUserAgent(ua);
+
+    // Deduplication check: compare timestamps to prevent logging if a login history row exists within the last 60 seconds
+    const sixtySecondsAgo = new Date(Date.now() - 60 * 1000).toISOString();
+    const { data: recentLogins, error: checkError } = await supabase
+      .from("login_history")
+      .select("id, created_at, browser, os, device")
+      .eq("user_id", userId)
+      .gte("created_at", sixtySecondsAgo)
+      .limit(1);
+
+    if (checkError) {
+      console.error("[logLogin] Error checking recent login_history:", checkError);
+    }
+
+    if (recentLogins && recentLogins.length > 0) {
+      // Mark session logged so subsequent triggers in this browser session skip early
+      sessionStorage.setItem(sessionKey, "true");
+      return;
+    }
+
+    sessionStorage.setItem(sessionKey, "true");
+    localStorage.setItem(`techmon_last_login_${userId}`, Date.now().toString());
+
     const { ip, city, region, country } = await getIpAndLocation();
 
     // 1. Insert into login_history table

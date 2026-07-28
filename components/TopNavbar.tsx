@@ -123,6 +123,7 @@ export default function TopNavbar({ user, profile }: Props) {
         {/* Left: Logo */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2.5 group">
+            <img src="/logo.svg" alt="Techmon Logo" className="w-7 h-7 md:w-8 md:h-8" />
             <span className="text-2xl md:text-3xl font-heading font-bold tracking-tight text-heading group-hover:text-accent transition-colors">
               Techmon
             </span>
