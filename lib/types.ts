@@ -105,3 +105,41 @@ export type Project = {
   };
 };
 
+export type JobListing = {
+  id: string;
+  posted_by: string;
+  title: string;
+  company: string;
+  location?: string;
+  job_type: "Full-time" | "Part-time" | "Internship" | "Contract";
+  work_mode: "Remote" | "Onsite" | "Hybrid";
+  description: string;
+  requirements?: string;
+  apply_url?: string;
+  apply_email?: string;
+  tags?: string[];
+  expires_at?: string;
+  created_at: string;
+  profiles?: {
+    name: string;
+    avatar_url?: string;
+    username?: string;
+  };
+  applicantCount?: number;
+  hasApplied?: boolean;
+};
+
+export type JobApplication = {
+  id: string;
+  job_id: string;
+  applicant_id: string;
+  message?: string;
+  created_at: string;
+  applicant?: {
+    name: string;
+    avatar_url?: string;
+    username?: string;
+    headline?: string;
+  };
+};
+

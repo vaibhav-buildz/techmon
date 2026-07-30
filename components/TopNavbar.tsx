@@ -18,7 +18,8 @@ import {
   Plus,
   CircleUserRound,
   Camera,
-  SquarePen
+  SquarePen,
+  Briefcase,
 } from "lucide-react";
 
 type UserProfile = {
@@ -101,6 +102,7 @@ export default function TopNavbar({ user, profile }: Props) {
     { label: "Home", icon: House, href: "/" },
     { label: "Search", icon: Search, onClick: () => setIsSearchModalOpen(true) },
     { label: "Feed", icon: Clapperboard, href: "/feed" },
+    { label: "Jobs", icon: Briefcase, href: "/jobs" },
     { label: "Messages", icon: MessageCircle, href: "/messages" },
     { label: "Notifications", icon: Heart, onClick: () => setIsNotificationsPanelOpen(true) },
     { label: "Create", icon: PlusSquare, onClick: () => setIsCreateMenuOpen(!isCreateMenuOpen) },
@@ -155,6 +157,9 @@ export default function TopNavbar({ user, profile }: Props) {
                 </Link>
                 <Link href="/feed" title="Feed" className={`p-1.5 hover:text-accent transition-colors ${pathname === '/feed' ? 'text-accent' : 'text-heading'}`}>
                   <Clapperboard className={`w-5 h-5 ${pathname === '/feed' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                </Link>
+                <Link href="/jobs" title="Jobs" className={`p-1.5 hover:text-accent transition-colors ${pathname === '/jobs' ? 'text-accent' : 'text-heading'}`}>
+                  <Briefcase className={`w-5 h-5 ${pathname === '/jobs' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 </Link>
                 <button onClick={() => setIsNotificationsPanelOpen(true)} title="Notifications" className="relative p-1.5 hover:text-accent transition-colors text-heading">
                   <Heart className="w-5 h-5 stroke-2" />
