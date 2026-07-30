@@ -170,20 +170,35 @@ export default function StandalonePostPage() {
           .from("likes")
           .delete()
           .match({ post_id: id, user_id: currentUserId });
+
+        if (post.user_id !== currentUserId) {
+          await supabase
+            .from("notifications")
+            .delete()
+            .match({ recipient_id: post.user_id, actor_id: currentUserId, type: "like", post_id: id });
+        }
       } else {
         await supabase
           .from("likes")
           .insert({ post_id: id, user_id: currentUserId });
           
         if (post.user_id !== currentUserId) {
-          await supabase
+          const { data: existingNotif } = await supabase
             .from("notifications")
-            .insert({
-              recipient_id: post.user_id,
-              actor_id: currentUserId,
-              type: "like",
-              post_id: id
-            });
+            .select("id")
+            .match({ recipient_id: post.user_id, actor_id: currentUserId, type: "like", post_id: id })
+            .maybeSingle();
+
+          if (!existingNotif) {
+            await supabase
+              .from("notifications")
+              .insert({
+                recipient_id: post.user_id,
+                actor_id: currentUserId,
+                type: "like",
+                post_id: id
+              });
+          }
         }
       }
     } catch (err) {

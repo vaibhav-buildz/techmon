@@ -63,13 +63,17 @@ export default function LoginPage() {
       if (data.session) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name, avatar_url")
+          .select("name, avatar_url, username")
           .eq("id", data.session.user.id)
-          .single();
+          .maybeSingle();
         addAccount(data.session, profile);
-      }
 
-      router.push("/onboarding");
+        if (profile?.username) {
+          router.push(`/profile/${profile.username}`);
+        } else {
+          router.push("/onboarding");
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

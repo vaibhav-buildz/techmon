@@ -110,7 +110,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Navigation List */}
-        <div className="bg-surface border border-border rounded-xl divide-y divide-border overflow-hidden shadow-xs">
+        <div className="bg-surface border border-border divide-y divide-border overflow-hidden">
           {settingsItems.map((item) => {
             const Icon = item.icon;
             return (

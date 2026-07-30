@@ -56,7 +56,11 @@ export default function ActivityPage() {
       const sharedPostIds = postsData.filter(p => p.type === "repost" && p.shared_post_id).map(p => p.shared_post_id);
       let sharedPostsData: any[] = [];
       if (sharedPostIds.length > 0) {
-        const { data: spData } = await supabase.from('posts').select('*').in('id', sharedPostIds);
+        const { data: spData } = await supabase
+          .from('posts')
+          .select('*')
+          .in('id', sharedPostIds)
+          .eq('archived', false);
         if (spData) {
           sharedPostsData = spData;
           spData.forEach(p => userIds.add(p.user_id));

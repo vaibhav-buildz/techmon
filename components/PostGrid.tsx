@@ -122,6 +122,8 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
     );
 
     try {
+      const targetPost = posts.find(p => p.id === postId);
+
       if (currentlyLiked) {
         const { error } = await supabase
           .from("likes")
@@ -129,6 +131,13 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
           .match({ post_id: postId, user_id: currentUserId });
           
         if (error) throw error;
+
+        if (targetPost && targetPost.user_id !== currentUserId) {
+          await supabase
+            .from("notifications")
+            .delete()
+            .match({ recipient_id: targetPost.user_id, actor_id: currentUserId, type: "like", post_id: postId });
+        }
       } else {
         const { error } = await supabase
           .from("likes")
@@ -136,19 +145,26 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
           
         if (error) throw error;
         
-        const targetPost = posts.find(p => p.id === postId);
         if (targetPost && targetPost.user_id !== currentUserId) {
-          const { error: notifError } = await supabase
+          const { data: existingNotif } = await supabase
             .from("notifications")
-            .insert({
-              recipient_id: targetPost.user_id,
-              actor_id: currentUserId,
-              type: "like",
-              post_id: postId
-            });
-            
-          if (notifError) {
-            console.error("Error creating like notification:", notifError);
+            .select("id")
+            .match({ recipient_id: targetPost.user_id, actor_id: currentUserId, type: "like", post_id: postId })
+            .maybeSingle();
+
+          if (!existingNotif) {
+            const { error: notifError } = await supabase
+              .from("notifications")
+              .insert({
+                recipient_id: targetPost.user_id,
+                actor_id: currentUserId,
+                type: "like",
+                post_id: postId
+              });
+              
+            if (notifError) {
+              console.error("Error creating like notification:", notifError);
+            }
           }
         }
       }

@@ -37,8 +37,8 @@ export default function SearchModal({ isOpen, onClose }: Props) {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("id, name, headline, avatar_url")
-          .ilike("name", `%${query}%`)
+          .select("id, name, headline, avatar_url, username")
+          .or(`name.ilike.%${query}%,username.ilike.%${query}%`)
           .limit(10);
           
         if (error) throw error;
