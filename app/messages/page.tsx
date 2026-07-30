@@ -432,8 +432,8 @@ export default function MessagesPage() {
                       <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-[15px] leading-relaxed shadow-sm ${
                           isMine 
-                            ? 'bg-[#2F5D8A] text-white rounded-br-sm' 
-                            : 'bg-white border border-gray-100 text-heading rounded-bl-sm'
+                            ? 'bg-accent text-white rounded-br-sm' 
+                            : 'bg-white border border-border text-heading rounded-bl-sm'
                         }`}>
                           {msg.media_url && (
                             <div className="mb-2 -mx-2 -mt-1 overflow-hidden rounded-t-xl relative">

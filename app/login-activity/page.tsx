@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Laptop, Smartphone, Globe, Shield, ArrowLeft, Clock, MapPin } from "lucide-react";
-import Link from "next/link";
+import { Laptop, Smartphone, Shield, ArrowLeft, Clock, MapPin } from "lucide-react";
 
 type LoginRecord = {
   id: string;
@@ -115,13 +114,13 @@ export default function LoginActivityPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-heading font-bold text-heading">Login Activity</h1>
-            <p className="text-sm text-body">Where you are currently logged in and recent sessions</p>
+            <h1 className="text-2xl md:text-3xl font-heading font-bold text-heading">Login Activity</h1>
+            <p className="text-sm font-sans text-muted">Active sessions, device logs, and security history</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-xs font-mono text-red-700">
             {error}
           </div>
         )}
@@ -131,29 +130,29 @@ export default function LoginActivityPage() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="bg-surface border border-border rounded-xl p-5 flex items-center justify-between animate-pulse"
+                className="bg-surface border border-border p-5 flex items-center justify-between animate-pulse"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-200" />
+                  <div className="w-10 h-10 bg-gray-200" />
                   <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-40" />
-                    <div className="h-3 bg-gray-200 rounded w-28" />
+                    <div className="h-4 bg-gray-200 w-40" />
+                    <div className="h-3 bg-gray-200 w-28" />
                   </div>
                 </div>
-                <div className="h-3 bg-gray-200 rounded w-16" />
+                <div className="h-3 bg-gray-200 w-16" />
               </div>
             ))}
           </div>
         ) : history.length === 0 ? (
-          <div className="bg-surface border border-border rounded-xl p-12 text-center flex flex-col items-center justify-center gap-3">
+          <div className="bg-surface border border-border p-12 text-center flex flex-col items-center justify-center gap-3">
             <Shield className="w-10 h-10 text-gray-300" />
-            <h3 className="font-heading font-semibold text-lg text-heading">No Login History</h3>
-            <p className="text-sm text-body max-w-sm">
+            <h3 className="font-heading font-bold text-lg text-heading">No Login History</h3>
+            <p className="text-sm font-sans text-muted max-w-sm">
               Your login sessions will appear here as soon as you sign in on a device.
             </p>
           </div>
         ) : (
-          <div className="bg-surface border border-border rounded-xl divide-y divide-border overflow-hidden shadow-xs">
+          <div className="bg-surface border border-border divide-y divide-border overflow-hidden">
             {history.map((record, index) => {
               const isCurrentSession = index === 0;
               const hasLocation =
@@ -174,24 +173,24 @@ export default function LoginActivityPage() {
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                    <div className="w-10 h-10 bg-surface border border-border flex items-center justify-center shrink-0 mt-0.5">
                       {getDeviceIcon(record.device, record.os)}
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-heading font-semibold text-heading text-base">
+                        <span className="font-heading font-bold text-heading text-base">
                           {record.browser || "Unknown Browser"} on {record.os || "Unknown OS"}
                         </span>
 
                         {isCurrentSession && (
-                          <span className="px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full border border-green-200">
+                          <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
                             Active session
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-body flex-wrap">
+                      <div className="flex items-center gap-3 text-xs text-muted font-sans flex-wrap">
                         <span className="flex items-center gap-1">
                           <MapPin className="w-3.5 h-3.5 text-gray-400" />
                           {locationString}
@@ -203,12 +202,12 @@ export default function LoginActivityPage() {
                     </div>
                   </div>
 
-                  <div className="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100">
-                    <span className="text-xs font-semibold text-heading flex items-center gap-1">
+                  <div className="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border">
+                    <span className="text-xs font-mono font-bold text-heading flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-gray-400 sm:hidden" />
                       {formatTimeAgo(record.created_at)}
                     </span>
-                    <span className="text-[11px] text-gray-400 font-mono" title={record.created_at}>
+                    <span className="text-[11px] text-muted font-mono" title={record.created_at}>
                       {formatExactDate(record.created_at)}
                     </span>
                   </div>
