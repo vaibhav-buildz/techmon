@@ -6,7 +6,7 @@ import TopNavbar from "./TopNavbar";
 import TopBar from "./TopBar";
 import { addAccount } from "@/lib/accountManager";
 import { usePathname, useRouter } from "next/navigation";
-import { logLogin, clearLoginSessionFlags } from "@/lib/logLogin";
+import { logLogin } from "@/lib/logLogin";
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
@@ -65,9 +65,6 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           setProfile(null);
         }
       } else {
-        if (event === "SIGNED_OUT") {
-          clearLoginSessionFlags();
-        }
         setProfile(null);
       }
       setLoading(false);

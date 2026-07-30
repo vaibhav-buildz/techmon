@@ -49,44 +49,23 @@ async function getIpAndLocation() {
   }
 }
 
-export function clearLoginSessionFlags(userId?: string) {
-  if (typeof window === "undefined") return;
-  if (userId) {
-    sessionStorage.removeItem(`techmon_logged_login_${userId}`);
-    localStorage.removeItem(`techmon_last_login_${userId}`);
-  } else {
-    Object.keys(sessionStorage).forEach((key) => {
-      if (key.startsWith("techmon_logged_login_")) {
-        sessionStorage.removeItem(key);
-      }
-    });
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("techmon_last_login_")) {
-        localStorage.removeItem(key);
-      }
-    });
-  }
-}
-
 export async function logLogin(userId: string) {
   if (!userId || typeof window === "undefined") return;
-
-  const sessionKey = `techmon_logged_login_${userId}`;
-  if (sessionStorage.getItem(sessionKey)) {
-    return;
-  }
 
   try {
     const ua = navigator.userAgent;
     const { browser, os, device } = parseUserAgent(ua);
 
-    // Deduplication check: compare timestamps to prevent logging if a login history row exists within the last 60 seconds
-    const sixtySecondsAgo = new Date(Date.now() - 60 * 1000).toISOString();
+    // Deduplication check: check if a login_history row already exists for this user_id with the same device+browser+os combination within the last 30 minutes
+    const thirtyMinutesAgoISOString = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data: recentLogins, error: checkError } = await supabase
       .from("login_history")
-      .select("id, created_at, browser, os, device")
+      .select("id")
       .eq("user_id", userId)
-      .gte("created_at", sixtySecondsAgo)
+      .eq("device", device)
+      .eq("browser", browser)
+      .eq("os", os)
+      .gte("created_at", thirtyMinutesAgoISOString)
       .limit(1);
 
     if (checkError) {
@@ -94,13 +73,8 @@ export async function logLogin(userId: string) {
     }
 
     if (recentLogins && recentLogins.length > 0) {
-      // Mark session logged so subsequent triggers in this browser session skip early
-      sessionStorage.setItem(sessionKey, "true");
       return;
     }
-
-    sessionStorage.setItem(sessionKey, "true");
-    localStorage.setItem(`techmon_last_login_${userId}`, Date.now().toString());
 
     const { ip, city, region, country } = await getIpAndLocation();
 
