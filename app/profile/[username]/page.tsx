@@ -13,6 +13,7 @@ import FollowListModal from "@/components/FollowListModal";
 import StoryViewer, { Story } from "@/components/StoryViewer";
 import HighlightsRow from "@/components/HighlightsRow";
 import SuggestedUsers from "@/components/SuggestedUsers";
+import ReportModal from "@/components/ReportModal";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield } from "lucide-react";
 
 type Profile = {
@@ -54,6 +55,7 @@ export default function ProfilePage() {
   const [followingCount, setFollowingCount] = useState(0);
   const [postsCount, setPostsCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [switchModalOpen, setSwitchModalOpen] = useState(false);
   const [followListModalOpen, setFollowListModalOpen] = useState(false);
   const [followListType, setFollowListType] = useState<"followers" | "following">("followers");
@@ -600,7 +602,7 @@ export default function ProfilePage() {
                     <button
                       onClick={() => {
                         setMenuOpen(false);
-                        alert("Report user clicked");
+                        setIsReportModalOpen(true);
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors font-medium"
                     >
@@ -938,6 +940,16 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+      )}
+
+      {profile && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          targetType="user"
+          targetId={profile.id}
+          currentUserId={currentUserId}
+        />
       )}
     </div>
   );

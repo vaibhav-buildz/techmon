@@ -8,6 +8,7 @@ import PostDetailModal from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import HashtagText from "@/components/HashtagText";
 import SuggestedUsers from "@/components/SuggestedUsers";
+import ReportModal from "@/components/ReportModal";
 import React from "react";
 import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, MessageCircle, AlertCircle, Camera, Share2, Repeat2, Archive, ArchiveRestore } from "lucide-react";
 
@@ -28,6 +29,7 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
   const [activeSharePostId, setActiveSharePostId] = useState<string | null>(null);
   const [showDeleteConfirmFor, setShowDeleteConfirmFor] = useState<Post | null>(null);
+  const [reportingPostId, setReportingPostId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -356,57 +358,69 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
                 </div>
                 
                 {/* Grid Tile Actions */}
-                {isOwner && (
-                  <div className="absolute top-2 right-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id);
-                      }}
-                      className="p-1.5 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id);
+                    }}
+                    className="p-1.5 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                  >
+                    <MoreHorizontal className="w-5 h-5" />
+                  </button>
+                  
+                  {activeMenuPostId === post.id && (
+                    <div 
+                      className="absolute right-0 mt-1 w-32 bg-surface border border-border shadow-lg rounded-xl overflow-hidden z-20 py-1"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <MoreHorizontal className="w-5 h-5" />
-                    </button>
-                    
-                    {activeMenuPostId === post.id && (
-                      <div 
-                        className="absolute right-0 mt-1 w-32 bg-surface border border-border shadow-lg rounded-xl overflow-hidden z-20 py-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {(post.type === "note" || post.type === "media") && (
+                      {isOwner ? (
+                        <>
+                          {(post.type === "note" || post.type === "media") && (
+                            <button
+                              onClick={() => {
+                                setActiveMenuPostId(null);
+                                setShowEditModalFor(post);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> Edit
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleArchiveGridPost(post)}
+                            className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          >
+                            {post.archived ? (
+                              <><ArchiveRestore className="w-3.5 h-3.5" /> Unarchive</>
+                            ) : (
+                              <><Archive className="w-3.5 h-3.5" /> Archive</>
+                            )}
+                          </button>
                           <button
                             onClick={() => {
                               setActiveMenuPostId(null);
-                              setShowEditModalFor(post);
+                              setShowDeleteConfirmFor(post);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                           >
-                            <Edit2 className="w-3.5 h-3.5" /> Edit
+                            <Trash2 className="w-3.5 h-3.5" /> Delete
                           </button>
-                        )}
-                        <button
-                          onClick={() => handleArchiveGridPost(post)}
-                          className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                        >
-                          {post.archived ? (
-                            <><ArchiveRestore className="w-3.5 h-3.5" /> Unarchive</>
-                          ) : (
-                            <><Archive className="w-3.5 h-3.5" /> Archive</>
-                          )}
-                        </button>
+                        </>
+                      ) : (
                         <button
                           onClick={() => {
                             setActiveMenuPostId(null);
-                            setShowDeleteConfirmFor(post);
+                            setReportingPostId(post.id);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                          className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                          <AlertCircle className="w-3.5 h-3.5" /> Report
                         </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             </React.Fragment>
@@ -456,6 +470,14 @@ export default function PostGrid({ posts: initialPosts, loading, currentUserId }
           </div>
         </div>
       )}
+
+      <ReportModal
+        isOpen={!!reportingPostId}
+        onClose={() => setReportingPostId(null)}
+        targetType="post"
+        targetId={reportingPostId || ""}
+        currentUserId={currentUserId}
+      />
     </>
   );
 }

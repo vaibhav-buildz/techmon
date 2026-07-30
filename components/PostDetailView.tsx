@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import EditPostModal from "./EditPostModal";
 import SharePostModal from "./SharePostModal";
 import LikesModal from "./LikesModal";
+import ReportModal from "./ReportModal";
 import { Post, CommentResult } from "@/lib/types";
 import HashtagText from "@/components/HashtagText";
 import CommentItem from "@/components/CommentItem";
@@ -43,6 +44,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReposted, setIsReposted] = useState(post.isRepostedByMe || false);
@@ -456,7 +458,7 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
                       <Bookmark className={`w-4 h-4 ${(post.savedCollectionIds || []).length > 0 ? "fill-current text-accent" : ""}`} /> 
                       {(post.savedCollectionIds || []).length > 0 ? "Unsave" : "Save"}
                     </button>
-                    {currentUserId === post.user_id && (
+                    {currentUserId === post.user_id ? (
                       <>
                         {(post.type === "note" || post.type === "media") && (
                           <button
@@ -489,6 +491,16 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
                           <Trash2 className="w-4 h-4" /> Delete
                         </button>
                       </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          setIsReportModalOpen(true);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-body hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                      >
+                        <AlertCircle className="w-4 h-4" /> Report
+                      </button>
                     )}
                   </div>
                 </>
@@ -759,6 +771,13 @@ export default function PostDetailView({ post, handleLike, currentUserId, onClos
         onClose={() => setIsShareModalOpen(false)}
         postId={post.id}
         currentUserId={currentUserId || null}
+      />
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType="post"
+        targetId={post.id}
+        currentUserId={currentUserId}
       />
     </div>
   );
