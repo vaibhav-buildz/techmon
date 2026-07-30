@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import { Post } from "@/lib/types";
+import { Post, Project } from "@/lib/types";
 import PostDetailModal from "@/components/PostDetailModal";
 import EditPostModal from "@/components/EditPostModal";
 import PostGrid from "@/components/PostGrid";
@@ -14,7 +14,9 @@ import StoryViewer, { Story } from "@/components/StoryViewer";
 import HighlightsRow from "@/components/HighlightsRow";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import ReportModal from "@/components/ReportModal";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield } from "lucide-react";
+import ProjectModal from "@/components/ProjectModal";
+import ProjectDetailModal from "@/components/ProjectDetailModal";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield, FolderCode, Plus, ExternalLink, GitBranch } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -45,7 +47,14 @@ export default function ProfilePage() {
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"posts" | "reposts">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "projects" | "reposts">("posts");
+
+  // Projects state
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
+  const [selectedProjectDetail, setSelectedProjectDetail] = useState<Project | null>(null);
   
   // Follow state
   const [isFollowing, setIsFollowing] = useState(false);
@@ -93,6 +102,29 @@ export default function ProfilePage() {
       }
     } catch (err: any) {
       console.error("[ProfilePage] Error fetching follow counts:", err);
+    }
+  }, []);
+
+  const fetchProjects = useCallback(async (profileId: string) => {
+    try {
+      setProjectsLoading(true);
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*, profiles(name, avatar_url, username)")
+        .eq("user_id", profileId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.warn("[ProfilePage] Error fetching projects:", error.message);
+        setProjects([]);
+      } else {
+        setProjects((data || []) as Project[]);
+      }
+    } catch (err) {
+      console.error("[ProfilePage] Error fetching projects:", err);
+      setProjects([]);
+    } finally {
+      setProjectsLoading(false);
     }
   }, []);
 
@@ -382,8 +414,9 @@ export default function ProfilePage() {
     if (profile && !loading) {
       loadProfilePosts(profile.id, currentUserId, profile);
       fetchProfileStories(profile.id, currentUserId);
+      fetchProjects(profile.id);
     }
-  }, [profile, currentUserId, loading, loadProfilePosts, fetchProfileStories]);
+  }, [profile, currentUserId, loading, loadProfilePosts, fetchProfileStories, fetchProjects]);
 
   // Listen for custom events from Modals
   useEffect(() => {
@@ -812,9 +845,9 @@ export default function ProfilePage() {
           profileAvatarUrl={profile.avatar_url || ""}
         />
 
-        {/* Posts / Reposts Tabs */}
+        {/* Posts / Projects / Reposts Tabs */}
         <div className="pt-2">
-          <div className="flex items-center justify-center gap-12 mb-6 border-b border-border pb-3">
+          <div className="flex items-center justify-center gap-8 sm:gap-12 mb-6 border-b border-border pb-3">
             <button
               onClick={() => setActiveTab("posts")}
               className={`flex items-center gap-2 font-heading font-bold text-xs tracking-wider uppercase transition-colors border-b-2 -mb-3.5 pb-3 ${
@@ -826,6 +859,18 @@ export default function ProfilePage() {
             >
               <Grid className="w-4.5 h-4.5" />
               <span>Posts</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("projects")}
+              className={`flex items-center gap-2 font-heading font-bold text-xs tracking-wider uppercase transition-colors border-b-2 -mb-3.5 pb-3 ${
+                activeTab === "projects"
+                  ? "text-accent border-accent"
+                  : "text-gray-400 border-transparent hover:text-gray-600"
+              }`}
+              title="Projects"
+            >
+              <FolderCode className="w-4.5 h-4.5" />
+              <span>Projects ({projects.length})</span>
             </button>
             <button
               onClick={() => setActiveTab("reposts")}
@@ -841,7 +886,158 @@ export default function ProfilePage() {
             </button>
           </div>
           
-          {postsLoading ? (
+          {activeTab === "projects" ? (
+            projectsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-64 bg-surface border border-border animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* + Add Project Card for Owner */}
+                {isOwner && (
+                  <button
+                    onClick={() => {
+                      setProjectToEdit(null);
+                      setProjectModalOpen(true);
+                    }}
+                    className="group min-h-[260px] bg-surface border-2 border-dashed border-border hover:border-accent p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <Plus className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-heading font-bold text-base text-heading group-hover:text-accent transition-colors">
+                      Add New Project
+                    </h3>
+                    <p className="text-xs font-mono text-muted mt-1 max-w-[200px]">
+                      Showcase an app, tool, or open source project
+                    </p>
+                  </button>
+                )}
+
+                {/* Project Cards */}
+                {projects.map((proj) => (
+                  <div
+                    key={proj.id}
+                    onClick={() => setSelectedProjectDetail(proj)}
+                    className="group bg-surface border border-border overflow-hidden flex flex-col h-full hover:border-heading transition-all shadow-xs cursor-pointer relative"
+                  >
+                    {/* Project Cover / Header */}
+                    <div className="h-40 w-full bg-slate-900 overflow-hidden relative shrink-0 border-b border-border">
+                      {proj.image_url ? (
+                        <img
+                          src={proj.image_url}
+                          alt={proj.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-slate-900 via-neutral-900 to-stone-900 flex flex-col items-center justify-center p-4 text-center">
+                          <FolderCode className="w-9 h-9 text-accent/70 group-hover:scale-110 transition-transform mb-1" />
+                          <span className="font-heading font-bold text-sm text-white/90 line-clamp-1">{proj.title}</span>
+                        </div>
+                      )}
+
+                      {/* Owner Edit Action */}
+                      {isOwner && (
+                        <div className="absolute top-2.5 right-2.5 z-10">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProjectToEdit(proj);
+                              setProjectModalOpen(true);
+                            }}
+                            className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors backdrop-blur-xs"
+                            title="Edit Project"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="space-y-1.5">
+                        <h3 className="font-heading font-bold text-lg text-heading group-hover:text-accent transition-colors line-clamp-1">
+                          {proj.title}
+                        </h3>
+                        {proj.description && (
+                          <p className="text-xs font-sans text-muted line-clamp-2 leading-relaxed">
+                            {proj.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 pt-2 border-t border-border/60">
+                        {/* Tech Stack Tags */}
+                        {Array.isArray(proj.tech_stack) && proj.tech_stack.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {proj.tech_stack.slice(0, 4).map((tech, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 bg-background border border-border font-mono text-[10px] uppercase text-muted tracking-wider"
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                            {proj.tech_stack.length > 4 && (
+                              <span className="px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                                +{proj.tech_stack.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* External Links & View */}
+                        <div className="flex items-center justify-between pt-1">
+                          <div className="flex items-center gap-3">
+                            {proj.github_url && (
+                              <a
+                                href={proj.github_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-muted hover:text-heading transition-colors"
+                                title="GitHub Repository"
+                              >
+                                <GitBranch className="w-4 h-4" />
+                              </a>
+                            )}
+                            {proj.live_url && (
+                              <a
+                                href={proj.live_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1 font-mono text-xs font-bold"
+                                title="Live Demo"
+                              >
+                                <span>Demo</span>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
+                          <span className="text-[11px] font-mono text-accent uppercase font-bold group-hover:underline">
+                            Details &rarr;
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Empty State */}
+                {!isOwner && projects.length === 0 && (
+                  <div className="col-span-full text-center py-16 bg-surface border border-border space-y-2">
+                    <FolderCode className="w-10 h-10 text-gray-300 mx-auto" />
+                    <h3 className="font-heading font-bold text-lg text-heading">No projects yet</h3>
+                    <p className="text-xs font-mono text-muted">This developer hasn't added any projects to their showcase.</p>
+                  </div>
+                )}
+              </div>
+            )
+          ) : postsLoading ? (
             <PostGrid posts={[]} loading={true} currentUserId={currentUserId} />
           ) : (
             <>
@@ -951,6 +1147,32 @@ export default function ProfilePage() {
           currentUserId={currentUserId}
         />
       )}
+
+      {/* Add / Edit Project Modal */}
+      {currentUserId && (
+        <ProjectModal
+          isOpen={projectModalOpen}
+          onClose={() => setProjectModalOpen(false)}
+          currentUserId={currentUserId}
+          projectToEdit={projectToEdit}
+          onProjectSaved={() => {
+            if (profile) fetchProjects(profile.id);
+          }}
+        />
+      )}
+
+      {/* Project Detail View Modal */}
+      <ProjectDetailModal
+        isOpen={Boolean(selectedProjectDetail)}
+        onClose={() => setSelectedProjectDetail(null)}
+        project={selectedProjectDetail}
+        isOwner={isOwner}
+        onEdit={(proj) => {
+          setSelectedProjectDetail(null);
+          setProjectToEdit(proj);
+          setProjectModalOpen(true);
+        }}
+      />
     </div>
   );
 }
