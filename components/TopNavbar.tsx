@@ -26,6 +26,7 @@ type UserProfile = {
   name: string;
   avatar_url?: string;
   username?: string;
+  is_admin?: boolean;
 };
 
 type Props = {

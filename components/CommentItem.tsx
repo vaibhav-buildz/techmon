@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Heart, Send, Trash2, MoreHorizontal, AlertCircle } from "lucide-react";
 import { CommentResult } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 const getRelativeTime = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
@@ -63,9 +64,22 @@ export default function CommentItem({ comment, currentUserId, postOwnerId, onLik
     }
   };
 
-  const handleReportClick = () => {
+  const handleReportClick = async () => {
     setShowMenu(false);
-    // Simulate report
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await supabase.from("reports").insert({
+          reporter_id: session.user.id,
+          target_id: comment.id,
+          target_type: "comment",
+          reason: "Inappropriate content reported by user",
+          status: "pending"
+        });
+      }
+    } catch (err) {
+      console.error("Error creating report:", err);
+    }
     alert("Comment reported. Thank you for helping keep Techmon safe.");
   };
 

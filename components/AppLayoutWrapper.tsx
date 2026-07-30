@@ -24,7 +24,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
         if (session?.user) {
           let { data: profileData } = await supabase
             .from("profiles")
-            .select("id, name, avatar_url, username")
+            .select("id, name, avatar_url, username, is_admin")
             .eq("id", session.user.id)
             .maybeSingle();
 
@@ -54,7 +54,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
         }
         let { data: profileData } = await supabase
           .from("profiles")
-          .select("id, name, avatar_url, username")
+          .select("id, name, avatar_url, username, is_admin")
           .eq("id", session.user.id)
           .maybeSingle();
         

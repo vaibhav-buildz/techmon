@@ -39,6 +39,7 @@ export default function ProfilePage() {
   const [isOwner, setIsOwner] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
@@ -175,6 +176,15 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+        const { data: myProf } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (myProf?.is_admin) {
+          setIsAdmin(true);
+        }
+
         if (profileData && user.id === profileData.id) {
           setIsOwner(true);
         } else if (profileData) {
@@ -543,6 +553,16 @@ export default function ProfilePage() {
               <div className="absolute right-0 top-10 w-56 bg-surface border border-border shadow-xl rounded-2xl overflow-hidden z-50 py-2 animate-in fade-in zoom-in-95 duration-150">
                 {isOwner ? (
                   <>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className="w-full text-left px-4 py-2.5 text-sm text-heading hover:bg-gray-50 flex items-center gap-3 transition-colors font-medium"
+                      >
+                        <Shield className="w-4 h-4 text-accent" />
+                        Admin Panel
+                      </Link>
+                    )}
                     <Link
                       href="/settings"
                       onClick={() => setMenuOpen(false)}

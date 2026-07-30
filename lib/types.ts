@@ -57,3 +57,34 @@ export type Message = {
   media_type?: string;
   created_at: string;
 };
+
+export type UserProfile = {
+  id: string;
+  name: string;
+  username?: string;
+  avatar_url?: string;
+  headline?: string;
+  email?: string;
+  created_at?: string;
+  is_admin?: boolean;
+  is_banned?: boolean;
+  postCount?: number;
+  followerCount?: number;
+};
+
+export type ContentReport = {
+  id: string;
+  reporter_id: string;
+  target_id: string;
+  target_type: "post" | "comment";
+  reason: string;
+  status: "pending" | "dismissed" | "reviewed";
+  created_at: string;
+  reporter?: {
+    name: string;
+    username?: string;
+    avatar_url?: string;
+  };
+  contentPreview?: string;
+};
+
