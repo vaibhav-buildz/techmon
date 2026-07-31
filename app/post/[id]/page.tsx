@@ -222,22 +222,22 @@ export default function StandalonePostPage() {
   };
 
   return (
-    <div className="px-4 pb-20 pt-6 flex justify-center w-full">
-      <div className="w-full max-w-2xl bg-surface border border-border shadow-sm rounded-2xl overflow-hidden min-h-[60vh] flex flex-col relative">
+    <div className="px-4 pb-20 pt-8 flex justify-center w-full">
+      <div className="w-full max-w-2xl bg-surface border border-border/80 shadow-md hover:shadow-lg transition-shadow rounded-2xl overflow-hidden min-h-[60vh] flex flex-col relative">
           {loading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex-1 flex items-center justify-center py-24">
+              <div className="w-9 h-9 border-3 border-accent border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : error || !post ? (
             <div className="flex-1 flex flex-col items-center justify-center p-12 text-center gap-4">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
-                <span className="text-2xl">😕</span>
+              <div className="w-16 h-16 bg-background rounded-2xl flex items-center justify-center border border-border shadow-2xs">
+                <span className="text-3xl">😕</span>
               </div>
               <h2 className="text-xl font-heading font-semibold text-heading">{error || "Post not found"}</h2>
-              <p className="text-body text-sm text-gray-500">This post may have been deleted or the link is invalid.</p>
+              <p className="text-body text-sm text-muted max-w-md">This post may have been deleted, archived, or the link is invalid.</p>
               <button 
                 onClick={() => router.push("/")}
-                className="mt-4 px-6 py-2 bg-accent text-white font-medium rounded-lg hover:bg-accent/90 transition-colors"
+                className="mt-2 px-6 py-2.5 bg-accent text-white font-mono text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-accent/90 transition-all active:scale-95 shadow-xs hover:shadow-glow-accent"
               >
                 Go Home
               </button>

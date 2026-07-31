@@ -195,33 +195,35 @@ export default function JobListingModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
       onClick={handleClose}
     >
       <div
-        className="bg-surface border border-border w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+        className="bg-surface border border-border/80 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/50">
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-accent" />
-            <h2 className="font-heading font-bold text-xl text-heading">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-border bg-background/60 backdrop-blur-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+              <Briefcase className="w-4 h-4" />
+            </div>
+            <h2 className="font-heading font-bold text-xl tracking-tight text-heading">
               {isEditing ? "Edit Job Listing" : "Post a Job or Internship"}
             </h2>
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-muted hover:text-heading transition-colors rounded-full hover:bg-gray-100"
+            className="p-2 text-muted hover:text-heading transition-colors rounded-full hover:bg-gray-100/80 active:scale-95"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4.5">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-mono">
+            <div className="p-3 bg-red-50/90 border border-red-200 text-red-700 text-xs font-mono rounded-lg">
               {error}
             </div>
           )}
@@ -229,7 +231,7 @@ export default function JobListingModal({
           {/* Title & Company */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading">
                 Job Title <span className="text-accent">*</span>
               </label>
               <input
@@ -238,11 +240,11 @@ export default function JobListingModal({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Senior Frontend Engineer, ML Intern"
-                className="w-full bg-background border border-border px-3.5 py-2 text-sm font-heading font-medium text-heading focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border px-3.5 py-2.5 rounded-lg text-sm font-heading font-medium text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5 text-muted" /> Company Name <span className="text-accent">*</span>
               </label>
               <input
@@ -251,7 +253,7 @@ export default function JobListingModal({
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 placeholder="e.g. Stripe, DeepMind, Vercel"
-                className="w-full bg-background border border-border px-3.5 py-2 text-sm font-sans text-heading focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border px-3.5 py-2.5 rounded-lg text-sm font-sans text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all"
               />
             </div>
           </div>
@@ -259,13 +261,13 @@ export default function JobListingModal({
           {/* Type, Work Mode, Location */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading">
                 Job Type
               </label>
               <select
                 value={jobType}
                 onChange={(e) => setJobType(e.target.value as JobListing["job_type"])}
-                className="w-full bg-background border border-border px-3 py-2 text-xs font-mono text-heading focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border px-3 py-2.5 rounded-lg text-xs font-mono text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all cursor-pointer"
               >
                 {JOB_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -276,13 +278,13 @@ export default function JobListingModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading">
                 Work Mode
               </label>
               <select
                 value={workMode}
                 onChange={(e) => setWorkMode(e.target.value as JobListing["work_mode"])}
-                className="w-full bg-background border border-border px-3 py-2 text-xs font-mono text-heading focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border px-3 py-2.5 rounded-lg text-xs font-mono text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all cursor-pointer"
               >
                 {WORK_MODES.map((m) => (
                   <option key={m} value={m}>
@@ -293,7 +295,7 @@ export default function JobListingModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-muted" /> Location
               </label>
               <input
@@ -301,14 +303,14 @@ export default function JobListingModal({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. San Francisco, Remote"
-                className="w-full bg-background border border-border px-3 py-2 text-xs font-sans text-heading focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border px-3 py-2.5 rounded-lg text-xs font-sans text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all"
               />
             </div>
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading">
               Job Description <span className="text-accent">*</span>
             </label>
             <textarea
@@ -317,13 +319,13 @@ export default function JobListingModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the role, responsibilities, team environment..."
-              className="w-full bg-background border border-border p-3 text-sm text-heading font-sans focus:outline-none focus:border-accent resize-y"
+              className="w-full bg-background border border-border p-3.5 rounded-lg text-sm text-heading font-sans focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all resize-y"
             />
           </div>
 
           {/* Requirements */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading">
               Key Requirements & Qualifications
             </label>
             <textarea
@@ -331,14 +333,14 @@ export default function JobListingModal({
               value={requirements}
               onChange={(e) => setRequirements(e.target.value)}
               placeholder="3+ years React/Next.js experience, experience with Supabase/PostgreSQL..."
-              className="w-full bg-background border border-border p-3 text-xs text-heading font-sans focus:outline-none focus:border-accent resize-y"
+              className="w-full bg-background border border-border p-3.5 rounded-lg text-xs text-heading font-sans focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all resize-y"
             />
           </div>
 
           {/* Application Link / Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1.5">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-accent" /> Apply URL (Optional)
               </label>
               <input
@@ -346,12 +348,12 @@ export default function JobListingModal({
                 value={applyUrl}
                 onChange={(e) => setApplyUrl(e.target.value)}
                 placeholder="https://company.com/careers/apply"
-                className="w-full bg-background border border-border px-3.5 py-2 text-xs font-mono text-heading focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border px-3.5 py-2.5 rounded-lg text-xs font-mono text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1.5">
+              <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-muted" /> Apply Email (Optional)
               </label>
               <input
@@ -359,14 +361,14 @@ export default function JobListingModal({
                 value={applyEmail}
                 onChange={(e) => setApplyEmail(e.target.value)}
                 placeholder="jobs@company.com"
-                className="w-full bg-background border border-border px-3.5 py-2 text-xs font-mono text-heading focus:outline-none focus:border-accent"
+                className="w-full bg-background border border-border px-3.5 py-2.5 rounded-lg text-xs font-mono text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all"
               />
             </div>
           </div>
 
           {/* Tags / Required Skills */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading">
               Skills & Tech Tags
             </label>
             <div className="flex items-center gap-2">
@@ -376,14 +378,14 @@ export default function JobListingModal({
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
                 placeholder="Type skill tag (e.g. React, Python, ML) & press Enter"
-                className="flex-1 bg-background border border-border px-3.5 py-2 text-xs font-mono text-heading focus:outline-none focus:border-accent"
+                className="flex-1 bg-background border border-border px-3.5 py-2.5 rounded-lg text-xs font-mono text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all"
               />
               <button
                 type="button"
                 onClick={handleAddTag}
-                className="px-3 py-2 bg-surface border border-border font-mono text-xs font-bold text-heading flex items-center gap-1 shrink-0"
+                className="px-4 py-2.5 bg-surface border border-border hover:border-heading rounded-lg font-mono text-xs font-bold text-heading flex items-center gap-1.5 shrink-0 transition-all active:scale-95 shadow-2xs"
               >
-                <Plus className="w-4 h-4" /> Add
+                <Plus className="w-4 h-4 text-accent" /> Add
               </button>
             </div>
 
@@ -392,13 +394,13 @@ export default function JobListingModal({
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-accent/10 border border-accent/30 text-accent font-mono text-[11px]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent/10 border border-accent/25 text-accent font-mono text-[11px] font-medium rounded-full transition-all hover:bg-accent/15"
                   >
                     <span>{tag}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-red-600 transition-colors"
+                      className="hover:text-red-600 transition-colors p-0.5 rounded-full hover:bg-accent/20"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -409,15 +411,15 @@ export default function JobListingModal({
           </div>
 
           {/* Expiry Date */}
-          <div className="space-y-1.5 pt-1 border-t border-border">
-            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1.5">
+          <div className="space-y-1.5 pt-2 border-t border-border">
+            <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-heading flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-muted" /> Listing Expiry Date (Optional)
             </label>
             <input
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="w-full sm:w-1/2 bg-background border border-border px-3.5 py-2 text-xs font-mono text-heading focus:outline-none focus:border-accent"
+              className="w-full sm:w-1/2 bg-background border border-border px-3.5 py-2.5 rounded-lg text-xs font-mono text-heading focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all"
             />
           </div>
 
@@ -430,14 +432,14 @@ export default function JobListingModal({
                     type="button"
                     onClick={handleDelete}
                     disabled={deleting}
-                    className="px-3 py-2 bg-red-600 text-white font-mono text-xs font-bold hover:bg-red-700 transition-colors flex items-center gap-1"
+                    className="px-3.5 py-2 bg-red-600 text-white font-mono text-xs font-bold rounded-lg hover:bg-red-700 transition-all flex items-center gap-1.5 active:scale-95 shadow-sm"
                   >
                     {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Confirm Delete"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(false)}
-                    className="px-3 py-2 bg-surface border border-border text-heading font-mono text-xs hover:bg-gray-100"
+                    className="px-3.5 py-2 bg-surface border border-border text-heading font-mono text-xs rounded-lg hover:bg-gray-100 transition-all active:scale-95"
                   >
                     Cancel
                   </button>
@@ -446,7 +448,7 @@ export default function JobListingModal({
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
-                  className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-full hover:bg-red-50"
+                  className="p-2.5 text-gray-400 hover:text-red-600 transition-colors rounded-full hover:bg-red-50/80 active:scale-95"
                   title="Delete job listing"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -460,14 +462,14 @@ export default function JobListingModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2.5 bg-surface border border-border font-mono text-xs font-bold text-heading hover:bg-gray-100 transition-colors"
+                className="px-5 py-2.5 bg-surface border border-border font-mono text-xs font-bold text-heading rounded-lg hover:bg-gray-100/80 transition-all active:scale-95"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2.5 bg-accent text-white font-heading font-bold text-xs uppercase tracking-wider hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-xs"
+                className="px-6 py-2.5 bg-accent text-white font-heading font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-accent/90 transition-all flex items-center gap-2 shadow-sm hover:shadow-glow-accent active:scale-95"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>{isEditing ? "Save Changes" : "Post Listing"}</span>

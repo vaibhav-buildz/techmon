@@ -121,12 +121,14 @@ export default function TopNavbar({ user, profile }: Props) {
   return (
     <>
       {/* Fixed Top Navbar */}
-      <header className="fixed top-0 inset-x-0 h-14 md:h-16 bg-background/95 border-b border-border z-40 flex items-center justify-between px-4 sm:px-6 backdrop-blur-xs">
+      <header className="fixed top-0 inset-x-0 h-14 md:h-16 bg-background/85 border-b border-border/80 z-40 flex items-center justify-between px-4 sm:px-6 backdrop-blur-md shadow-xs">
         
         {/* Left: Logo */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <img src="/logo.svg" alt="Techmon Logo" className="w-7 h-7 md:w-8 md:h-8" />
+            <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center p-1 group-hover:bg-accent/20 group-hover:scale-105 transition-all">
+              <img src="/logo.svg" alt="Techmon Logo" className="w-full h-full object-contain" />
+            </div>
             <span className="text-2xl md:text-3xl font-heading font-bold tracking-tight text-heading group-hover:text-accent transition-colors">
               Techmon
             </span>
@@ -138,10 +140,13 @@ export default function TopNavbar({ user, profile }: Props) {
           <div className="hidden md:flex flex-1 max-w-sm mx-8">
             <button 
               onClick={() => setIsSearchModalOpen(true)}
-              className="flex items-center w-full bg-surface border border-border hover:border-heading transition-colors h-9 px-3 text-gray-500 text-xs font-mono tracking-wide focus:outline-none"
+              className="flex items-center justify-between w-full bg-surface/90 border border-border hover:border-heading/60 rounded-xl transition-all h-9.5 px-3.5 text-gray-500 text-xs font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-accent/15 group shadow-2xs"
             >
-              <Search className="w-3.5 h-3.5 mr-2 text-muted" />
-              <span>SEARCH TECHMON...</span>
+              <div className="flex items-center">
+                <Search className="w-3.5 h-3.5 mr-2 text-muted group-hover:text-accent transition-colors" />
+                <span>SEARCH TECHMON...</span>
+              </div>
+              <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono text-muted bg-background border border-border rounded">⌘K</kbd>
             </button>
           </div>
         )}
@@ -151,20 +156,23 @@ export default function TopNavbar({ user, profile }: Props) {
           {user ? (
             <>
               {/* Desktop Nav Actions */}
-              <div className="hidden md:flex items-center gap-4 mr-2">
-                <Link href="/" title="Home" className={`p-1.5 hover:text-accent transition-colors ${pathname === '/' ? 'text-accent' : 'text-heading'}`}>
+              <div className="hidden md:flex items-center gap-3.5 mr-1">
+                <Link href="/" title="Home" className={`p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 ${pathname === '/' ? 'text-accent bg-accent/10 font-bold' : 'text-heading'}`}>
                   <House className={`w-5 h-5 ${pathname === '/' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 </Link>
-                <Link href="/feed" title="Feed" className={`p-1.5 hover:text-accent transition-colors ${pathname === '/feed' ? 'text-accent' : 'text-heading'}`}>
+                <Link href="/feed" title="Feed" className={`p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 ${pathname === '/feed' ? 'text-accent bg-accent/10 font-bold' : 'text-heading'}`}>
                   <Clapperboard className={`w-5 h-5 ${pathname === '/feed' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 </Link>
-                <Link href="/jobs" title="Jobs" className={`p-1.5 hover:text-accent transition-colors ${pathname === '/jobs' ? 'text-accent' : 'text-heading'}`}>
+                <Link href="/jobs" title="Jobs" className={`p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 ${pathname === '/jobs' ? 'text-accent bg-accent/10 font-bold' : 'text-heading'}`}>
                   <Briefcase className={`w-5 h-5 ${pathname === '/jobs' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 </Link>
-                <button onClick={() => setIsNotificationsPanelOpen(true)} title="Notifications" className="relative p-1.5 hover:text-accent transition-colors text-heading">
+                <button onClick={() => setIsNotificationsPanelOpen(true)} title="Notifications" className="relative p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 text-heading">
                   <Heart className="w-5 h-5 stroke-2" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full"></span>
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full animate-ping" />
+                  )}
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
                   )}
                 </button>
                 
@@ -173,7 +181,7 @@ export default function TopNavbar({ user, profile }: Props) {
                   <button 
                     onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)} 
                     title="Create"
-                    className="flex items-center gap-1.5 px-4 py-2 bg-accent text-white font-mono text-xs uppercase tracking-wider border border-accent hover:bg-accent/90 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-accent text-white rounded-lg font-mono text-xs uppercase tracking-wider border border-accent hover:bg-accent/90 transition-all shadow-xs hover:shadow-glow-accent active:scale-95"
                   >
                     <Plus className="w-4 h-4 stroke-2" />
                     <span>Post</span>
@@ -182,17 +190,19 @@ export default function TopNavbar({ user, profile }: Props) {
                   {isCreateMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setIsCreateMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-48 bg-surface border border-border shadow-lg rounded-none z-50 py-1 divide-y divide-border animate-in fade-in duration-100">
+                      <div className="absolute right-0 mt-2 w-52 bg-surface/95 backdrop-blur-md border border-border shadow-xl rounded-xl z-50 py-1.5 divide-y divide-border animate-in fade-in zoom-in-95 duration-150">
                         <button
                           onClick={() => {
                             setIsCreateMenuOpen(false);
                             setIsCreateModalOpen(true);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors group"
+                          className="w-full px-4 py-3 text-left hover:bg-gray-100/70 flex items-center gap-3 transition-all group"
                         >
-                          <SquarePen className="w-4 h-4 text-accent" />
+                          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 group-hover:scale-105 transition-transform">
+                            <SquarePen className="w-4 h-4" />
+                          </div>
                           <div>
-                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent">Article / Note</div>
+                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent transition-colors">Article / Note</div>
                             <div className="text-[10px] text-muted font-sans">Text or Media Post</div>
                           </div>
                         </button>
@@ -201,11 +211,13 @@ export default function TopNavbar({ user, profile }: Props) {
                             setIsCreateMenuOpen(false);
                             setIsStoryModalOpen(true);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors group"
+                          className="w-full px-4 py-3 text-left hover:bg-gray-100/70 flex items-center gap-3 transition-all group"
                         >
-                          <Camera className="w-4 h-4 text-accent" />
+                          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 group-hover:scale-105 transition-transform">
+                            <Camera className="w-4 h-4" />
+                          </div>
                           <div>
-                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent">Story</div>
+                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent transition-colors">Story</div>
                             <div className="text-[10px] text-muted font-sans">24-hour dispatch</div>
                           </div>
                         </button>
@@ -214,22 +226,22 @@ export default function TopNavbar({ user, profile }: Props) {
                   )}
                 </div>
 
-                <div className="w-px h-6 bg-border mx-1" />
+                <div className="w-px h-5 bg-border/80 mx-0.5" />
 
-                <Link href="/messages" title="Messages" className="relative p-1.5 hover:text-accent transition-colors text-heading">
+                <Link href="/messages" title="Messages" className="relative p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 text-heading">
                   <MessageCircle className="w-5 h-5 stroke-2" />
                   {unreadMessagesCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full"></span>
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
                   )}
                 </Link>
               </div>
 
-              {/* Mobile Only Header Actions (if any) */}
+              {/* Mobile Only Header Actions */}
               <div className="flex md:hidden items-center gap-2">
-                <Link href="/messages" className="relative p-1.5 text-heading">
+                <Link href="/messages" className="relative p-2 rounded-lg text-heading">
                   <MessageCircle className="w-5 h-5 stroke-2" />
                   {unreadMessagesCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full"></span>
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
                   )}
                 </Link>
               </div>
@@ -237,7 +249,7 @@ export default function TopNavbar({ user, profile }: Props) {
               {/* User Avatar Link */}
               <Link
                 href={profile?.username ? `/profile/${profile.username}` : "/onboarding"}
-                className="w-8 h-8 rounded-full overflow-hidden border border-heading/30 focus:outline-none hover:border-accent transition-all block"
+                className="w-8.5 h-8.5 rounded-full overflow-hidden border border-heading/30 hover:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all block shadow-2xs hover:scale-105 active:scale-95"
               >
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
@@ -251,7 +263,7 @@ export default function TopNavbar({ user, profile }: Props) {
           ) : (
             <div className="flex items-center gap-3">
               <Link href="/login" className="font-mono text-xs uppercase tracking-wider text-heading hover:text-accent transition-colors">Log In</Link>
-              <Link href="/signup" className="font-mono text-xs uppercase tracking-wider px-4 py-2 bg-accent text-white hover:bg-accent/90 transition-colors border border-accent rounded-none">Sign Up</Link>
+              <Link href="/signup" className="font-mono text-xs uppercase tracking-wider px-4 py-2 bg-accent text-white hover:bg-accent/90 transition-all border border-accent rounded-lg shadow-xs hover:shadow-glow-accent active:scale-95">Sign Up</Link>
             </div>
           )}
         </div>

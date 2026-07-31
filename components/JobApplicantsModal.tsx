@@ -109,31 +109,33 @@ export default function JobApplicantsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-surface border border-border w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
+        className="bg-surface border border-border/80 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/50">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-border bg-background/60 backdrop-blur-xs">
           <div>
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-accent" />
-              <h2 className="font-heading font-bold text-xl text-heading">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <Users className="w-4 h-4" />
+              </div>
+              <h2 className="font-heading font-bold text-xl tracking-tight text-heading">
                 Job Applicants
               </h2>
             </div>
             {jobTitle && (
-              <p className="text-xs font-mono text-muted mt-0.5 line-clamp-1">
+              <p className="text-xs font-mono text-muted mt-1 line-clamp-1">
                 Applicants for: <span className="text-heading font-semibold">{jobTitle}</span>
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-muted hover:text-heading transition-colors rounded-full hover:bg-gray-100"
+            className="p-2 text-muted hover:text-heading transition-colors rounded-full hover:bg-gray-100/80 active:scale-95"
           >
             <X className="w-5 h-5" />
           </button>
@@ -142,7 +144,7 @@ export default function JobApplicantsModal({
         {/* Modal Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-mono mb-4">
+            <div className="p-3 bg-red-50/90 border border-red-200 text-red-700 text-xs font-mono rounded-lg mb-4">
               {error}
             </div>
           )}
@@ -150,39 +152,41 @@ export default function JobApplicantsModal({
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="p-4 border border-border bg-background flex items-center gap-3 animate-pulse">
+                <div key={i} className="p-4 rounded-xl border border-border bg-background flex items-center gap-3 animate-pulse">
                   <div className="w-10 h-10 bg-gray-200 rounded-full shrink-0" />
                   <div className="space-y-1.5 flex-1">
-                    <div className="h-4 bg-gray-200 w-1/3" />
-                    <div className="h-3 bg-gray-200 w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded w-1/3" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
                   </div>
                 </div>
               ))}
             </div>
           ) : applications.length === 0 ? (
-            <div className="text-center py-12 text-muted space-y-2">
-              <Users className="w-10 h-10 text-gray-300 mx-auto" />
+            <div className="text-center py-12 text-muted space-y-3">
+              <div className="w-14 h-14 bg-background border border-border rounded-full flex items-center justify-center mx-auto text-gray-400">
+                <Users className="w-7 h-7" />
+              </div>
               <h3 className="font-heading font-bold text-lg text-heading">No Applications Yet</h3>
               <p className="text-xs font-mono text-muted">No developer has submitted an application for this listing yet.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="text-xs font-mono text-muted uppercase tracking-wider">
+              <div className="text-xs font-mono font-bold text-muted uppercase tracking-wider">
                 Total Applicants ({applications.length})
               </div>
 
-              <div className="divide-y divide-border border border-border bg-background">
+              <div className="space-y-3">
                 {applications.map((app) => {
                   const applicant = app.applicant;
                   return (
-                    <div key={app.id} className="p-4 space-y-3 hover:bg-surface/50 transition-colors">
+                    <div key={app.id} className="p-4 rounded-xl border border-border/80 bg-background hover:bg-surface hover:shadow-sm transition-all space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-full overflow-hidden border border-border shrink-0 bg-surface">
+                          <div className="w-10 h-10 rounded-full overflow-hidden border border-border shrink-0 bg-surface shadow-2xs">
                             {applicant?.avatar_url ? (
                               <img src={applicant.avatar_url} alt={applicant.name} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-xs text-muted">
+                              <div className="w-full h-full flex items-center justify-center font-mono font-bold text-xs text-heading bg-accent/10">
                                 {applicant?.name?.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -203,7 +207,7 @@ export default function JobApplicantsModal({
                           <Link
                             href={`/profile/${applicant.username}`}
                             onClick={onClose}
-                            className="px-3 py-1 bg-surface border border-border text-heading hover:border-accent hover:text-accent font-mono text-xs font-bold transition-colors shrink-0 flex items-center gap-1"
+                            className="px-3.5 py-1.5 bg-surface border border-border text-heading hover:border-accent hover:text-accent rounded-lg font-mono text-xs font-bold transition-all shrink-0 flex items-center gap-1 active:scale-95 shadow-2xs"
                           >
                             <span>Profile</span>
                             <ArrowRight className="w-3.5 h-3.5" />
@@ -213,7 +217,7 @@ export default function JobApplicantsModal({
 
                       {/* Application Note / Message */}
                       {app.message && (
-                        <div className="p-3 bg-surface border border-border text-xs font-sans text-heading leading-relaxed flex items-start gap-2">
+                        <div className="p-3.5 bg-surface border border-border/70 rounded-lg text-xs font-sans text-heading leading-relaxed flex items-start gap-2.5">
                           <MessageSquare className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                           <p className="whitespace-pre-wrap">{app.message}</p>
                         </div>
@@ -231,10 +235,10 @@ export default function JobApplicantsModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border bg-background/50 flex justify-end">
+        <div className="p-4 border-t border-border bg-background/60 backdrop-blur-xs flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-surface border border-border font-mono text-xs font-bold text-heading hover:bg-gray-100 transition-colors"
+            className="px-5 py-2.5 bg-surface border border-border font-mono text-xs font-bold text-heading rounded-lg hover:bg-gray-100/80 transition-all active:scale-95"
           >
             Close
           </button>

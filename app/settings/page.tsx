@@ -93,37 +93,37 @@ export default function SettingsPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 pt-24 pb-12">
+      <div className="max-w-2xl mx-auto px-4 pt-24 pb-16">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-body hover:text-heading"
+            className="p-2.5 hover:bg-surface border border-border/60 hover:border-heading/40 rounded-xl transition-all text-body hover:text-heading active:scale-95 shadow-2xs"
             title="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-heading font-bold text-heading">Settings</h1>
-            <p className="text-sm text-body">Manage your account preferences and activity</p>
+            <h1 className="text-2xl font-heading font-bold tracking-tight text-heading">Settings</h1>
+            <p className="text-sm text-muted">Manage your account preferences, security, and activity</p>
           </div>
         </div>
 
         {/* Navigation List */}
-        <div className="bg-surface border border-border divide-y divide-border overflow-hidden">
+        <div className="bg-surface border border-border/80 rounded-2xl divide-y divide-border/80 overflow-hidden shadow-sm">
           {settingsItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
-                href={item.href}
-                className={`flex items-center justify-between p-4 sm:p-5 transition-colors group ${
+                className={`flex items-center justify-between p-4.5 sm:p-5 transition-all group ${
                   item.isAdminItem ? "bg-accent/5 hover:bg-accent/10" : "hover:bg-gray-50/80"
                 }`}
+                href={item.href}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
-                    item.isAdminItem ? "bg-accent text-white" : "bg-accent/10 text-accent"
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-2xs ${
+                    item.isAdminItem ? "bg-accent text-white" : "bg-accent/10 border border-accent/20 text-accent"
                   }`}>
                     <Icon className="w-5 h-5" />
                   </div>
@@ -133,16 +133,16 @@ export default function SettingsPage() {
                         {item.title}
                       </h3>
                       {item.isAdminItem && (
-                        <span className="px-2 py-0.5 bg-accent text-white font-mono text-[9px] uppercase font-bold tracking-wider">
+                        <span className="px-2 py-0.5 bg-accent text-white font-mono text-[9px] uppercase font-bold tracking-wider rounded-md shadow-2xs">
                           Admin Only
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-body font-normal">{item.description}</p>
+                    <p className="text-xs text-muted font-sans mt-0.5">{item.description}</p>
                   </div>
                 </div>
 
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-heading group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-heading group-hover:translate-x-1 transition-all shrink-0 ml-2" />
               </Link>
             );
           })}
