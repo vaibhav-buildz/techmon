@@ -143,3 +143,48 @@ export type JobApplication = {
   };
 };
 
+export type Group = {
+  id: string;
+  name: string;
+  description?: string;
+  cover_url?: string;
+  is_private: boolean;
+  topic_tags?: string[];
+  created_by: string;
+  created_at: string;
+  memberCount?: number;
+  isMember?: boolean;
+  myRole?: "admin" | "moderator" | "member";
+};
+
+export type GroupMember = {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: "admin" | "moderator" | "member";
+  created_at: string;
+  profile?: {
+    name: string;
+    username?: string;
+    avatar_url?: string;
+    headline?: string;
+  };
+};
+
+export type GroupPost = {
+  id: string;
+  group_id: string;
+  user_id: string;
+  content: string;
+  media_url?: string;
+  media_type?: "image" | "video";
+  type: "text" | "media" | "code";
+  created_at: string;
+  profiles?: {
+    name: string;
+    avatar_url?: string;
+    username?: string;
+  };
+};
+
+

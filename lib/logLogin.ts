@@ -49,33 +49,70 @@ async function getIpAndLocation() {
   }
 }
 
-export async function logLogin(userId: string) {
+/**
+ * Returns a persistent device ID stored in localStorage ('techmon_device_id').
+ * Generates a new UUID if it does not exist yet.
+ */
+export function getOrCreateDeviceId(): string {
+  if (typeof window === "undefined") return "";
+  let deviceId = localStorage.getItem("techmon_device_id");
+  if (!deviceId) {
+    deviceId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem("techmon_device_id", deviceId);
+  }
+  return deviceId;
+}
+
+/**
+ * Clears active session login keys from localStorage upon sign out,
+ * ensuring subsequent logins on this device log fresh alerts.
+ */
+export function clearLoginSession(userId?: string) {
+  if (typeof window === "undefined") return;
+  const deviceId = getOrCreateDeviceId();
+  if (userId) {
+    localStorage.removeItem(`techmon_logged_in_session_${deviceId}_${userId}`);
+  } else {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith(`techmon_logged_in_session_${deviceId}_`)) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+}
+
+/**
+ * Logs a login event to login_history and notifications using device/session localStorage deduplication.
+ */
+export async function logLogin(userId: string, accessToken?: string) {
   if (!userId || typeof window === "undefined") return;
 
   try {
-    const ua = navigator.userAgent;
-    const { browser, os, device } = parseUserAgent(ua);
+    const deviceId = getOrCreateDeviceId();
 
-    // Deduplication check: check if a login_history row already exists for this user_id with the same device+browser+os combination within the last 30 minutes
-    const thirtyMinutesAgoISOString = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    const { data: recentLogins, error: checkError } = await supabase
-      .from("login_history")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("device", device)
-      .eq("browser", browser)
-      .eq("os", os)
-      .gte("created_at", thirtyMinutesAgoISOString)
-      .limit(1);
-
-    if (checkError) {
-      console.error("[logLogin] Error checking recent login_history:", checkError);
+    let token = accessToken;
+    if (!token) {
+      const { data: { session } } = await supabase.auth.getSession();
+      token = session?.access_token;
     }
 
-    if (recentLogins && recentLogins.length > 0) {
+    const tokenIdentifier = token || "active_session";
+    const sessionKey = `techmon_logged_in_session_${deviceId}_${userId}`;
+
+    // Deduplication check using localStorage
+    const storedToken = localStorage.getItem(sessionKey);
+    if (storedToken === tokenIdentifier) {
       return;
     }
 
+    // Set token immediately in localStorage to prevent race conditions across parallel mounts
+    localStorage.setItem(sessionKey, tokenIdentifier);
+
+    const ua = navigator.userAgent;
+    const { browser, os, device } = parseUserAgent(ua);
     const { ip, city, region, country } = await getIpAndLocation();
 
     // 1. Insert into login_history table
@@ -95,9 +132,10 @@ export async function logLogin(userId: string) {
     }
 
     // 2. Insert into notifications table
-    const locationString = city !== "Unknown City" && country !== "Unknown Country"
-      ? `${city}, ${country}`
-      : "Unknown location";
+    const locationString =
+      city !== "Unknown City" && country !== "Unknown Country"
+        ? `${city}, ${country}`
+        : "Unknown location";
 
     const message = `New login from ${browser} on ${os} in ${locationString}`;
 

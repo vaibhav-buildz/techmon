@@ -6,7 +6,7 @@ import TopNavbar from "./TopNavbar";
 import TopBar from "./TopBar";
 import { addAccount } from "@/lib/accountManager";
 import { usePathname, useRouter } from "next/navigation";
-import { logLogin } from "@/lib/logLogin";
+import { logLogin, clearLoginSession } from "@/lib/logLogin";
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
@@ -50,7 +50,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
       setUser(session?.user || null);
       if (session?.user) {
         if (event === "SIGNED_IN") {
-          logLogin(session.user.id);
+          logLogin(session.user.id, session.access_token);
         }
         let { data: profileData } = await supabase
           .from("profiles")
@@ -65,6 +65,9 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           setProfile(null);
         }
       } else {
+        if (event === "SIGNED_OUT") {
+          clearLoginSession();
+        }
         setProfile(null);
       }
       setLoading(false);

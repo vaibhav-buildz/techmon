@@ -20,7 +20,9 @@ import {
   Camera,
   SquarePen,
   Briefcase,
+  Users2,
 } from "lucide-react";
+
 
 type UserProfile = {
   id: string;
@@ -103,6 +105,7 @@ export default function TopNavbar({ user, profile }: Props) {
     { label: "Search", icon: Search, onClick: () => setIsSearchModalOpen(true) },
     { label: "Feed", icon: Clapperboard, href: "/feed" },
     { label: "Jobs", icon: Briefcase, href: "/jobs" },
+    { label: "Groups", icon: Users2, href: "/groups" },
     { label: "Messages", icon: MessageCircle, href: "/messages" },
     { label: "Notifications", icon: Heart, onClick: () => setIsNotificationsPanelOpen(true) },
     { label: "Create", icon: PlusSquare, onClick: () => setIsCreateMenuOpen(!isCreateMenuOpen) },
@@ -166,6 +169,10 @@ export default function TopNavbar({ user, profile }: Props) {
                 <Link href="/jobs" title="Jobs" className={`p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 ${pathname === '/jobs' ? 'text-accent bg-accent/10 font-bold' : 'text-heading'}`}>
                   <Briefcase className={`w-5 h-5 ${pathname === '/jobs' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 </Link>
+                <Link href="/groups" title="Groups" className={`p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 ${pathname === '/groups' ? 'text-accent bg-accent/10 font-bold' : 'text-heading'}`}>
+                  <Users2 className={`w-5 h-5 ${pathname === '/groups' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                </Link>
+
                 <button onClick={() => setIsNotificationsPanelOpen(true)} title="Notifications" className="relative p-2 rounded-lg hover:bg-gray-100/70 hover:text-accent transition-all active:scale-95 text-heading">
                   <Heart className="w-5 h-5 stroke-2" />
                   {unreadCount > 0 && (
