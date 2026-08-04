@@ -30,6 +30,8 @@ export default function EditProfilePage() {
   const [portfolioUrl, setPortfolioUrl] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [uploadingResume, setUploadingResume] = useState(false);
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
@@ -64,6 +66,7 @@ export default function EditProfilePage() {
           setLinkedinUrl(profile.linkedin_url || "");
           setPortfolioUrl(profile.portfolio_url || "");
           setAvatarUrl(profile.avatar_url || "");
+          setResumeUrl(profile.resume_url || "");
         }
       } catch (err: any) {
         setError(err.message);
@@ -165,6 +168,61 @@ export default function EditProfilePage() {
     }
   };
 
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploadingResume(true);
+      setError(null);
+
+      if (!e.target.files || e.target.files.length === 0) {
+        throw new Error("You must select a PDF file to upload.");
+      }
+
+      const file = e.target.files[0];
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        throw new Error("Only PDF files are allowed.");
+      }
+
+      const filePath = `${userId}/resume.pdf`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("resumes")
+        .upload(filePath, file, { upsert: true, contentType: "application/pdf" });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from("resumes").getPublicUrl(filePath);
+      const publicUrl = data.publicUrl;
+      setResumeUrl(publicUrl);
+
+      if (userId) {
+        await supabase.from("profiles").update({ resume_url: publicUrl }).eq("id", userId);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
+  const handleRemoveResume = async () => {
+    try {
+      setUploadingResume(true);
+      setError(null);
+      setResumeUrl("");
+
+      if (userId) {
+        await supabase.storage.from("resumes").remove([`${userId}/resume.pdf`]);
+        await supabase.from("profiles").update({ resume_url: null }).eq("id", userId);
+      }
+    } catch (err: any) {
+      console.error("[EditProfile] Error removing resume:", err);
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
@@ -196,6 +254,7 @@ export default function EditProfilePage() {
           linkedin_url: linkedinUrl,
           portfolio_url: portfolioUrl,
           avatar_url: avatarUrl,
+          resume_url: resumeUrl || null,
         })
         .eq("id", userId);
 
@@ -454,6 +513,51 @@ export default function EditProfilePage() {
               <div>
                 <SkillsAutocomplete skills={skills} onChange={setSkills} />
                 <p className="text-xs text-body mt-2">Start typing to see suggestions, or press Enter/comma to add a custom skill.</p>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border shadow-sm rounded-xl p-6 md:p-8 space-y-4">
+              <h2 className="font-mono text-xs uppercase text-accent">&gt; RESUME</h2>
+              <div className="space-y-3">
+                {resumeUrl ? (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 border border-border rounded-lg">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-mono text-heading truncate font-medium">📄 resume.pdf</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <a
+                        href={resumeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-mono text-accent hover:underline font-semibold"
+                      >
+                        View
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleRemoveResume}
+                        disabled={uploadingResume}
+                        className="text-xs font-mono text-red-600 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleResumeUpload}
+                      disabled={uploadingResume}
+                      className="text-xs text-body file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-surface file:text-heading hover:file:bg-gray-100 transition-colors"
+                    />
+                    {uploadingResume && (
+                      <p className="text-xs text-accent mt-1">Uploading resume...</p>
+                    )}
+                    <p className="text-xs text-body mt-1">Upload your resume in PDF format</p>
+                  </div>
+                )}
               </div>
             </div>
 

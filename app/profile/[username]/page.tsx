@@ -16,7 +16,7 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import ReportModal from "@/components/ReportModal";
 import ProjectModal from "@/components/ProjectModal";
 import ProjectDetailModal from "@/components/ProjectDetailModal";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield, FolderCode, Plus, ExternalLink, GitBranch } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield, FolderCode, Plus, ExternalLink, GitBranch, FileText } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -30,6 +30,7 @@ type Profile = {
   github_url?: string;
   linkedin_url?: string;
   portfolio_url?: string;
+  resume_url?: string;
 };
 
 export default function ProfilePage() {
@@ -831,6 +832,19 @@ export default function ProfilePage() {
                     </button>
                   </>
                 ) : null}
+
+                {profile.resume_url && (
+                  <a
+                    href={profile.resume_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-surface border border-heading/40 text-heading hover:border-heading hover:text-accent transition-colors font-mono text-xs uppercase tracking-wider rounded-none"
+                    title="View Resume"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-heading" />
+                    <span>Resume</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>

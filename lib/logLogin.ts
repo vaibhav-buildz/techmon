@@ -87,29 +87,30 @@ export function clearLoginSession(userId?: string) {
 /**
  * Logs a login event to login_history and notifications using device/session localStorage deduplication.
  */
-export async function logLogin(userId: string, accessToken?: string) {
+export async function logLogin(userId: string, accessToken?: string, event?: string) {
+  console.log(`[logLogin] Triggered - Auth Event: "${event || 'UNKNOWN'}", UserId: "${userId}"`);
+
   if (!userId || typeof window === "undefined") return;
+
+  // Strictly filter to ONLY 'SIGNED_IN' events
+  if (event && event !== "SIGNED_IN") {
+    console.log(`[logLogin] Skipped logging - event "${event}" is not "SIGNED_IN"`);
+    return;
+  }
 
   try {
     const deviceId = getOrCreateDeviceId();
-
-    let token = accessToken;
-    if (!token) {
-      const { data: { session } } = await supabase.auth.getSession();
-      token = session?.access_token;
-    }
-
-    const tokenIdentifier = token || "active_session";
     const sessionKey = `techmon_logged_in_session_${deviceId}_${userId}`;
 
-    // Deduplication check using localStorage
-    const storedToken = localStorage.getItem(sessionKey);
-    if (storedToken === tokenIdentifier) {
+    // Deduplication check using localStorage session marker
+    const storedSession = localStorage.getItem(sessionKey);
+    if (storedSession) {
+      console.log(`[logLogin] Ignored duplicate - session already logged for user ${userId} on device ${deviceId}`);
       return;
     }
 
-    // Set token immediately in localStorage to prevent race conditions across parallel mounts
-    localStorage.setItem(sessionKey, tokenIdentifier);
+    // Set session marker immediately in localStorage to prevent race conditions across parallel mounts
+    localStorage.setItem(sessionKey, "logged_in");
 
     const ua = navigator.userAgent;
     const { browser, os, device } = parseUserAgent(ua);

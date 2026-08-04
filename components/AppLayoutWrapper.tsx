@@ -49,9 +49,7 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user || null);
       if (session?.user) {
-        if (event === "SIGNED_IN") {
-          logLogin(session.user.id, session.access_token);
-        }
+        logLogin(session.user.id, session.access_token, event);
         let { data: profileData } = await supabase
           .from("profiles")
           .select("id, name, avatar_url, username, is_admin")

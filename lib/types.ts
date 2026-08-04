@@ -54,7 +54,9 @@ export type Message = {
   content: string;
   read: boolean;
   media_url?: string;
-  media_type?: string;
+  media_type?: "image" | "video" | "document" | "audio" | "contact_share" | "poll" | string;
+  reply_to_id?: string;
+  deleted?: boolean;
   created_at: string;
 };
 
@@ -65,6 +67,7 @@ export type UserProfile = {
   avatar_url?: string;
   headline?: string;
   email?: string;
+  resume_url?: string;
   created_at?: string;
   is_admin?: boolean;
   is_banned?: boolean;
