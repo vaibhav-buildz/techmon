@@ -47,7 +47,9 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
     fetchSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user || null);
+      const newUser = session?.user || null;
+      setUser((prevUser: any) => (prevUser?.id !== newUser?.id ? newUser : prevUser));
+
       if (session?.user) {
         logLogin(session.user.id, session.access_token, event);
         let { data: profileData } = await supabase
@@ -57,7 +59,18 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
           .maybeSingle();
         
         if (profileData && profileData.username) {
-          setProfile(profileData);
+          setProfile((prevProfile: any) => {
+            if (
+              prevProfile?.id === profileData.id &&
+              prevProfile?.username === profileData.username &&
+              prevProfile?.name === profileData.name &&
+              prevProfile?.avatar_url === profileData.avatar_url &&
+              prevProfile?.is_admin === profileData.is_admin
+            ) {
+              return prevProfile;
+            }
+            return profileData;
+          });
           addAccount(session, profileData);
         } else {
           setProfile(null);

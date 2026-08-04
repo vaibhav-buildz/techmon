@@ -198,7 +198,7 @@ export default function GroupsPage() {
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C4402A] hover:bg-[#A33420] text-white rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-sm active:scale-95 self-start md:self-auto shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-sm active:scale-95 self-start md:self-auto shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Create Group</span>
@@ -277,7 +277,7 @@ export default function GroupsPage() {
             </p>
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C4402A] hover:bg-[#A33420] text-white rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-xs"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-xs"
             >
               <Plus className="w-4 h-4" />
               <span>Create First Group</span>
@@ -371,7 +371,7 @@ export default function GroupsPage() {
                       <button
                         onClick={(e) => handleJoinGroup(e, group)}
                         disabled={joiningGroupId === group.id}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#C4402A] text-white hover:bg-[#A33420] rounded-lg font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-2xs active:scale-95"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#DC2626] text-white hover:bg-[#B91C1C] rounded-lg font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-2xs active:scale-95"
                       >
                         {joiningGroupId === group.id ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />

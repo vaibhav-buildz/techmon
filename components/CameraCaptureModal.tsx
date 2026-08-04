@@ -45,7 +45,7 @@ const COLOR_SWATCHES = [
   "#FFFFFF",
   "#000000",
   "#EF4444",
-  "#F59E0B",
+  "#DC2626",
   "#10B981",
   "#3B82F6",
   "#EC4899",

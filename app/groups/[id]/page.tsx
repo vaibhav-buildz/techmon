@@ -412,7 +412,7 @@ export default function GroupDetailPage() {
           </p>
           <Link
             href="/groups"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C4402A] text-white rounded-xl font-mono text-xs uppercase tracking-wider"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#DC2626] text-white rounded-xl font-mono text-xs uppercase tracking-wider"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Groups</span>
@@ -525,7 +525,7 @@ export default function GroupDetailPage() {
                   className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-xs active:scale-95 ${
                     isMember
                       ? "bg-surface border border-border text-heading hover:border-red-500/40 hover:text-red-500"
-                      : "bg-[#C4402A] text-white hover:bg-[#A33420]"
+                      : "bg-[#DC2626] text-white hover:bg-[#B91C1C]"
                   }`}
                 >
                   {joining ? (
@@ -562,7 +562,7 @@ export default function GroupDetailPage() {
             <button
               onClick={handleJoinOrLeave}
               disabled={joining}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#C4402A] text-white hover:bg-[#A33420] rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-xs"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#DC2626] text-white hover:bg-[#B91C1C] rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-xs"
             >
               {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
               <span>Join Group to Unlock</span>
@@ -660,7 +660,7 @@ export default function GroupDetailPage() {
                       <button
                         type="submit"
                         disabled={posting || uploadingPostMedia || (!postContent.trim() && !postMediaUrl)}
-                        className="inline-flex items-center gap-2 px-5 py-2 bg-[#C4402A] text-white hover:bg-[#A33420] disabled:opacity-50 rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-2xs"
+                        className="inline-flex items-center gap-2 px-5 py-2 bg-[#DC2626] text-white hover:bg-[#B91C1C] disabled:opacity-50 rounded-xl font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-2xs"
                       >
                         {posting ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

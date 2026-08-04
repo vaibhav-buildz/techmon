@@ -838,7 +838,7 @@ export default function MessagesPage() {
                           onTouchMove={handleTouchMove}
                           onTouchEnd={() => handleTouchEnd(msg)}
                           className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-3 text-[15px] leading-relaxed shadow-sm transition-all select-none cursor-pointer ${
-                            isHighlighted ? 'ring-2 ring-[#C4402A] scale-[1.01]' : ''
+                            isHighlighted ? 'ring-2 ring-[#DC2626] scale-[1.01]' : ''
                           } ${
                             isMine 
                               ? 'bg-accent text-white rounded-br-sm' 
@@ -871,7 +871,7 @@ export default function MessagesPage() {
                                     className={`w-full text-left p-2 mb-2 rounded-xl border-l-4 transition-opacity flex items-center gap-2 ${
                                       isMine
                                         ? 'bg-black/15 border-white text-white'
-                                        : 'bg-gray-100 border-[#C4402A] text-heading'
+                                        : 'bg-gray-100 border-[#DC2626] text-heading'
                                     } hover:opacity-80`}
                                   >
                                     <CornerUpLeft className="w-3.5 h-3.5 shrink-0 opacity-70" />
@@ -953,7 +953,7 @@ export default function MessagesPage() {
                                       isMine ? 'bg-white/10 border-white/20 text-white' : 'bg-white border-border text-heading'
                                     }`}>
                                       <div className="flex items-center gap-2">
-                                        <BarChart2 className={`w-4 h-4 ${isMine ? 'text-white' : 'text-[#C4402A]'}`} />
+                                        <BarChart2 className={`w-4 h-4 ${isMine ? 'text-white' : 'text-[#DC2626]'}`} />
                                         <span className="text-xs font-mono uppercase tracking-wider opacity-80">Poll</span>
                                       </div>
                                       <div className="font-bold text-base">{pollData.question}</div>
@@ -975,7 +975,7 @@ export default function MessagesPage() {
                                                 isSelected
                                                   ? isMine
                                                     ? 'border-white bg-white/20 font-semibold'
-                                                    : 'border-[#C4402A] bg-[#C4402A]/10 font-semibold text-heading'
+                                                    : 'border-[#DC2626] bg-[#DC2626]/10 font-semibold text-heading'
                                                   : isMine
                                                   ? 'border-white/20 bg-white/5 hover:bg-white/10'
                                                   : 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-heading'
@@ -983,14 +983,14 @@ export default function MessagesPage() {
                                             >
                                               <div
                                                 className={`absolute left-0 top-0 bottom-0 transition-all ${
-                                                  isMine ? 'bg-white/20' : 'bg-[#C4402A]/20'
+                                                  isMine ? 'bg-white/20' : 'bg-[#DC2626]/20'
                                                 }`}
                                                 style={{ width: `${pct}%` }}
                                               />
                                               
                                               <div className="relative z-10 flex items-center gap-2 min-w-0 flex-1 pr-2">
                                                 {isSelected && (
-                                                  <CheckCircle2 className={`w-4 h-4 shrink-0 ${isMine ? 'text-white' : 'text-[#C4402A]'}`} />
+                                                  <CheckCircle2 className={`w-4 h-4 shrink-0 ${isMine ? 'text-white' : 'text-[#DC2626]'}`} />
                                                 )}
                                                 <span className="text-sm truncate">{opt}</span>
                                               </div>
@@ -1044,9 +1044,9 @@ export default function MessagesPage() {
             <div className="p-4 bg-surface border-t border-border shrink-0 pb-safe">
               {/* Active Reply Preview Bar */}
               {replyingTo && (
-                <div className="mb-3 p-2.5 bg-gray-100 border-l-4 border-[#C4402A] rounded-r-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
+                <div className="mb-3 p-2.5 bg-gray-100 border-l-4 border-[#DC2626] rounded-r-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                    <CornerUpLeft className="w-4 h-4 text-[#C4402A] shrink-0" />
+                    <CornerUpLeft className="w-4 h-4 text-[#DC2626] shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-semibold text-heading truncate">
                         Replying to {replyingTo.sender_id === currentUser?.id ? "yourself" : activeConversation.otherUser.name}
@@ -1076,12 +1076,12 @@ export default function MessagesPage() {
                       <img src={mediaPreview} alt="Preview" className="w-16 h-16 object-cover rounded-lg" />
                     ) : mediaType === "audio" ? (
                       <div className="flex items-center gap-2 px-3 py-2 text-sm text-heading">
-                        <Mic className="w-5 h-5 text-[#C4402A]" />
+                        <Mic className="w-5 h-5 text-[#DC2626]" />
                         <span className="font-medium">Voice Note Ready</span>
                       </div>
                     ) : mediaType === "document" ? (
                       <div className="flex items-center gap-3">
-                        <FileText className="w-8 h-8 text-[#C4402A]" />
+                        <FileText className="w-8 h-8 text-[#DC2626]" />
                         <div>
                           <div className="text-sm font-semibold text-heading max-w-xs truncate">{docName}</div>
                           <div className="text-xs text-gray-500 font-mono">{formatBytes(docSize)}</div>
@@ -1118,7 +1118,7 @@ export default function MessagesPage() {
                     <button
                       type="button"
                       onClick={stopRecording}
-                      className="p-2 bg-[#C4402A] text-white hover:bg-[#C4402A]/90 rounded-full transition-colors"
+                      className="p-2 bg-[#DC2626] text-white hover:bg-[#DC2626]/90 rounded-full transition-colors"
                       title="Done Recording"
                     >
                       <Check className="w-5 h-5" />
@@ -1171,7 +1171,7 @@ export default function MessagesPage() {
                           }}
                           className="w-full text-left px-3 py-2 text-sm text-heading hover:bg-gray-100 rounded-xl flex items-center gap-3 transition-colors"
                         >
-                          <div className="p-2 bg-[#C4402A]/10 text-[#C4402A] rounded-lg">
+                          <div className="p-2 bg-[#DC2626]/10 text-[#DC2626] rounded-lg">
                             <FileText className="w-4 h-4" />
                           </div>
                           <span className="font-medium">Document</span>
@@ -1334,7 +1334,7 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   onClick={() => setPollOptions([...pollOptions, ""])}
-                  className="text-xs font-semibold text-[#C4402A] hover:underline"
+                  className="text-xs font-semibold text-[#DC2626] hover:underline"
                 >
                   + Add Option
                 </button>
@@ -1352,7 +1352,7 @@ export default function MessagesPage() {
               <button
                 type="button"
                 onClick={handleCreatePoll}
-                className="px-5 py-2 rounded-xl text-sm font-semibold bg-[#C4402A] text-white hover:bg-[#C4402A]/90 transition-colors"
+                className="px-5 py-2 rounded-xl text-sm font-semibold bg-[#DC2626] text-white hover:bg-[#DC2626]/90 transition-colors"
               >
                 Send Poll
               </button>
@@ -1388,7 +1388,7 @@ export default function MessagesPage() {
               }}
               className="w-full text-left px-3 py-2 text-sm text-heading hover:bg-gray-100 rounded-xl flex items-center gap-3 transition-colors"
             >
-              <CornerUpLeft className="w-4 h-4 text-[#C4402A]" />
+              <CornerUpLeft className="w-4 h-4 text-[#DC2626]" />
               <span className="font-medium">Reply</span>
             </button>
 

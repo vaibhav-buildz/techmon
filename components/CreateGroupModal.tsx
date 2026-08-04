@@ -383,7 +383,7 @@ export default function CreateGroupModal({
             <button
               type="submit"
               disabled={submitting || uploadingImage || !name.trim()}
-              className="flex items-center gap-2 px-6 py-2.5 bg-[#C4402A] text-white rounded-xl font-mono text-xs font-semibold uppercase tracking-wider hover:bg-[#A33420] disabled:opacity-50 transition-all shadow-sm"
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#DC2626] text-white rounded-xl font-mono text-xs font-semibold uppercase tracking-wider hover:bg-[#B91C1C] disabled:opacity-50 transition-all shadow-sm"
             >
               {submitting ? (
                 <>
