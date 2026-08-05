@@ -766,7 +766,7 @@ export default function ProfilePage() {
               )}
 
               {/* Social / External Links */}
-              {(profile.github_url || profile.linkedin_url || profile.portfolio_url || profile.resume_url) && (
+              {(profile.github_url || profile.linkedin_url || profile.portfolio_url) && (
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-3 font-mono text-xs uppercase tracking-wider">
                   {profile.github_url && (
                     <a href={profile.github_url} target="_blank" rel="noopener noreferrer" className="text-heading hover:text-accent transition-colors flex items-center gap-1">
@@ -784,12 +784,6 @@ export default function ProfilePage() {
                     <a href={profile.portfolio_url} target="_blank" rel="noopener noreferrer" className="text-heading hover:text-accent transition-colors flex items-center gap-1">
                       <ExternalLink className="w-3.5 h-3.5" />
                       <span>Portfolio</span>
-                    </a>
-                  )}
-                  {profile.resume_url && (
-                    <a href={profile.resume_url} target="_blank" rel="noopener noreferrer" className="text-heading hover:text-accent transition-colors flex items-center gap-1">
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>Resume</span>
                     </a>
                   )}
                 </div>
