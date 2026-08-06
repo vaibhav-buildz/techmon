@@ -189,7 +189,7 @@ export default function MessagesPage() {
           .order("created_at", { ascending: false })
           .limit(20);
 
-        const visibleLastMsg = recentMsgs?.find(m => !storedHiddenSet.has(m.id));
+        const visibleLastMsg = recentMsgs?.find(m => !m.deleted && !storedHiddenSet.has(m.id));
 
         const { count } = await supabase
           .from("messages")
@@ -296,12 +296,36 @@ export default function MessagesPage() {
           if (updatedMsg.conversation_id === activeConversationId) {
             setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
           }
-          setConversations(prev => prev.map(c => {
-            if (c.id === updatedMsg.conversation_id && c.lastMessage?.id === updatedMsg.id) {
-              return { ...c, lastMessage: updatedMsg };
-            }
-            return c;
-          }));
+
+          if (updatedMsg.deleted) {
+            const nextLast = await getOrFetchNextVisibleMessage(
+              updatedMsg.conversation_id,
+              updatedMsg.id,
+              hiddenMsgIds,
+              messages
+            );
+            setConversations(prev => {
+              const updated = prev.map(c => {
+                if (c.id === updatedMsg.conversation_id && c.lastMessage?.id === updatedMsg.id) {
+                  return { ...c, lastMessage: nextLast };
+                }
+                return c;
+              });
+              updated.sort((a, b) => {
+                const dateA = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.created_at).getTime();
+                const dateB = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.created_at).getTime();
+                return dateB - dateA;
+              });
+              return updated;
+            });
+          } else {
+            setConversations(prev => prev.map(c => {
+              if (c.id === updatedMsg.conversation_id && c.lastMessage?.id === updatedMsg.id) {
+                return { ...c, lastMessage: updatedMsg };
+              }
+              return c;
+            }));
+          }
         }
       })
       .subscribe();
@@ -499,8 +523,35 @@ export default function MessagesPage() {
     setIsSending(false);
   };
 
+  // Helper to recompute the most recent visible message for conversation preview
+  const getOrFetchNextVisibleMessage = async (
+    convoId: string,
+    ignoreMsgId: string,
+    currentHiddenSet: Set<string>,
+    currentMessages: Message[]
+  ): Promise<Message | undefined> => {
+    const localVisible = currentMessages
+      .filter(m => m.conversation_id === convoId && m.id !== ignoreMsgId && !m.deleted && !currentHiddenSet.has(m.id))
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    if (localVisible.length > 0) {
+      return localVisible[localVisible.length - 1];
+    }
+
+    const { data: recentMsgs } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", convoId)
+      .eq("deleted", false)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (!recentMsgs) return undefined;
+    return recentMsgs.find(m => m.id !== ignoreMsgId && !m.deleted && !currentHiddenSet.has(m.id));
+  };
+
   // Actions Handlers
-  const handleDeleteForMe = (msg: Message) => {
+  const handleDeleteForMe = async (msg: Message) => {
     if (!currentUser) return;
     const newHiddenSet = new Set(hiddenMsgIds);
     newHiddenSet.add(msg.id);
@@ -515,17 +566,19 @@ export default function MessagesPage() {
     setContextMenuMsg(null);
 
     // Update conversation sidebar preview if this was the preview message for current user
-    setConversations(prev => prev.map(c => {
-      if (c.id === msg.conversation_id && c.lastMessage?.id === msg.id) {
-        const visibleMsgs = messages.filter(m => m.conversation_id === c.id && !newHiddenSet.has(m.id));
-        const nextLast = visibleMsgs.length > 0 ? visibleMsgs[visibleMsgs.length - 1] : undefined;
-        return {
-          ...c,
-          lastMessage: nextLast
-        };
-      }
-      return c;
-    }));
+    const affectedConvo = conversations.find(c => c.id === msg.conversation_id && c.lastMessage?.id === msg.id);
+    if (affectedConvo) {
+      const nextLast = await getOrFetchNextVisibleMessage(msg.conversation_id, msg.id, newHiddenSet, messages);
+      setConversations(prev => {
+        const updated = prev.map(c => c.id === msg.conversation_id ? { ...c, lastMessage: nextLast } : c);
+        updated.sort((a, b) => {
+          const dateA = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.created_at).getTime();
+          const dateB = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.created_at).getTime();
+          return dateB - dateA;
+        });
+        return updated;
+      });
+    }
   };
 
   const handleUnsend = async (msg: Message) => {
@@ -543,18 +596,23 @@ export default function MessagesPage() {
     setContextMenuMsg(null);
 
     // Optimistic update for active chat messages
-    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, deleted: true } : m));
+    const updatedMessages = messages.map(m => m.id === msg.id ? { ...m, deleted: true } : m);
+    setMessages(updatedMessages);
 
     // Optimistic update for conversation sidebar preview
-    setConversations(prev => prev.map(c => {
-      if (c.id === msg.conversation_id && c.lastMessage?.id === msg.id) {
-        return {
-          ...c,
-          lastMessage: { ...c.lastMessage, deleted: true }
-        };
-      }
-      return c;
-    }));
+    const affectedConvo = conversations.find(c => c.id === msg.conversation_id && c.lastMessage?.id === msg.id);
+    if (affectedConvo) {
+      const nextLast = await getOrFetchNextVisibleMessage(msg.conversation_id, msg.id, hiddenMsgIds, updatedMessages);
+      setConversations(prev => {
+        const updated = prev.map(c => c.id === msg.conversation_id ? { ...c, lastMessage: nextLast } : c);
+        updated.sort((a, b) => {
+          const dateA = a.lastMessage ? new Date(a.lastMessage.created_at).getTime() : new Date(a.created_at).getTime();
+          const dateB = b.lastMessage ? new Date(b.lastMessage.created_at).getTime() : new Date(b.created_at).getTime();
+          return dateB - dateA;
+        });
+        return updated;
+      });
+    }
 
     // DB update
     const { error } = await supabase
