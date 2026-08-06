@@ -101,7 +101,9 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
       setUser((prevUser: any) => (prevUser?.id !== newUser?.id ? newUser : prevUser));
 
       if (session?.user) {
-        logLogin(session.user.id, session.access_token, event);
+        if (event === "SIGNED_IN") {
+          logLogin(session.user.id, session.access_token, event).catch(console.error);
+        }
         let { data: profileData } = await supabase
           .from("profiles")
           .select("id, name, avatar_url, username, is_admin")
