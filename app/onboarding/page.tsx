@@ -5,9 +5,11 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import SkillsAutocomplete from "@/components/SkillsAutocomplete";
 import { addAccount } from "@/lib/accountManager";
+import { useAppProfile } from "@/components/AppLayoutWrapper";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { refreshProfile } = useAppProfile();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -197,6 +199,15 @@ export default function OnboardingPage() {
       if (session) {
         addAccount(session, { name, avatar_url: "" });
       }
+
+      // Explicitly sync and verify profile state in AppLayoutWrapper prior to redirect
+      await refreshProfile({
+        id: userId,
+        username: username.trim(),
+        name,
+        avatar_url: "",
+        is_admin: false,
+      });
 
       router.push(`/profile/${username.trim()}`);
     } catch (err: any) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { supabase } from "@/lib/supabase";
 import TopNavbar from "./TopNavbar";
 import TopBar from "./TopBar";
@@ -8,12 +8,62 @@ import { addAccount } from "@/lib/accountManager";
 import { usePathname, useRouter } from "next/navigation";
 import { logLogin, clearLoginSession } from "@/lib/logLogin";
 
+type AppContextType = {
+  user: any;
+  profile: any;
+  refreshProfile: (optimisticProfile?: any) => Promise<any>;
+};
+
+const AppContext = createContext<AppContextType>({
+  user: null,
+  profile: null,
+  refreshProfile: async () => null,
+});
+
+export const useAppProfile = () => useContext(AppContext);
+
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+
+  const refreshProfile = useCallback(async (optimisticProfile?: any) => {
+    if (optimisticProfile && optimisticProfile.username) {
+      setProfile(optimisticProfile);
+    }
+    let currentUserId = user?.id;
+    if (!currentUserId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUserId = session?.user?.id;
+      if (!currentUserId) return null;
+      setUser(session?.user);
+    }
+
+    try {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, name, avatar_url, username, is_admin")
+        .eq("id", currentUserId)
+        .maybeSingle();
+
+      if (profileData && profileData.username) {
+        setProfile(profileData);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) addAccount(session, profileData);
+        return profileData;
+      } else if (optimisticProfile && optimisticProfile.username) {
+        return optimisticProfile;
+      } else {
+        setProfile(null);
+        return null;
+      }
+    } catch (err) {
+      console.error("[AppLayoutWrapper] Error refreshing profile:", err);
+      return optimisticProfile || null;
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -113,21 +163,25 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <TopBar />
-        <main className="flex-1 flex flex-col">
-          {children}
-        </main>
-      </div>
+      <AppContext.Provider value={{ user, profile, refreshProfile }}>
+        <div className="min-h-screen flex flex-col">
+          <TopBar />
+          <main className="flex-1 flex flex-col">
+            {children}
+          </main>
+        </div>
+      </AppContext.Provider>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col pt-14 md:pt-16 bg-background">
-      <TopNavbar user={user} profile={profile} />
-      <main className="flex-1 flex flex-col pb-14 md:pb-0">
-        {children}
-      </main>
-    </div>
+    <AppContext.Provider value={{ user, profile, refreshProfile }}>
+      <div className="min-h-screen flex flex-col pt-14 md:pt-16 bg-background">
+        <TopNavbar user={user} profile={profile} />
+        <main className="flex-1 flex flex-col pb-14 md:pb-0">
+          {children}
+        </main>
+      </div>
+    </AppContext.Provider>
   );
 }
