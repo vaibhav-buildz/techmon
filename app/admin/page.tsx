@@ -140,12 +140,13 @@ export default function AdminPage() {
     const pm = new Map();
     if (aids.length) { const { data } = await supabase.from("profiles").select("id,name,avatar_url,headline,username").in("id", aids); data?.forEach((p: any) => pm.set(p.id, p)); }
     const ids = raw.map((r: any) => r.id);
-    const [{ data: ld }, { data: cd }] = await Promise.all([
-      supabase.from("likes").select("post_id").in("post_id", ids),
-      supabase.from("comments").select("post_id").in("post_id", ids),
-    ]);
-    const lm = new Map<string, number>(); ld?.forEach((x: any) => lm.set(x.post_id, (lm.get(x.post_id) || 0) + 1));
-    const cm = new Map<string, number>(); cd?.forEach((x: any) => cm.set(x.post_id, (cm.get(x.post_id) || 0) + 1));
+    const { data: counts } = await supabase.rpc("get_post_counts", { post_ids: ids });
+    const lm = new Map<string, number>();
+    const cm = new Map<string, number>();
+    counts?.forEach((x: any) => {
+      lm.set(x.post_id, Number(x.like_count) || 0);
+      cm.set(x.post_id, Number(x.comment_count) || 0);
+    });
     setPosts(raw.map((p: any) => ({
       id: p.id, user_id: p.user_id, type: p.type || "text", content: p.content || "",
       background: p.background, code_lang: p.code_lang, media_url: p.media_url,

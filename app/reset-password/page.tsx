@@ -15,45 +15,77 @@ export default function ResetPasswordPage() {
 
   const [checking, setChecking] = useState(true);
   const [isRecoverySession, setIsRecoverySession] = useState(false);
+  const [isLoggedInDirect, setIsLoggedInDirect] = useState(false);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const hasRecoveryParams =
+      hash.includes("type=recovery") ||
+      search.includes("type=recovery") ||
+      search.includes("code=") ||
+      (hash.includes("access_token=") && hash.includes("recovery"));
+    const hasErrorParams = hash.includes("error=") || search.includes("error=");
 
-    const checkRecovery = async () => {
-      const hash = typeof window !== "undefined" ? window.location.hash : "";
-      const search = typeof window !== "undefined" ? window.location.search : "";
-      const hasRecoveryParams = hash.includes("type=recovery") || search.includes("type=recovery") || search.includes("code=");
+    if (hasErrorParams) {
+      setIsRecoverySession(false);
+      setChecking(false);
+      return;
+    }
 
-      const { data: { session } } = await supabase.auth.getSession();
+    let recoveryResolved = false;
 
-      if (hasRecoveryParams || session) {
-        setIsRecoverySession(true);
-        setChecking(false);
-      }
-    };
-
-    checkRecovery();
-
-    // Listen specifically for PASSWORD_RECOVERY auth event
+    // Listen to Supabase auth events without blind timeouts
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const hash = typeof window !== "undefined" ? window.location.hash : "";
-      const search = typeof window !== "undefined" ? window.location.search : "";
-      const hasRecoveryParams = hash.includes("type=recovery") || search.includes("type=recovery");
+      if (recoveryResolved) return;
 
-      if (event === "PASSWORD_RECOVERY" || hasRecoveryParams || session) {
+      if (event === "PASSWORD_RECOVERY" || (hasRecoveryParams && session && (event === "SIGNED_IN" || event === "INITIAL_SESSION"))) {
+        recoveryResolved = true;
         setIsRecoverySession(true);
         setChecking(false);
+      } else if (event === "INITIAL_SESSION") {
+        if (session && !hasRecoveryParams) {
+          recoveryResolved = true;
+          setIsLoggedInDirect(true);
+          setChecking(false);
+        } else if (!hasRecoveryParams || !session) {
+          recoveryResolved = true;
+          setIsRecoverySession(false);
+          setChecking(false);
+        }
       }
     });
 
-    // Timeout fallback after 2.5 seconds for expired or invalid links
-    timer = setTimeout(() => {
-      setChecking(false);
-    }, 2500);
+    const checkInitial = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (recoveryResolved) return;
+
+        if (error || !session) {
+          if (!hasRecoveryParams) {
+            recoveryResolved = true;
+            setIsRecoverySession(false);
+            setChecking(false);
+          }
+        } else if (session && !hasRecoveryParams) {
+          recoveryResolved = true;
+          setIsLoggedInDirect(true);
+          setChecking(false);
+        } else if (session && hasRecoveryParams) {
+          recoveryResolved = true;
+          setIsRecoverySession(true);
+          setChecking(false);
+        }
+      } catch (err) {
+        console.error("[ResetPassword] Session check error:", err);
+        if (!recoveryResolved) setChecking(false);
+      }
+    };
+
+    checkInitial();
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(timer);
     };
   }, []);
 
@@ -123,6 +155,18 @@ export default function ResetPasswordPage() {
                 className="w-full inline-flex justify-center items-center py-2.5 px-4 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors"
               >
                 Sign In Now
+              </Link>
+            </div>
+          ) : isLoggedInDirect ? (
+            <div className="space-y-6">
+              <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-900 leading-relaxed">
+                You are currently logged in. To change your password while logged in, please use Account Settings.
+              </div>
+              <Link
+                href="/settings"
+                className="w-full inline-flex justify-center items-center py-2.5 px-4 bg-accent text-white font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors"
+              >
+                Go to Account Settings
               </Link>
             </div>
           ) : !isRecoverySession ? (

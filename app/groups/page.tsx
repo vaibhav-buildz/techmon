@@ -51,35 +51,41 @@ export default function GroupsPage() {
         return;
       }
 
-      // 3. Fetch all group_memberships
-      const { data: membersData, error: membersError } = await supabase
-        .from("group_members")
-        .select("group_id, user_id, role");
+      const groupIds = groupsData.map((g) => g.id);
 
-      if (membersError) {
-        console.error("Error fetching group members:", membersError);
+      // 3. Fetch member counts via RPC and current user's memberships in parallel
+      const [countsRes, myMembershipsRes] = await Promise.all([
+        supabase.rpc("get_group_member_counts", { group_ids: groupIds }),
+        userId
+          ? supabase.from("group_members").select("group_id, role").eq("user_id", userId).in("group_id", groupIds)
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+
+      if (countsRes.error) {
+        console.error("Error fetching group member counts:", countsRes.error);
+      }
+      if (myMembershipsRes.error) {
+        console.error("Error fetching user group memberships:", myMembershipsRes.error);
       }
 
-      // Group members by group_id
-      const memberMap = new Map<string, { count: number; isMember: boolean; role?: "admin" | "moderator" | "member" }>();
-      
-      membersData?.forEach((m) => {
-        const existing = memberMap.get(m.group_id) || { count: 0, isMember: false };
-        const isMe = userId ? m.user_id === userId : false;
-        memberMap.set(m.group_id, {
-          count: existing.count + 1,
-          isMember: existing.isMember || isMe,
-          role: isMe ? (m.role as "admin" | "moderator" | "member") : existing.role,
-        });
+      const countMap = new Map<string, number>();
+      countsRes.data?.forEach((c: any) => {
+        countMap.set(c.group_id, Number(c.member_count) || 0);
+      });
+
+      const myMembershipMap = new Map<string, "admin" | "moderator" | "member" | undefined>();
+      myMembershipsRes.data?.forEach((m) => {
+        myMembershipMap.set(m.group_id, m.role as "admin" | "moderator" | "member");
       });
 
       const formattedGroups: Group[] = groupsData.map((g) => {
-        const meta = memberMap.get(g.id) || { count: 0, isMember: false };
+        const isMember = myMembershipMap.has(g.id);
+        const myRole = myMembershipMap.get(g.id);
         return {
           ...g,
-          memberCount: meta.count,
-          isMember: meta.isMember,
-          myRole: meta.role,
+          memberCount: countMap.get(g.id) || 0,
+          isMember,
+          myRole,
         };
       });
 
