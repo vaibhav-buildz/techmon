@@ -79,7 +79,7 @@ export type ContentReport = {
   id: string;
   reporter_id: string;
   target_id: string;
-  target_type: "post" | "comment";
+  target_type: "post" | "comment" | "user";
   reason: string;
   status: "pending" | "dismissed" | "reviewed";
   created_at: string;

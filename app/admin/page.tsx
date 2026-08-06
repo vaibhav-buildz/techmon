@@ -166,14 +166,16 @@ export default function AdminPage() {
     if (rIds.length) { const { data } = await supabase.from("profiles").select("id,name,username,avatar_url").in("id", rIds); data?.forEach((p: any) => rm.set(p.id, p)); }
     const postIds = raw.filter((r: any) => r.target_type === "post").map((r: any) => r.target_id);
     const commIds = raw.filter((r: any) => r.target_type === "comment").map((r: any) => r.target_id);
-    const pMap = new Map(); const cMap = new Map();
+    const userIds = raw.filter((r: any) => r.target_type === "user").map((r: any) => r.target_id);
+    const pMap = new Map(); const cMap = new Map(); const uMap = new Map();
     if (postIds.length) { const { data } = await supabase.from("posts").select("id,content").in("id", postIds); data?.forEach((p: any) => pMap.set(p.id, p.content)); }
     if (commIds.length) { const { data } = await supabase.from("comments").select("id,content").in("id", commIds); data?.forEach((c: any) => cMap.set(c.id, c.content)); }
+    if (userIds.length) { const { data } = await supabase.from("profiles").select("id,name,username").in("id", userIds); data?.forEach((u: any) => uMap.set(u.id, `${u.name}${u.username ? ` (@${u.username})` : ""}`)); }
     setReports(raw.map((r: any) => ({
       id: r.id, reporter_id: r.reporter_id, target_id: r.target_id, target_type: r.target_type,
       reason: r.reason || "No reason", status: r.status, created_at: r.created_at,
       reporter: rm.get(r.reporter_id) || { name: "System" },
-      contentPreview: r.target_type === "post" ? pMap.get(r.target_id) || "[Deleted]" : cMap.get(r.target_id) || "[Deleted]",
+      contentPreview: r.target_type === "post" ? pMap.get(r.target_id) || "[Deleted]" : r.target_type === "comment" ? cMap.get(r.target_id) || "[Deleted]" : uMap.get(r.target_id) || "[Deleted User]",
     })));
     reportsOk.current = true;
     setReportsLoading(false);
@@ -237,6 +239,17 @@ export default function AdminPage() {
   };
 
   const nukeReport = async (r: ContentReport) => {
+    if (r.target_type === "user") {
+      if (r.target_id === myId) return alert("Can't modify yourself.");
+      if (!confirm("Ban this reported user account?")) return;
+      setReportBusy(r.id);
+      await supabase.from("profiles").update({ is_banned: true }).eq("id", r.target_id);
+      setUsers(p => p.map(u => u.id === r.target_id ? { ...u, is_banned: true } : u));
+      await supabase.from("reports").update({ status: "reviewed" }).eq("id", r.id);
+      setReports(p => p.filter(x => x.id !== r.id));
+      setReportBusy("");
+      return;
+    }
     if (!confirm(`Delete this ${r.target_type}?`)) return;
     setReportBusy(r.id);
     await supabase.from(r.target_type === "post" ? "posts" : "comments").delete().eq("id", r.target_id);
@@ -554,7 +567,7 @@ export default function AdminPage() {
                         {rf === "pending" && (
                           <div className="flex flex-col gap-1.5 shrink-0">
                             <Btn onClick={() => dismissReport(r.id)} disabled={reportBusy === r.id} variant="muted" loading={reportBusy === r.id} label="Dismiss" icon={XCircle} />
-                            <Btn onClick={() => nukeReport(r)} disabled={reportBusy === r.id} variant="red" loading={reportBusy === r.id} label="Delete" icon={Trash2} />
+                            <Btn onClick={() => nukeReport(r)} disabled={reportBusy === r.id} variant="red" loading={reportBusy === r.id} label={r.target_type === "user" ? "Ban User" : "Delete"} icon={r.target_type === "user" ? Ban : Trash2} />
                           </div>
                         )}
                       </div>
