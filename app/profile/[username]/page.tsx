@@ -16,7 +16,7 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import ReportModal from "@/components/ReportModal";
 import ProjectModal from "@/components/ProjectModal";
 import ProjectDetailModal from "@/components/ProjectDetailModal";
-import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield, FolderCode, Plus, ExternalLink, GitBranch, FileText } from "lucide-react";
+import { Type, Code, Heart, StickyNote, MoreHorizontal, Trash2, Edit2, AlertCircle, Menu, Settings, Users, LogOut, X, MessageCircle, Archive, Activity, Grid, Repeat2, Shield, FolderCode, Plus, ExternalLink, GitBranch, FileText, Building2 } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -741,8 +741,9 @@ export default function ProfilePage() {
                 </p>
               )}
               {profile.organization && (
-                <p className="text-xs text-muted font-sans font-medium">
-                  📍 {profile.organization}
+                <p className="text-xs text-muted font-sans font-medium flex items-center justify-center md:justify-start gap-1">
+                  <Building2 className="w-3.5 h-3.5 shrink-0 text-muted" />
+                  <span>{profile.organization}</span>
                 </p>
               )}
               {profile.bio && (

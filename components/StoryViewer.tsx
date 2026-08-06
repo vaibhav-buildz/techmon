@@ -75,11 +75,13 @@ export default function StoryViewer({
       viewedSetRef.current.add(storyId);
 
       try {
-        // Use upsert with onConflict to avoid duplicate inserts
-        await supabase.from("story_views").insert({
-          story_id: storyId,
-          viewer_id: viewerId,
-        });
+        await supabase.from("story_views").upsert(
+          {
+            story_id: storyId,
+            viewer_id: viewerId,
+          },
+          { onConflict: "story_id,viewer_id", ignoreDuplicates: true }
+        );
       } catch {
         // Silently fail — might be a duplicate
       }

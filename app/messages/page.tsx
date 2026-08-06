@@ -614,6 +614,21 @@ export default function MessagesPage() {
       });
     }
 
+    // Delete file attachment from storage if present
+    if (msg.media_url) {
+      try {
+        const filePath = msg.media_url.includes("/messages/")
+          ? msg.media_url.split("/messages/").pop()
+          : null;
+
+        if (filePath) {
+          await supabase.storage.from("messages").remove([filePath]);
+        }
+      } catch (err) {
+        console.error("Error deleting message attachment from storage:", err);
+      }
+    }
+
     // DB update
     const { error } = await supabase
       .from("messages")

@@ -631,3 +631,47 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('groups', 'groups', true)
 CREATE POLICY "Public Read Access Groups Storage" ON storage.objects FOR SELECT USING (bucket_id = 'groups');
 CREATE POLICY "Authenticated Upload Groups Storage" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'groups' AND auth.role() = 'authenticated');
 
+-- ==========================================
+-- 20. CLEANUP & MAINTENANCE FUNCTIONS
+-- ==========================================
+
+-- Function to clean up expired stories and their storage media (if not saved in highlights)
+CREATE OR REPLACE FUNCTION public.cleanup_expired_stories()
+RETURNS INT
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  deleted_count INT := 0;
+  rec RECORD;
+  file_name TEXT;
+BEGIN
+  FOR rec IN 
+    SELECT s.id, s.media_url
+    FROM public.stories s
+    WHERE s.expires_at < NOW()
+      AND NOT EXISTS (
+        SELECT 1 FROM public.highlight_stories hs WHERE hs.story_id = s.id
+      )
+  LOOP
+    file_name := substring(rec.media_url from '/stories/(.*)$');
+    IF file_name IS NOT NULL AND file_name <> '' THEN
+      DELETE FROM storage.objects 
+      WHERE bucket_id = 'stories' AND name = file_name;
+    END IF;
+
+    DELETE FROM public.stories WHERE id = rec.id;
+    deleted_count := deleted_count + 1;
+  END LOOP;
+
+  RETURN deleted_count;
+END;
+$$;
+
+-- Ensure ON DELETE CASCADE for threaded comment replies
+ALTER TABLE public.comments 
+  DROP CONSTRAINT IF EXISTS comments_parent_comment_id_fkey,
+  ADD CONSTRAINT comments_parent_comment_id_fkey 
+  FOREIGN KEY (parent_comment_id) REFERENCES public.comments(id) ON DELETE CASCADE;
+
+
