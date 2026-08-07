@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,46 @@ export default function SignupPage() {
   const [gitHubLoading, setGitHubLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset loading states on mount, pageshow (BFCache restore), window focus, or visibilitychange
+  useEffect(() => {
+    const handleResetLoading = () => {
+      setLoading(false);
+      setGitHubLoading(false);
+      setGoogleLoading(false);
+    };
+
+    handleResetLoading();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleResetLoading();
+      }
+    };
+
+    window.addEventListener("focus", handleResetLoading);
+    window.addEventListener("pageshow", handleResetLoading);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleResetLoading);
+      window.removeEventListener("pageshow", handleResetLoading);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Fallback timer: reset loading state if stuck in loading for more than 10 seconds
+  useEffect(() => {
+    if (loading || gitHubLoading || googleLoading) {
+      const timer = setTimeout(() => {
+        setLoading(false);
+        setGitHubLoading(false);
+        setGoogleLoading(false);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading, gitHubLoading, googleLoading]);
 
   const handleGoogleSignUp = async () => {
     try {
