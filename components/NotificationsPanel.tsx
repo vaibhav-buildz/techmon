@@ -112,6 +112,7 @@ export default function NotificationsPanel({ isOpen, onClose, userId, onRead }: 
           } else {
             // Notify parent to clear badge
             onRead();
+            window.dispatchEvent(new Event("notificationsRead"));
           }
         }
       } catch (err) {

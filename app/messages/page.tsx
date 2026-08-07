@@ -241,9 +241,30 @@ export default function MessagesPage() {
         .eq("read", false)
         .neq("sender_id", currentUser.id);
 
+      // Also mark notifications from the other participant as read
+      const { data: convo } = await supabase
+        .from("conversations")
+        .select("user1_id, user2_id")
+        .eq("id", activeConversationId)
+        .maybeSingle();
+
+      if (convo) {
+        const otherUserId = convo.user1_id === currentUser.id ? convo.user2_id : convo.user1_id;
+        await supabase
+          .from("notifications")
+          .update({ read: true })
+          .eq("recipient_id", currentUser.id)
+          .eq("actor_id", otherUserId)
+          .eq("read", false);
+      }
+
       setConversations(prev => prev.map(c => 
         c.id === activeConversationId ? { ...c, unreadCount: 0 } : c
       ));
+
+      // Trigger immediate update of navbar unread state
+      window.dispatchEvent(new Event("messagesRead"));
+      window.dispatchEvent(new Event("notificationsRead"));
     };
 
     fetchMessages();
@@ -267,6 +288,16 @@ export default function MessagesPage() {
                 .from("messages")
                 .update({ read: true })
                 .eq("id", newMsg.id);
+
+              await supabase
+                .from("notifications")
+                .update({ read: true })
+                .eq("recipient_id", currentUser.id)
+                .eq("actor_id", newMsg.sender_id)
+                .eq("read", false);
+
+              window.dispatchEvent(new Event("messagesRead"));
+              window.dispatchEvent(new Event("notificationsRead"));
             }
           }
 

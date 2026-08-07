@@ -83,18 +83,34 @@ export default function TopNavbar({ user, profile }: Props) {
         if (!msgError && msgCount !== null) {
           setUnreadMessagesCount(msgCount);
         }
+      } else {
+        setUnreadMessagesCount(0);
       }
     };
     fetchUnread();
 
+    const handleUnreadReset = () => {
+      fetchUnread();
+    };
+
+    window.addEventListener("notificationsRead", handleUnreadReset);
+    window.addEventListener("messagesRead", handleUnreadReset);
+    window.addEventListener("unreadStateChanged", handleUnreadReset);
+
     const channel = supabase
-      .channel('navbar-messages-changes')
+      .channel('navbar-all-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        fetchUnread();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
         fetchUnread();
       })
       .subscribe();
 
     return () => {
+      window.removeEventListener("notificationsRead", handleUnreadReset);
+      window.removeEventListener("messagesRead", handleUnreadReset);
+      window.removeEventListener("unreadStateChanged", handleUnreadReset);
       supabase.removeChannel(channel);
     };
   }, [user]);
