@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { StickyNote, Image as ImageIcon, X, Upload, Check } from "lucide-react";
 import { processHashtags } from "@/lib/hashtagHelpers";
@@ -9,6 +9,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
+  initialType?: "note" | "media";
 };
 
 const BACKGROUNDS = [
@@ -20,8 +21,14 @@ const BACKGROUNDS = [
   { id: "yellow-red", class: "bg-gradient-to-br from-yellow-300 to-red-400" },
 ];
 
-export default function CreatePostModal({ isOpen, onClose, userId }: Props) {
-  const [postType, setPostType] = useState<"note" | "media">("note");
+export default function CreatePostModal({ isOpen, onClose, userId, initialType = "note" }: Props) {
+  const [postType, setPostType] = useState<"note" | "media">(initialType);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPostType(initialType);
+    }
+  }, [isOpen, initialType]);
   const [content, setContent] = useState("");
   const [background, setBackground] = useState(BACKGROUNDS[0]);
   const [file, setFile] = useState<File | null>(null);

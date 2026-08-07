@@ -21,6 +21,8 @@ import {
   SquarePen,
   Briefcase,
   Users2,
+  Image as ImageIcon,
+  StickyNote,
 } from "lucide-react";
 
 
@@ -49,6 +51,7 @@ export default function TopNavbar({ user, profile }: Props) {
   const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [createPostInitialType, setCreatePostInitialType] = useState<"note" | "media">("media");
 
 
 
@@ -213,22 +216,41 @@ export default function TopNavbar({ user, profile }: Props) {
                   {isCreateMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setIsCreateMenuOpen(false)} />
-                      <div className="absolute right-0 mt-2 w-52 bg-surface/95 backdrop-blur-md border border-border shadow-xl rounded-xl z-50 py-1.5 divide-y divide-border animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute right-0 mt-2 w-56 bg-surface/95 backdrop-blur-md border border-border shadow-xl rounded-xl z-50 py-1.5 divide-y divide-border animate-in fade-in zoom-in-95 duration-150">
                         <button
                           onClick={() => {
                             setIsCreateMenuOpen(false);
+                            setCreatePostInitialType("media");
                             setIsCreateModalOpen(true);
                           }}
                           className="w-full px-4 py-3 text-left hover:bg-gray-100/70 flex items-center gap-3 transition-all group"
                         >
                           <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 group-hover:scale-105 transition-transform">
-                            <SquarePen className="w-4 h-4" />
+                            <ImageIcon className="w-4 h-4" />
                           </div>
                           <div>
-                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent transition-colors">Article / Note</div>
-                            <div className="text-[10px] text-muted font-sans">Text or Media Post</div>
+                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent transition-colors">Post</div>
+                            <div className="text-[10px] text-muted font-sans">Photo or Video</div>
                           </div>
                         </button>
+
+                        <button
+                          onClick={() => {
+                            setIsCreateMenuOpen(false);
+                            setCreatePostInitialType("note");
+                            setIsCreateModalOpen(true);
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-100/70 flex items-center gap-3 transition-all group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 group-hover:scale-105 transition-transform">
+                            <StickyNote className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="font-mono text-xs font-semibold uppercase tracking-wider text-heading group-hover:text-accent transition-colors">Note</div>
+                            <div className="text-[10px] text-muted font-sans">Text & color canvas</div>
+                          </div>
+                        </button>
+
                         <button
                           onClick={() => {
                             setIsCreateMenuOpen(false);
@@ -333,6 +355,7 @@ export default function TopNavbar({ user, profile }: Props) {
             isOpen={isCreateModalOpen} 
             onClose={() => setIsCreateModalOpen(false)} 
             userId={user.id} 
+            initialType={createPostInitialType}
           />
           <CameraCaptureModal
             isOpen={isStoryModalOpen}
